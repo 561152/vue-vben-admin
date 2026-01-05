@@ -241,7 +241,13 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">进行中</span>
                   <Progress
-                    :percent="welcomeSopStats.totalCustomers > 0 ? (welcomeSopStats.inProgress / welcomeSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      welcomeSopStats.totalCustomers > 0
+                        ? (welcomeSopStats.inProgress /
+                            welcomeSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#1890ff"
                   />
@@ -250,7 +256,13 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">已完成</span>
                   <Progress
-                    :percent="welcomeSopStats.totalCustomers > 0 ? (welcomeSopStats.completed / welcomeSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      welcomeSopStats.totalCustomers > 0
+                        ? (welcomeSopStats.completed /
+                            welcomeSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#52c41a"
                   />
@@ -259,7 +271,13 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">已放弃</span>
                   <Progress
-                    :percent="welcomeSopStats.totalCustomers > 0 ? (welcomeSopStats.abandoned / welcomeSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      welcomeSopStats.totalCustomers > 0
+                        ? (welcomeSopStats.abandoned /
+                            welcomeSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#ff4d4f"
                   />
@@ -267,7 +285,9 @@ onMounted(() => {
                 </div>
               </div>
               <div class="sop-footer">
-                <Tag color="green">完成率: {{ welcomeSopStats.completionRate.toFixed(1) }}%</Tag>
+                <Tag color="green"
+                  >完成率: {{ welcomeSopStats.completionRate.toFixed(1) }}%</Tag
+                >
               </div>
             </div>
 
@@ -281,7 +301,13 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">进行中</span>
                   <Progress
-                    :percent="vipSopStats.totalCustomers > 0 ? (vipSopStats.inProgress / vipSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      vipSopStats.totalCustomers > 0
+                        ? (vipSopStats.inProgress /
+                            vipSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#1890ff"
                   />
@@ -290,7 +316,12 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">已完成</span>
                   <Progress
-                    :percent="vipSopStats.totalCustomers > 0 ? (vipSopStats.completed / vipSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      vipSopStats.totalCustomers > 0
+                        ? (vipSopStats.completed / vipSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#52c41a"
                   />
@@ -299,7 +330,12 @@ onMounted(() => {
                 <div class="progress-item">
                   <span class="label">已放弃</span>
                   <Progress
-                    :percent="vipSopStats.totalCustomers > 0 ? (vipSopStats.abandoned / vipSopStats.totalCustomers * 100) : 0"
+                    :percent="
+                      vipSopStats.totalCustomers > 0
+                        ? (vipSopStats.abandoned / vipSopStats.totalCustomers) *
+                          100
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#ff4d4f"
                   />
@@ -307,7 +343,9 @@ onMounted(() => {
                 </div>
               </div>
               <div class="sop-footer">
-                <Tag color="green">完成率: {{ vipSopStats.completionRate.toFixed(1) }}%</Tag>
+                <Tag color="green"
+                  >完成率: {{ vipSopStats.completionRate.toFixed(1) }}%</Tag
+                >
               </div>
             </div>
           </div>

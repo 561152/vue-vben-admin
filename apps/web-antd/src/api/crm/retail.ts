@@ -47,12 +47,15 @@ export interface SopStats {
 export interface CustomerSopProgress {
   customerId: string;
   customerName: string;
-  sopProgress: Record<string, {
-    status: string;
-    startedAt?: string;
-    completedAt?: string;
-    currentStep?: number;
-  }>;
+  sopProgress: Record<
+    string,
+    {
+      status: string;
+      startedAt?: string;
+      completedAt?: string;
+      currentStep?: number;
+    }
+  >;
 }
 
 export interface ReferralRelationship {
@@ -94,14 +97,19 @@ export interface StartSopResponse {
  * Get member level statistics
  */
 export async function getMemberStats(params?: { levels?: string[] }) {
-  return requestClient.get<MemberStatsResponse>('/crm/retail/member-stats', { params });
+  return requestClient.get<MemberStatsResponse>('/crm/retail/member-stats', {
+    params,
+  });
 }
 
 /**
  * Get referral leaderboard
  */
 export async function getReferralLeaderboard(params?: { limit?: number }) {
-  return requestClient.get<ReferralLeaderboardResponse>('/crm/retail/referral/leaderboard', { params });
+  return requestClient.get<ReferralLeaderboardResponse>(
+    '/crm/retail/referral/leaderboard',
+    { params },
+  );
 }
 
 /**
@@ -114,23 +122,35 @@ export async function getSopStats(sopCode: string) {
 /**
  * Start customer SOP
  */
-export async function startCustomerSop(data: { customerIds: string[]; sopCode: string }) {
+export async function startCustomerSop(data: {
+  customerIds: string[];
+  sopCode: string;
+}) {
   return requestClient.post<StartSopResponse>('/crm/retail/sop/start', data);
 }
 
 /**
  * Get customer SOP progress
  */
-export async function getCustomerSopProgress(customerId: string, sopCode?: string) {
+export async function getCustomerSopProgress(
+  customerId: string,
+  sopCode?: string,
+) {
   const params = sopCode ? { sopCode } : {};
-  return requestClient.get<CustomerSopProgress>(`/crm/retail/sop/progress/${customerId}`, { params });
+  return requestClient.get<CustomerSopProgress>(
+    `/crm/retail/sop/progress/${customerId}`,
+    { params },
+  );
 }
 
 /**
  * Generate referral code for customer
  */
 export async function generateReferralCode(customerId: string) {
-  return requestClient.post<GenerateReferralCodeResponse>('/crm/retail/referral/generate', { customerId });
+  return requestClient.post<GenerateReferralCodeResponse>(
+    '/crm/retail/referral/generate',
+    { customerId },
+  );
 }
 
 /**
@@ -138,10 +158,10 @@ export async function generateReferralCode(customerId: string) {
  */
 export async function getReferralRelationships(
   customerId: string,
-  params?: { page?: number; pageSize?: number }
+  params?: { page?: number; pageSize?: number },
 ) {
   return requestClient.get<ReferralRelationshipsResponse>(
     `/crm/retail/referral/relationships/${customerId}`,
-    { params }
+    { params },
   );
 }
