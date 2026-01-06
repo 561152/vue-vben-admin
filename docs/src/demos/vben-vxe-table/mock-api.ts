@@ -2,7 +2,7 @@ import { MOCK_API_DATA } from './table-data';
 
 export namespace DemoTableApi {
   export interface PageFetchParams {
-    [key: string]: any;
+    [key: string]: any // eslint-disable-line @typescript-eslint/no-explicit-any;
     page: number;
     pageSize: number;
   }
@@ -20,7 +20,7 @@ export function sleep(time = 1000) {
  * 获取示例表格数据
  */
 async function getExampleTableApi(params: DemoTableApi.PageFetchParams) {
-  return new Promise<{ items: any; total: number }>((resolve) => {
+  return new Promise<{ items: any // eslint-disable-line @typescript-eslint/no-explicit-any; total: number }>((resolve) => {
     const { page, pageSize } = params;
     const items = MOCK_API_DATA.slice((page - 1) * pageSize, page * pageSize);
 

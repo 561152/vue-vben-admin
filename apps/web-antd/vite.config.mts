@@ -5,12 +5,14 @@ export default defineConfig(async () => {
     application: {},
     vite: {
       server: {
+        host: '0.0.0.0',
+        port: 5666,
+        strictPort: true, // 如果端口被占用则报错，而不是自动切换端口
         proxy: {
           '/api': {
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
-            // mock代理目标地址
-            target: 'http://localhost:5320/api',
+            // 代理到后端 API 服务
+            target: 'http://localhost:3000',
             ws: true,
           },
         },

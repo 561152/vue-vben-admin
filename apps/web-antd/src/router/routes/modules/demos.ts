@@ -12,13 +12,14 @@ const routes: RouteRecordRaw[] = [
     },
     name: 'Demos',
     path: '/demos',
+    redirect: '/demos/ant-design',
     children: [
       {
         meta: {
           title: $t('demos.antd'),
         },
         name: 'AntDesignDemos',
-        path: '/demos/ant-design',
+        path: 'ant-design',
         component: () => import('#/views/demos/antd/index.vue'),
       },
     ],

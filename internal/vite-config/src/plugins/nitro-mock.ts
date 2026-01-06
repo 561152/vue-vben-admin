@@ -46,6 +46,7 @@ export const viteNitroMockPlugin = ({
 };
 
 async function runNitroServer(rootDir: string, port: number, verbose: boolean) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let nitro: any;
   const reload = async () => {
     if (nitro) {

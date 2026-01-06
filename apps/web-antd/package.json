@@ -26,6 +26,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -43,6 +44,9 @@
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
+    "katex": "^0.16.27",
+    "marked": "^17.0.1",
+    "marked-katex-extension": "^5.1.6",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

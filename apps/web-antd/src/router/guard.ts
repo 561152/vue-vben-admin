@@ -7,6 +7,7 @@ import { startProgress, stopProgress } from '@vben/utils';
 
 import { accessRoutes, coreRouteNames } from '#/router/routes';
 import { useAuthStore } from '#/store';
+import { hasAppModule, hasPermission } from '#/utils/permissions';
 
 import { generateAccess } from './access';
 
@@ -87,6 +88,25 @@ function setupAccessGuard(router: Router) {
 
     // 是否已经生成过动态路由
     if (accessStore.isAccessChecked) {
+      // 检查路由的应用模块和权限要求
+      const appModule = to.meta.appModule as string | undefined;
+      const permissions = to.meta.permissions as string[] | undefined;
+
+      // 第一层：检查应用模块订阅
+      if (appModule && !hasAppModule(appModule)) {
+        console.warn(`[权限] 未订阅应用模块: ${appModule}`);
+        return { name: 'Forbidden', replace: true };
+      }
+
+      // 第二层：检查权限码
+      if (permissions && permissions.length > 0) {
+        const hasAllPerms = permissions.every((perm) => hasPermission(perm));
+        if (!hasAllPerms) {
+          console.warn(`[权限] 缺少权限: ${permissions.join(', ')}`);
+          return { name: 'Forbidden', replace: true };
+        }
+      }
+
       return true;
     }
 

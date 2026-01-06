@@ -1,5 +1,3 @@
 // @ts-check
-
-import { defineConfig } from '@vben/eslint-config';
-
-export default defineConfig();
+// Temporary simple eslint config until @vben/eslint-config is installed
+export default [];
