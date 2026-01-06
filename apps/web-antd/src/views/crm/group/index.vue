@@ -1,6 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Tag, Popconfirm, Drawer } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Tag,
+  Popconfirm,
+  Drawer,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface GroupItem {
@@ -58,7 +69,12 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const columns = [
   { title: '群名称', dataIndex: 'name', key: 'name' },
-  { title: '群成员数', dataIndex: 'memberCount', key: 'memberCount', width: 100 },
+  {
+    title: '群成员数',
+    dataIndex: 'memberCount',
+    key: 'memberCount',
+    width: 100,
+  },
   {
     title: '状态',
     dataIndex: 'status',
@@ -67,7 +83,7 @@ const columns = [
     customRender: ({ text }: { text: string }) => {
       const info = statusMap[text] || { label: text, color: 'default' };
       return h(Tag, { color: info.color }, () => info.label);
-    }
+    },
   },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
   {
@@ -84,9 +100,10 @@ const memberColumns = [
     dataIndex: 'type',
     key: 'type',
     customRender: ({ text }: { text: string }) => {
-      return h(Tag, { color: text === 'EMPLOYEE' ? 'blue' : 'green' },
-        () => text === 'EMPLOYEE' ? '员工' : '客户');
-    }
+      return h(Tag, { color: text === 'EMPLOYEE' ? 'blue' : 'green' }, () =>
+        text === 'EMPLOYEE' ? '员工' : '客户',
+      );
+    },
   },
   { title: '加入时间', dataIndex: 'joinTime', key: 'joinTime' },
   {
@@ -99,9 +116,15 @@ const memberColumns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: GroupItem[]; total: number }>('/groups', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ items: GroupItem[]; total: number }>(
+      '/groups',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.items;
     pagination.value.total = res.total;
   } catch (e) {
@@ -113,7 +136,9 @@ async function fetchData() {
 
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers');
+    const res = await requestClient.get<{ items: CustomerItem[] }>(
+      '/customers',
+    );
     customers.value = res.items;
   } catch (e) {
     console.error(e);
@@ -172,7 +197,9 @@ async function handleViewMembers(record: GroupItem) {
 async function fetchMembers(groupId: number) {
   membersLoading.value = true;
   try {
-    const res = await requestClient.get<MemberItem[]>(`/groups/${groupId}/members`);
+    const res = await requestClient.get<MemberItem[]>(
+      `/groups/${groupId}/members`,
+    );
     members.value = res;
   } catch (e) {
     console.error(e);
@@ -204,7 +231,9 @@ async function handleAddMemberSubmit() {
 async function handleRemoveMember(memberId: number) {
   if (!currentGroup.value) return;
   try {
-    await requestClient.delete(`/groups/${currentGroup.value.id}/members/${memberId}`);
+    await requestClient.delete(
+      `/groups/${currentGroup.value.id}/members/${memberId}`,
+    );
     message.success('移除成功');
     await fetchMembers(currentGroup.value.id);
     fetchData();
@@ -227,7 +256,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">群管理</h2>
       <Button type="primary" @click="handleAdd">新建群</Button>
     </div>
@@ -243,8 +272,12 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleViewMembers(record)">成员</Button>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleViewMembers(record)"
+              >成员</Button
+            >
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -260,7 +293,11 @@ onMounted(() => {
           <Input v-model:value="formState.name" placeholder="请输入群名称" />
         </Form.Item>
         <Form.Item label="群公告">
-          <Input.TextArea v-model:value="formState.notice" placeholder="请输入群公告" :rows="3" />
+          <Input.TextArea
+            v-model:value="formState.notice"
+            placeholder="请输入群公告"
+            :rows="3"
+          />
         </Form.Item>
       </Form>
     </Modal>
@@ -284,7 +321,10 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'action'">
-            <Popconfirm title="确定移除吗？" @confirm="handleRemoveMember(record.id)">
+            <Popconfirm
+              title="确定移除吗？"
+              @confirm="handleRemoveMember(record.id)"
+            >
               <Button type="link" size="small" danger>移除</Button>
             </Popconfirm>
           </template>
@@ -293,12 +333,16 @@ onMounted(() => {
     </Drawer>
 
     <!-- 添加成员弹窗 -->
-    <Modal v-model:open="addMemberModalVisible" title="添加群成员" @ok="handleAddMemberSubmit">
+    <Modal
+      v-model:open="addMemberModalVisible"
+      title="添加群成员"
+      @ok="handleAddMemberSubmit"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="选择客户" required>
           <select
             v-model="selectedCustomerId"
-            class="w-full border rounded p-2"
+            class="w-full rounded border p-2"
           >
             <option :value="undefined">请选择客户</option>
             <option v-for="c in customers" :key="c.id" :value="c.id">

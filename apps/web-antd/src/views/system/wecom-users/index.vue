@@ -1,8 +1,5 @@
 <template>
-  <Page
-    title="员工管理"
-    description="企业微信同步的员工信息"
-  >
+  <Page title="员工管理" description="企业微信同步的员工信息">
     <!-- 搜索栏 -->
     <Card class="mb-4">
       <Form layout="inline">
@@ -47,10 +44,7 @@
         <!-- 头像 -->
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'avatar'">
-            <Avatar
-              :src="record.headImageUrl"
-              :size="40"
-            >
+            <Avatar :src="record.headImageUrl" :size="40">
               {{ record.userName?.charAt(0) || '?' }}
             </Avatar>
           </template>
@@ -71,9 +65,7 @@
             <Tag v-else-if="record.gender === 'FEMALE'" color="pink">
               <WomanOutlined /> 女
             </Tag>
-            <Tag v-else color="default">
-              <QuestionOutlined /> 未知
-            </Tag>
+            <Tag v-else color="default"> <QuestionOutlined /> 未知 </Tag>
           </template>
 
           <!-- 状态 -->
@@ -81,7 +73,10 @@
             <Tag v-if="record.isActivate === 'ACTIVATED'" color="success">
               <CheckCircleOutlined /> 已激活
             </Tag>
-            <Tag v-else-if="record.isActivate === 'NOT_ACTIVATED'" color="warning">
+            <Tag
+              v-else-if="record.isActivate === 'NOT_ACTIVATED'"
+              color="warning"
+            >
               <ClockCircleOutlined /> 未激活
             </Tag>
             <Tag v-else-if="record.isActivate === 'DEACTIVATED'" color="error">

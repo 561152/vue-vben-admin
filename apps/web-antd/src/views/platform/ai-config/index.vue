@@ -1,8 +1,5 @@
 <template>
-  <Page
-    title="AI 配置管理"
-    description="管理平台默认 AI 配置和租户配置"
-  >
+  <Page title="AI 配置管理" description="管理平台默认 AI 配置和租户配置">
     <Tabs v-model:activeKey="activeTab" class="config-tabs">
       <!-- 平台默认配置 -->
       <TabPane key="defaults" tab="平台默认配置">
@@ -35,7 +32,11 @@
                 </template>
                 <template v-else-if="column.key === 'action'">
                   <Space>
-                    <Button type="link" size="small" @click="editDefault(record)">
+                    <Button
+                      type="link"
+                      size="small"
+                      @click="editDefault(record)"
+                    >
                       <EditOutlined />
                       编辑
                     </Button>
@@ -58,7 +59,11 @@
               :loading="loadingTenants"
               @change="handleTenantChange"
             >
-              <SelectOption v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
+              <SelectOption
+                v-for="tenant in tenants"
+                :key="tenant.id"
+                :value="tenant.id"
+              >
                 {{ tenant.name }}
               </SelectOption>
             </Select>
@@ -93,7 +98,11 @@
                   </template>
                   <template v-else-if="column.key === 'action'">
                     <Space>
-                      <Button type="link" size="small" @click="editTenantConfig(record)">
+                      <Button
+                        type="link"
+                        size="small"
+                        @click="editTenantConfig(record)"
+                      >
                         <EditOutlined />
                         编辑
                       </Button>
@@ -183,10 +192,18 @@
           </Select>
         </FormItem>
         <FormItem label="模型" required>
-          <Input v-model:value="defaultForm.modelName" placeholder="输入模型名称" />
+          <Input
+            v-model:value="defaultForm.modelName"
+            placeholder="输入模型名称"
+          />
         </FormItem>
         <FormItem label="温度 (Temperature)">
-          <Slider v-model:value="defaultForm.temperature" :min="0" :max="2" :step="0.1" />
+          <Slider
+            v-model:value="defaultForm.temperature"
+            :min="0"
+            :max="2"
+            :step="0.1"
+          />
           <InputNumber
             v-model:value="defaultForm.temperature"
             :min="0"
@@ -217,7 +234,11 @@
           <Input.TextArea v-model:value="defaultForm.description" rows="3" />
         </FormItem>
         <FormItem label="状态">
-          <Switch v-model:checked="defaultForm.isActive" checked-children="启用" un-checked-children="禁用" />
+          <Switch
+            v-model:checked="defaultForm.isActive"
+            checked-children="启用"
+            un-checked-children="禁用"
+          />
         </FormItem>
       </Form>
     </Modal>
@@ -232,7 +253,11 @@
     >
       <Form layout="vertical" :model="tenantForm">
         <FormItem label="模型">
-          <Input v-model:value="tenantForm.modelName" placeholder="留空使用默认" allow-clear />
+          <Input
+            v-model:value="tenantForm.modelName"
+            placeholder="留空使用默认"
+            allow-clear
+          />
         </FormItem>
         <FormItem label="温度 (Temperature)">
           <InputNumber
@@ -382,9 +407,15 @@ const scenarioNames: Record<string, string> = {
 };
 
 const availableScenarios = computed(() => {
-  const existingScenarios = new Set(defaultConfigs.value.map((c) => c.scenario));
+  const existingScenarios = new Set(
+    defaultConfigs.value.map((c) => c.scenario),
+  );
   return Object.entries(scenarioNames)
-    .filter(([value]) => !existingScenarios.has(value) || editingDefault.value?.scenario === value)
+    .filter(
+      ([value]) =>
+        !existingScenarios.has(value) ||
+        editingDefault.value?.scenario === value,
+    )
     .map(([value, label]) => ({ value, label }));
 });
 
@@ -413,7 +444,9 @@ const tenantColumns = [
 const fetchDefaults = async () => {
   loadingDefaults.value = true;
   try {
-    const res = await requestClient.get<{ defaults: DefaultConfig[] }>('/platform/ai-config/defaults');
+    const res = await requestClient.get<{ defaults: DefaultConfig[] }>(
+      '/platform/ai-config/defaults',
+    );
     defaultConfigs.value = res.defaults || [];
   } catch (error: any) {
     message.error(error.message || '获取默认配置失败');
@@ -425,9 +458,12 @@ const fetchDefaults = async () => {
 const fetchTenants = async () => {
   loadingTenants.value = true;
   try {
-    const res = await requestClient.get<{ items: Tenant[] }>('/platform/tenants', {
-      params: { limit: 100 },
-    });
+    const res = await requestClient.get<{ items: Tenant[] }>(
+      '/platform/tenants',
+      {
+        params: { limit: 100 },
+      },
+    );
     tenants.value = res.items || [];
   } catch (error: any) {
     console.error('获取租户列表失败', error);
@@ -440,7 +476,7 @@ const fetchTenantConfig = async (tenantId: string) => {
   loadingTenantConfig.value = true;
   try {
     const res = await requestClient.get<{ scenarios: TenantConfig[] }>(
-      `/platform/ai-config/tenants/${tenantId}`
+      `/platform/ai-config/tenants/${tenantId}`,
     );
     tenantConfigs.value = res.scenarios || [];
   } catch (error: any) {
@@ -490,14 +526,17 @@ const handleSaveDefault = async () => {
 
   saving.value = true;
   try {
-    await requestClient.put(`/platform/ai-config/defaults/${defaultForm.scenario}`, {
-      modelName: defaultForm.modelName,
-      temperature: defaultForm.temperature,
-      maxTokens: defaultForm.maxTokens,
-      timeout: defaultForm.timeout,
-      description: defaultForm.description || null,
-      isActive: defaultForm.isActive,
-    });
+    await requestClient.put(
+      `/platform/ai-config/defaults/${defaultForm.scenario}`,
+      {
+        modelName: defaultForm.modelName,
+        temperature: defaultForm.temperature,
+        maxTokens: defaultForm.maxTokens,
+        timeout: defaultForm.timeout,
+        description: defaultForm.description || null,
+        isActive: defaultForm.isActive,
+      },
+    );
     message.success('保存成功');
     defaultModalVisible.value = false;
     await fetchDefaults();
@@ -524,13 +563,14 @@ const handleSaveTenantConfig = async () => {
   try {
     const data: Record<string, any> = {};
     if (tenantForm.modelName) data.modelName = tenantForm.modelName;
-    if (tenantForm.temperature !== null) data.temperature = tenantForm.temperature;
+    if (tenantForm.temperature !== null)
+      data.temperature = tenantForm.temperature;
     if (tenantForm.maxTokens !== null) data.maxTokens = tenantForm.maxTokens;
     if (tenantForm.timeout !== null) data.timeout = tenantForm.timeout;
 
     await requestClient.put(
       `/platform/ai-config/tenants/${selectedTenantId.value}/scenarios/${editingTenantConfig.value.scenario}`,
-      data
+      data,
     );
     message.success('保存成功');
     tenantModalVisible.value = false;
@@ -551,7 +591,7 @@ const resetTenantConfig = async (scenario: string) => {
     onOk: async () => {
       try {
         await requestClient.delete(
-          `/platform/ai-config/tenants/${selectedTenantId.value}/scenarios/${scenario}`
+          `/platform/ai-config/tenants/${selectedTenantId.value}/scenarios/${scenario}`,
         );
         message.success('已重置为默认配置');
         await fetchTenantConfig(selectedTenantId.value as string);
@@ -570,8 +610,8 @@ onMounted(() => {
 
 <style scoped>
 .config-tabs {
-  background: var(--component-background, #fff);
   padding: 16px;
+  background: var(--component-background, #fff);
   border-radius: 12px;
 }
 
@@ -586,12 +626,12 @@ onMounted(() => {
 
 .scenario-cell {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .scenario-icon {
-  color: #1890ff;
   font-size: 16px;
+  color: #1890ff;
 }
 </style>

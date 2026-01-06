@@ -107,7 +107,12 @@ const typeOptions = [
   { value: 'MESSAGE', label: '消息', color: 'green', icon: MessageOutlined },
   { value: 'MEETING', label: '会议', color: 'orange', icon: TeamOutlined },
   { value: 'EMAIL', label: '邮件', color: 'purple', icon: MailOutlined },
-  { value: 'OTHER', label: '其他', color: 'default', icon: ClockCircleOutlined },
+  {
+    value: 'OTHER',
+    label: '其他',
+    color: 'default',
+    icon: ClockCircleOutlined,
+  },
 ];
 
 const statusOptions = [
@@ -128,9 +133,13 @@ const columns = [
     key: 'type',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = typeOptions.find(o => o.value === text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
-    }
+      const opt = typeOptions.find((o) => o.value === text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
+    },
   },
   {
     title: '内容',
@@ -149,7 +158,7 @@ const columns = [
         return h(Tag, { color: 'blue' }, () => '待执行');
       }
       return h(Tag, { color: 'default' }, () => '已完成');
-    }
+    },
   },
   {
     title: '计划时间',
@@ -159,7 +168,7 @@ const columns = [
     customRender: ({ text }: { text: string | null }) => {
       if (!text) return '-';
       return dayjs(text).format('MM-DD HH:mm');
-    }
+    },
   },
   {
     title: '跟进人',
@@ -172,7 +181,8 @@ const columns = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 140,
-    customRender: ({ text }: { text: string }) => dayjs(text).format('MM-DD HH:mm')
+    customRender: ({ text }: { text: string }) =>
+      dayjs(text).format('MM-DD HH:mm'),
   },
   {
     title: '操作',
@@ -192,7 +202,10 @@ async function fetchData() {
     if (filterStatus.value) params.status = filterStatus.value;
     if (filterType.value) params.type = filterType.value;
 
-    const res = await requestClient.get<{ items: FollowUpItem[]; total: number }>('/follow-ups', { params });
+    const res = await requestClient.get<{
+      items: FollowUpItem[];
+      total: number;
+    }>('/follow-ups', { params });
     dataSource.value = res.items;
     pagination.value.total = res.total;
   } catch (e) {
@@ -222,9 +235,12 @@ async function fetchTodayData() {
 
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers', {
-      params: { pageSize: 100 }
-    });
+    const res = await requestClient.get<{ items: CustomerItem[] }>(
+      '/customers',
+      {
+        params: { pageSize: 100 },
+      },
+    );
     customers.value = res.items;
   } catch (e) {
     console.error(e);
@@ -232,7 +248,12 @@ async function fetchCustomers() {
 }
 
 function handleAdd() {
-  formState.value = { customerId: undefined, type: 'CALL', content: '', nextPlanAt: null };
+  formState.value = {
+    customerId: undefined,
+    type: 'CALL',
+    content: '',
+    nextPlanAt: null,
+  };
   modalVisible.value = true;
 }
 
@@ -311,7 +332,7 @@ function formatRelativeTime(time: string | null) {
 }
 
 function getTypeIcon(type: string) {
-  const opt = typeOptions.find(o => o.value === type);
+  const opt = typeOptions.find((o) => o.value === type);
   return opt?.icon || ClockCircleOutlined;
 }
 
@@ -325,7 +346,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">跟进管理</h2>
       <Button type="primary" @click="handleAdd">新增跟进</Button>
     </div>
@@ -394,7 +415,10 @@ onMounted(() => {
           <Col :span="8">
             <Card title="已逾期" size="small" class="h-96 overflow-auto">
               <template #extra>
-                <Badge :count="todayData?.stats.overdueCount || 0" :number-style="{ backgroundColor: '#ff4d4f' }" />
+                <Badge
+                  :count="todayData?.stats.overdueCount || 0"
+                  :number-style="{ backgroundColor: '#ff4d4f' }"
+                />
               </template>
               <List
                 v-if="todayData?.overdue.length"
@@ -405,14 +429,22 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#ff4d4f' }" :size="32">
-                          <template #icon><component :is="getTypeIcon(item.type)" /></template>
+                        <Avatar
+                          :style="{ backgroundColor: '#ff4d4f' }"
+                          :size="32"
+                        >
+                          <template #icon
+                            ><component :is="getTypeIcon(item.type)"
+                          /></template>
                         </Avatar>
                       </template>
                       <template #title>
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center justify-between">
                           <span>{{ item.customerName }}</span>
-                          <Popconfirm title="标记为已完成?" @confirm="handleMarkCompleted(item.id)">
+                          <Popconfirm
+                            title="标记为已完成?"
+                            @confirm="handleMarkCompleted(item.id)"
+                          >
                             <Button type="link" size="small">
                               <CheckCircleOutlined />
                             </Button>
@@ -421,13 +453,19 @@ onMounted(() => {
                       </template>
                       <template #description>
                         <div class="text-xs">{{ item.content }}</div>
-                        <div class="text-xs text-red-500">{{ formatRelativeTime(item.nextPlanAt) }}</div>
+                        <div class="text-xs text-red-500">
+                          {{ formatRelativeTime(item.nextPlanAt) }}
+                        </div>
                       </template>
                     </ListItemMeta>
                   </ListItem>
                 </template>
               </List>
-              <Empty v-else description="无逾期任务" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="无逾期任务"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </Col>
 
@@ -435,7 +473,10 @@ onMounted(() => {
           <Col :span="8">
             <Card title="今日待办" size="small" class="h-96 overflow-auto">
               <template #extra>
-                <Badge :count="todayData?.stats.todayCount || 0" :number-style="{ backgroundColor: '#1890ff' }" />
+                <Badge
+                  :count="todayData?.stats.todayCount || 0"
+                  :number-style="{ backgroundColor: '#1890ff' }"
+                />
               </template>
               <List
                 v-if="todayData?.today.length"
@@ -446,14 +487,22 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#1890ff' }" :size="32">
-                          <template #icon><component :is="getTypeIcon(item.type)" /></template>
+                        <Avatar
+                          :style="{ backgroundColor: '#1890ff' }"
+                          :size="32"
+                        >
+                          <template #icon
+                            ><component :is="getTypeIcon(item.type)"
+                          /></template>
                         </Avatar>
                       </template>
                       <template #title>
-                        <div class="flex justify-between items-center">
+                        <div class="flex items-center justify-between">
                           <span>{{ item.customerName }}</span>
-                          <Popconfirm title="标记为已完成?" @confirm="handleMarkCompleted(item.id)">
+                          <Popconfirm
+                            title="标记为已完成?"
+                            @confirm="handleMarkCompleted(item.id)"
+                          >
                             <Button type="link" size="small">
                               <CheckCircleOutlined />
                             </Button>
@@ -470,15 +519,26 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty v-else description="今日无待办" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="今日无待办"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </Col>
 
           <!-- Upcoming -->
           <Col :span="8">
-            <Card title="即将到来 (3天内)" size="small" class="h-96 overflow-auto">
+            <Card
+              title="即将到来 (3天内)"
+              size="small"
+              class="h-96 overflow-auto"
+            >
               <template #extra>
-                <Badge :count="todayData?.stats.upcomingCount || 0" :number-style="{ backgroundColor: '#52c41a' }" />
+                <Badge
+                  :count="todayData?.stats.upcomingCount || 0"
+                  :number-style="{ backgroundColor: '#52c41a' }"
+                />
               </template>
               <List
                 v-if="todayData?.upcoming.length"
@@ -489,8 +549,13 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#52c41a' }" :size="32">
-                          <template #icon><component :is="getTypeIcon(item.type)" /></template>
+                        <Avatar
+                          :style="{ backgroundColor: '#52c41a' }"
+                          :size="32"
+                        >
+                          <template #icon
+                            ><component :is="getTypeIcon(item.type)"
+                          /></template>
                         </Avatar>
                       </template>
                       <template #title>{{ item.customerName }}</template>
@@ -504,7 +569,11 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty v-else description="暂无即将到来的任务" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无即将到来的任务"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </Col>
         </Row>
@@ -523,7 +592,7 @@ onMounted(() => {
               style="width: 120px"
               allow-clear
             />
-            <span class="text-gray-500 ml-4">类型:</span>
+            <span class="ml-4 text-gray-500">类型:</span>
             <Select
               v-model:value="filterType"
               :options="[{ value: '', label: '全部' }, ...typeOptions]"
@@ -553,7 +622,10 @@ onMounted(() => {
                 </Avatar>
                 <div>
                   <div class="font-medium">{{ record.customerName }}</div>
-                  <div v-if="record.customerPhone" class="text-xs text-gray-400">
+                  <div
+                    v-if="record.customerPhone"
+                    class="text-xs text-gray-400"
+                  >
                     {{ record.customerPhone }}
                   </div>
                 </div>
@@ -568,7 +640,10 @@ onMounted(() => {
                 >
                   <Button type="link" size="small">完成</Button>
                 </Popconfirm>
-                <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
+                <Popconfirm
+                  title="确定删除吗？"
+                  @confirm="handleDelete(record.id)"
+                >
                   <Button type="link" size="small" danger>删除</Button>
                 </Popconfirm>
               </Space>
@@ -586,9 +661,11 @@ onMounted(() => {
             v-model:value="formState.customerId"
             placeholder="请选择客户"
             show-search
-            :filter-option="(input: string, option: any) =>
-              option.label.toLowerCase().includes(input.toLowerCase())"
-            :options="customers.map(c => ({ value: c.id, label: c.name }))"
+            :filter-option="
+              (input: string, option: any) =>
+                option.label.toLowerCase().includes(input.toLowerCase())
+            "
+            :options="customers.map((c) => ({ value: c.id, label: c.name }))"
           />
         </Form.Item>
         <Form.Item label="跟进方式">

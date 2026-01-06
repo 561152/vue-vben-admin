@@ -20,8 +20,17 @@ import {
   ExperimentOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons-vue';
-import { startSession, sendMessage, solveStructured, quickAnalyzeProblem } from '#/api/ai';
-import type { MathStep, StructuredSolutionResponse, ProblemAnalysis } from '#/api/ai';
+import {
+  startSession,
+  sendMessage,
+  solveStructured,
+  quickAnalyzeProblem,
+} from '#/api/ai';
+import type {
+  MathStep,
+  StructuredSolutionResponse,
+  ProblemAnalysis,
+} from '#/api/ai';
 import type { VerificationResult } from './components/VerificationPanel.vue';
 import MessageBubble from './components/MessageBubble.vue';
 import ProblemAnalysisCard from './components/ProblemAnalysisCard.vue';
@@ -51,7 +60,9 @@ const sessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const inputMessage = ref('');
 const isLoading = ref(false);
-const selectedSubject = ref<'math' | 'chinese' | 'english' | 'physics' | 'chemistry'>('math');
+const selectedSubject = ref<
+  'math' | 'chinese' | 'english' | 'physics' | 'chemistry'
+>('math');
 const studentId = ref('1'); // TODO: 从用户状态获取
 const messagesContainer = ref<HTMLElement | null>(null);
 
@@ -129,7 +140,8 @@ const scrollToBottom = async () => {
 };
 
 // 生成消息 ID
-const generateId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+const generateId = () =>
+  `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 // 开始新会话
 const handleStartSession = async () => {
@@ -319,13 +331,14 @@ const handleKeyPress = (e: KeyboardEvent) => {
           <Tag v-else color="default">未开始</Tag>
         </div>
         <div class="toolbar-right">
-          <Tooltip title="结构化求解模式：自动分析问题、建立数学模型、三重验证答案">
+          <Tooltip
+            title="结构化求解模式：自动分析问题、建立数学模型、三重验证答案"
+          >
             <div class="mode-switch">
-              <ExperimentOutlined :style="{ color: structuredMode ? '#1890ff' : '#999' }" />
-              <Switch
-                v-model:checked="structuredMode"
-                size="small"
+              <ExperimentOutlined
+                :style="{ color: structuredMode ? '#1890ff' : '#999' }"
               />
+              <Switch v-model:checked="structuredMode" size="small" />
               <span :class="{ active: structuredMode }">结构化求解</span>
             </div>
           </Tooltip>
@@ -363,7 +376,10 @@ const handleKeyPress = (e: KeyboardEvent) => {
             <template v-if="structuredMode">
               <Tag
                 class="quick-tag"
-                @click="inputMessage = '小明有5个苹果，小红给了他3个，现在小明有几个苹果？'"
+                @click="
+                  inputMessage =
+                    '小明有5个苹果，小红给了他3个，现在小明有几个苹果？'
+                "
               >
                 小学应用题
               </Tag>
@@ -375,7 +391,10 @@ const handleKeyPress = (e: KeyboardEvent) => {
               </Tag>
               <Tag
                 class="quick-tag"
-                @click="inputMessage = '甲乙两人共有100元，甲比乙多20元，甲乙各有多少元？'"
+                @click="
+                  inputMessage =
+                    '甲乙两人共有100元，甲比乙多20元，甲乙各有多少元？'
+                "
               >
                 方程组应用题
               </Tag>
@@ -393,10 +412,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
               >
                 求导 f(x) = x³ + 2x²
               </Tag>
-              <Tag
-                class="quick-tag"
-                @click="inputMessage = '因式分解 x² - 9'"
-              >
+              <Tag class="quick-tag" @click="inputMessage = '因式分解 x² - 9'">
                 因式分解 x² - 9
               </Tag>
             </template>
@@ -407,7 +423,10 @@ const handleKeyPress = (e: KeyboardEvent) => {
       <!-- 消息列表 -->
       <template v-for="msg in messages" :key="msg.id">
         <!-- 结构化消息 -->
-        <div v-if="msg.isStructured && msg.role === 'tutor'" class="structured-message">
+        <div
+          v-if="msg.isStructured && msg.role === 'tutor'"
+          class="structured-message"
+        >
           <!-- 用户头像和消息内容 -->
           <div class="message-bubble is-ai">
             <div class="avatar ai-avatar">
@@ -447,11 +466,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
         </div>
 
         <!-- 普通消息 -->
-        <MessageBubble
-          v-else
-          :message="msg"
-          @follow-up="handleFollowUp"
-        />
+        <MessageBubble v-else :message="msg" @follow-up="handleFollowUp" />
       </template>
 
       <!-- 加载中 -->
@@ -464,12 +479,32 @@ const handleKeyPress = (e: KeyboardEvent) => {
     <!-- 输入区域 -->
     <Card class="input-card" :bordered="false">
       <!-- 快速分析预览 -->
-      <div v-if="structuredMode && quickAnalysisResult" class="quick-analysis-preview">
+      <div
+        v-if="structuredMode && quickAnalysisResult"
+        class="quick-analysis-preview"
+      >
         <Tag color="processing">
-          {{ categoryNames[quickAnalysisResult.category] || quickAnalysisResult.category }}
+          {{
+            categoryNames[quickAnalysisResult.category] ||
+            quickAnalysisResult.category
+          }}
         </Tag>
-        <Tag :color="quickAnalysisResult.difficulty === 'easy' ? 'green' : quickAnalysisResult.difficulty === 'medium' ? 'orange' : 'red'">
-          {{ quickAnalysisResult.difficulty === 'easy' ? '简单' : quickAnalysisResult.difficulty === 'medium' ? '中等' : '困难' }}
+        <Tag
+          :color="
+            quickAnalysisResult.difficulty === 'easy'
+              ? 'green'
+              : quickAnalysisResult.difficulty === 'medium'
+                ? 'orange'
+                : 'red'
+          "
+        >
+          {{
+            quickAnalysisResult.difficulty === 'easy'
+              ? '简单'
+              : quickAnalysisResult.difficulty === 'medium'
+                ? '中等'
+                : '困难'
+          }}
         </Tag>
         <Tag v-if="quickAnalysisResult.isWordProblem" color="cyan">应用题</Tag>
         <Tag v-if="quickAnalysisResult.hasEquation" color="purple">含方程</Tag>
@@ -479,9 +514,13 @@ const handleKeyPress = (e: KeyboardEvent) => {
       <div class="input-area">
         <Input.TextArea
           v-model:value="inputMessage"
-          :placeholder="structuredMode
-            ? '输入应用题或计算题，AI将分析、求解并验证...'
-            : hasActiveSession ? '继续提问...' : '输入你的数学问题，开始学习之旅'"
+          :placeholder="
+            structuredMode
+              ? '输入应用题或计算题，AI将分析、求解并验证...'
+              : hasActiveSession
+                ? '继续提问...'
+                : '输入你的数学问题，开始学习之旅'
+          "
           :auto-size="{ minRows: 1, maxRows: 4 }"
           :disabled="isLoading"
           @keypress="handleKeyPress"
@@ -525,14 +564,14 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .toolbar-left {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .logo-icon {
@@ -547,26 +586,26 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 .toolbar-right {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .messages-container {
   flex: 1;
-  overflow-y: auto;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .welcome-message {
-  text-align: center;
   padding: 60px 20px;
   color: #666;
+  text-align: center;
 }
 
 .welcome-icon {
+  margin-bottom: 20px;
   font-size: 64px;
   color: #1890ff;
-  margin-bottom: 20px;
 }
 
 .welcome-message h2 {
@@ -579,21 +618,21 @@ const handleKeyPress = (e: KeyboardEvent) => {
 }
 
 .quick-title {
-  color: #999;
   margin-bottom: 12px;
+  color: #999;
 }
 
 .quick-list {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 8px;
+  justify-content: center;
 }
 
 .quick-tag {
-  cursor: pointer;
   padding: 8px 16px;
   font-size: 14px;
+  cursor: pointer;
 }
 
 .quick-tag:hover {
@@ -603,16 +642,16 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 .loading-indicator {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 12px 16px;
   color: #666;
 }
 
 .input-card {
   flex-shrink: 0;
-  border-radius: 0;
   border-top: 1px solid #e8e8e8;
+  border-radius: 0;
 }
 
 .input-area {
@@ -627,8 +666,8 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 .input-tips {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   margin-top: 8px;
   font-size: 12px;
   color: #999;
@@ -637,13 +676,13 @@ const handleKeyPress = (e: KeyboardEvent) => {
 /* 模式切换 */
 .mode-switch {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   padding: 4px 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
   font-size: 12px;
   color: #666;
+  background: #f5f5f5;
+  border-radius: 4px;
 }
 
 .mode-switch span {
@@ -651,20 +690,20 @@ const handleKeyPress = (e: KeyboardEvent) => {
 }
 
 .mode-switch span.active {
-  color: #1890ff;
   font-weight: 500;
+  color: #1890ff;
 }
 
 /* 快速分析预览 */
 .quick-analysis-preview {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 8px 12px;
   margin-bottom: 12px;
   background: #e6f7ff;
-  border-radius: 6px;
   border-left: 3px solid #1890ff;
+  border-radius: 6px;
 }
 
 .preview-label {
@@ -685,21 +724,21 @@ const handleKeyPress = (e: KeyboardEvent) => {
 }
 
 .structured-message .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   font-size: 20px;
-  flex-shrink: 0;
-  background: #e6f7ff;
   color: #1890ff;
+  background: #e6f7ff;
+  border-radius: 50%;
 }
 
 .structured-message .ai-avatar {
-  background: #f6ffed;
   color: #52c41a;
+  background: #f6ffed;
 }
 
 .structured-content {

@@ -1,8 +1,5 @@
 <template>
-  <Page
-    title="AI 配置"
-    description="配置 AI 功能的模型参数和场景设置"
-  >
+  <Page title="AI 配置" description="配置 AI 功能的模型参数和场景设置">
     <!-- 配额信息卡片 -->
     <Card class="quota-card mb-6">
       <Row :gutter="24">
@@ -29,11 +26,7 @@
           </Statistic>
         </Col>
         <Col :span="8">
-          <Statistic
-            title="使用率"
-            :value="quota.usagePercent"
-            suffix="%"
-          >
+          <Statistic title="使用率" :value="quota.usagePercent" suffix="%">
             <template #prefix>
               <PieChartOutlined style="color: #722ed1" />
             </template>
@@ -70,19 +63,36 @@
                 <div class="scenario-header">
                   <div class="scenario-info">
                     <div class="scenario-icon">
-                      <RobotOutlined v-if="scenario.scenario.includes('CHAT')" />
-                      <BulbOutlined v-else-if="scenario.scenario.includes('REASONING')" />
-                      <EyeOutlined v-else-if="scenario.scenario.includes('VISION')" />
+                      <RobotOutlined
+                        v-if="scenario.scenario.includes('CHAT')"
+                      />
+                      <BulbOutlined
+                        v-else-if="scenario.scenario.includes('REASONING')"
+                      />
+                      <EyeOutlined
+                        v-else-if="scenario.scenario.includes('VISION')"
+                      />
                       <ApiOutlined v-else />
                     </div>
                     <div class="scenario-title">
-                      <span class="name">{{ getScenarioName(scenario.scenario) }}</span>
-                      <Tag v-if="scenario.isCustomized" color="blue" size="small">已自定义</Tag>
+                      <span class="name">{{
+                        getScenarioName(scenario.scenario)
+                      }}</span>
+                      <Tag
+                        v-if="scenario.isCustomized"
+                        color="blue"
+                        size="small"
+                        >已自定义</Tag
+                      >
                       <Tag v-else color="default" size="small">默认</Tag>
                     </div>
                   </div>
                   <div class="scenario-actions">
-                    <Button type="link" size="small" @click="editScenario(scenario)">
+                    <Button
+                      type="link"
+                      size="small"
+                      @click="editScenario(scenario)"
+                    >
                       <EditOutlined />
                       编辑
                     </Button>
@@ -131,7 +141,10 @@
             <div v-for="model in models" :key="model.id" class="model-item">
               <div class="model-info">
                 <span class="model-name">{{ model.name }}</span>
-                <Tag :color="model.isPlatformDefault ? 'green' : 'default'" size="small">
+                <Tag
+                  :color="model.isPlatformDefault ? 'green' : 'default'"
+                  size="small"
+                >
                   {{ model.isPlatformDefault ? '推荐' : '可用' }}
                 </Tag>
               </div>
@@ -150,15 +163,21 @@
           <div class="help-content">
             <div class="help-item">
               <div class="help-title">温度 (Temperature)</div>
-              <div class="help-desc">控制输出的随机性，0-2之间。较低值更确定，较高值更有创意。</div>
+              <div class="help-desc">
+                控制输出的随机性，0-2之间。较低值更确定，较高值更有创意。
+              </div>
             </div>
             <div class="help-item">
               <div class="help-title">最大 Token</div>
-              <div class="help-desc">AI 响应的最大长度限制，影响回复的详细程度。</div>
+              <div class="help-desc">
+                AI 响应的最大长度限制，影响回复的详细程度。
+              </div>
             </div>
             <div class="help-item">
               <div class="help-title">超时时间</div>
-              <div class="help-desc">API 调用的超时时间（毫秒），超时将返回错误。</div>
+              <div class="help-desc">
+                API 调用的超时时间（毫秒），超时将返回错误。
+              </div>
             </div>
           </div>
         </Card>
@@ -180,7 +199,11 @@
             placeholder="选择模型（留空使用默认）"
             allow-clear
           >
-            <SelectOption v-for="model in models" :key="model.id" :value="model.id">
+            <SelectOption
+              v-for="model in models"
+              :key="model.id"
+              :value="model.id"
+            >
               {{ model.name }}
             </SelectOption>
           </Select>
@@ -319,7 +342,9 @@ const getScenarioName = (scenario: string): string => {
 const fetchConfig = async () => {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ scenarios: ScenarioConfig[] }>('/settings/ai-config');
+    const res = await requestClient.get<{ scenarios: ScenarioConfig[] }>(
+      '/settings/ai-config',
+    );
     scenarios.value = res.scenarios || [];
   } catch (error: any) {
     message.error(error.message || '获取配置失败');
@@ -330,7 +355,9 @@ const fetchConfig = async () => {
 
 const fetchModels = async () => {
   try {
-    const res = await requestClient.get<{ models: ModelInfo[] }>('/settings/ai-config/models');
+    const res = await requestClient.get<{ models: ModelInfo[] }>(
+      '/settings/ai-config/models',
+    );
     models.value = res.models || [];
   } catch (error: any) {
     console.error('获取模型列表失败', error);
@@ -378,7 +405,10 @@ const handleSave = async () => {
       data.timeout = editForm.timeout;
     }
 
-    await requestClient.put(`/settings/ai-config/scenarios/${currentScenario.value.scenario}`, data);
+    await requestClient.put(
+      `/settings/ai-config/scenarios/${currentScenario.value.scenario}`,
+      data,
+    );
     message.success('保存成功');
     editModalVisible.value = false;
     await fetchConfig();
@@ -419,8 +449,8 @@ onMounted(() => {
 }
 
 .quota-card :deep(.ant-statistic-title) {
-  color: var(--text-color-secondary, #666);
   font-size: 14px;
+  color: var(--text-color-secondary, #666);
 }
 
 .quota-card :deep(.ant-statistic-content) {
@@ -440,15 +470,15 @@ onMounted(() => {
 }
 
 .scenario-item {
+  padding: 16px;
   border: 1px solid var(--border-color, #f0f0f0);
   border-radius: 8px;
-  padding: 16px;
   transition: all 0.3s;
 }
 
 .scenario-item:hover {
   border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 2px 8px rgb(24 144 255 / 15%);
 }
 
 .scenario-item.is-customized {
@@ -457,27 +487,27 @@ onMounted(() => {
 
 .scenario-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
 .scenario-info {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .scenario-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   font-size: 20px;
   color: #1890ff;
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-radius: 8px;
 }
 
 .scenario-title {
@@ -501,19 +531,19 @@ onMounted(() => {
 
 .config-item {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .config-item .label {
-  color: var(--text-color-secondary, #999);
   font-size: 13px;
+  color: var(--text-color-secondary, #999);
 }
 
 .config-item .value {
-  color: var(--text-color, #333);
-  font-weight: 500;
   font-size: 13px;
+  font-weight: 500;
+  color: var(--text-color, #333);
 }
 
 /* 模型列表卡片 */
@@ -529,8 +559,8 @@ onMounted(() => {
 
 .model-item {
   padding: 12px;
-  border-radius: 8px;
   background: var(--component-background-light, #fafafa);
+  border-radius: 8px;
 }
 
 .model-info {
@@ -567,19 +597,19 @@ onMounted(() => {
 }
 
 .help-item:last-child {
-  border-bottom: none;
   padding-bottom: 0;
+  border-bottom: none;
 }
 
 .help-title {
+  margin-bottom: 4px;
   font-weight: 600;
   color: var(--text-color, #333);
-  margin-bottom: 4px;
 }
 
 .help-desc {
   font-size: 13px;
-  color: var(--text-color-secondary, #666);
   line-height: 1.5;
+  color: var(--text-color-secondary, #666);
 }
 </style>

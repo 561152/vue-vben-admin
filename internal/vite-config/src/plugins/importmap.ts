@@ -127,7 +127,7 @@ async function viteImportMapPlugin(
           await Promise.allSettled(
             (installDeps || []).map((dep) => generator.install(dep)),
           );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           installError = error;
           installed = false;

@@ -1,6 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, Select, message, Tag, Popconfirm } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Tag,
+  Popconfirm,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface ConfigItem {
@@ -45,7 +56,7 @@ const columns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       return h(Tag, { color: 'blue' }, () => text);
-    }
+    },
   },
   {
     title: '可见性',
@@ -56,7 +67,7 @@ const columns = [
       const color = text ? 'green' : 'orange';
       const label = text ? '公开' : '私有';
       return h(Tag, { color }, () => label);
-    }
+    },
   },
   {
     title: '系统配置',
@@ -65,9 +76,14 @@ const columns = [
     width: 100,
     customRender: ({ text }: { text: boolean }) => {
       return text ? h(Tag, { color: 'red' }, () => '系统') : null;
-    }
+    },
   },
-  { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
+    ellipsis: true,
+  },
   { title: '更新时间', dataIndex: 'updatedAt', key: 'updatedAt', width: 180 },
   {
     title: '操作',
@@ -79,9 +95,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ data: ConfigItem[]; total: number }>('/platform/configs', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ data: ConfigItem[]; total: number }>(
+      '/platform/configs',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     console.log('API Response:', res);
     if (res && res.data) {
       dataSource.value = res.data;
@@ -151,7 +173,10 @@ async function handleDelete(record: ConfigItem) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/platform/configs/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/platform/configs/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/platform/configs', formState.value);
@@ -177,7 +202,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">系统配置</h2>
       <Button type="primary" @click="handleAdd">新增配置</Button>
     </div>
@@ -193,29 +218,53 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm
               title="确定删除吗？"
               @confirm="handleDelete(record)"
               :disabled="record.isSystem"
             >
-              <Button type="link" size="small" danger :disabled="record.isSystem">删除</Button>
+              <Button
+                type="link"
+                size="small"
+                danger
+                :disabled="record.isSystem"
+                >删除</Button
+              >
             </Popconfirm>
           </Space>
         </template>
       </template>
     </Table>
 
-    <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit" width="600px">
+    <Modal
+      v-model:open="modalVisible"
+      :title="modalTitle"
+      @ok="handleSubmit"
+      width="600px"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="配置键" required>
-          <Input v-model:value="formState.key" placeholder="如：SYSTEM_NAME" :disabled="!!editingId" />
+          <Input
+            v-model:value="formState.key"
+            placeholder="如：SYSTEM_NAME"
+            :disabled="!!editingId"
+          />
         </Form.Item>
         <Form.Item label="配置值" required>
-          <Input.TextArea v-model:value="formState.value" placeholder="请输入配置值" :rows="4" />
+          <Input.TextArea
+            v-model:value="formState.value"
+            placeholder="请输入配置值"
+            :rows="4"
+          />
         </Form.Item>
         <Form.Item label="分类" required>
-          <Input v-model:value="formState.category" placeholder="如：SYSTEM, EMAIL, SMS, STORAGE" />
+          <Input
+            v-model:value="formState.category"
+            placeholder="如：SYSTEM, EMAIL, SMS, STORAGE"
+          />
         </Form.Item>
         <Form.Item label="值类型" required>
           <Select v-model:value="formState.valueType" placeholder="选择值类型">
@@ -227,14 +276,21 @@ onMounted(() => {
           </Select>
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" :rows="2" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+            :rows="2"
+          />
         </Form.Item>
         <Form.Item label="可见性">
           <Space>
             <Tag :color="formState.isPublic ? 'green' : 'orange'">
               {{ formState.isPublic ? '公开' : '私有' }}
             </Tag>
-            <Button size="small" @click="formState.isPublic = !formState.isPublic">
+            <Button
+              size="small"
+              @click="formState.isPublic = !formState.isPublic"
+            >
               切换为{{ formState.isPublic ? '私有' : '公开' }}
             </Button>
           </Space>

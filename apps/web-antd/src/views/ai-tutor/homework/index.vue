@@ -77,7 +77,10 @@ const getAccuracyColor = (accuracy: number) => {
 };
 
 // 处理文件选择
-const handleFileChange = (info: { file: UploadFile; fileList: UploadFile[] }) => {
+const handleFileChange = (info: {
+  file: UploadFile;
+  fileList: UploadFile[];
+}) => {
   fileList.value = info.fileList.slice(-1);
 
   if (info.file.originFileObj) {
@@ -206,19 +209,30 @@ const handleClear = () => {
 
               <div class="summary-cards">
                 <div class="summary-card">
-                  <div class="summary-value">{{ result.summary.totalQuestions }}</div>
+                  <div class="summary-value">
+                    {{ result.summary.totalQuestions }}
+                  </div>
                   <div class="summary-label">总题数</div>
                 </div>
                 <div class="summary-card correct">
-                  <div class="summary-value">{{ result.summary.correctCount }}</div>
+                  <div class="summary-value">
+                    {{ result.summary.correctCount }}
+                  </div>
                   <div class="summary-label">正确</div>
                 </div>
                 <div class="summary-card wrong">
-                  <div class="summary-value">{{ result.summary.totalQuestions - result.summary.correctCount }}</div>
+                  <div class="summary-value">
+                    {{
+                      result.summary.totalQuestions -
+                      result.summary.correctCount
+                    }}
+                  </div>
                   <div class="summary-label">错误</div>
                 </div>
                 <div class="summary-card score">
-                  <div class="summary-value">{{ result.summary.score }}/{{ result.summary.maxScore }}</div>
+                  <div class="summary-value">
+                    {{ result.summary.score }}/{{ result.summary.maxScore }}
+                  </div>
                   <div class="summary-label">得分</div>
                 </div>
               </div>
@@ -269,7 +283,11 @@ const handleClear = () => {
                     />
                   </template>
                   <template v-if="column.dataIndex === 'score'">
-                    <span :style="{ color: record.isCorrect ? '#52c41a' : '#ff4d4f' }">
+                    <span
+                      :style="{
+                        color: record.isCorrect ? '#52c41a' : '#ff4d4f',
+                      }"
+                    >
                       {{ record.score }}/{{ record.maxScore }}
                     </span>
                   </template>
@@ -302,7 +320,7 @@ const handleClear = () => {
 }
 
 .page-header h2 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 24px;
 }
 
@@ -352,8 +370,8 @@ const handleClear = () => {
 }
 
 .tips-list {
-  margin: 0;
   padding-left: 20px;
+  margin: 0;
   color: #666;
 }
 
@@ -376,8 +394,8 @@ const handleClear = () => {
 }
 
 .empty-icon {
-  font-size: 64px;
   margin-bottom: 16px;
+  font-size: 64px;
 }
 
 .summary-section {
@@ -404,9 +422,9 @@ const handleClear = () => {
 
 .summary-card {
   padding: 16px;
+  text-align: center;
   background: #f5f5f5;
   border-radius: 8px;
-  text-align: center;
 }
 
 .summary-card.correct {
@@ -428,20 +446,20 @@ const handleClear = () => {
 }
 
 .summary-label {
+  margin-top: 4px;
   font-size: 12px;
   color: #999;
-  margin-top: 4px;
 }
 
 .accuracy-bar {
   display: flex;
-  align-items: center;
   gap: 16px;
+  align-items: center;
 }
 
 .accuracy-bar span {
-  white-space: nowrap;
   color: #666;
+  white-space: nowrap;
 }
 
 .accuracy-bar .ant-progress {
@@ -450,7 +468,7 @@ const handleClear = () => {
 
 .weak-points-section h4,
 .detail-section h4 {
-  margin: 0 0 12px 0;
+  margin: 0 0 12px;
   font-size: 14px;
   color: #333;
 }
@@ -463,8 +481,8 @@ const handleClear = () => {
 
 .correction-text {
   margin-top: 4px;
-  color: #52c41a;
   font-size: 12px;
+  color: #52c41a;
 }
 
 .no-error {

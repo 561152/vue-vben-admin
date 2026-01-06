@@ -1,6 +1,16 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Tag, Popconfirm } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Tag,
+  Popconfirm,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface TagItem {
@@ -31,10 +41,15 @@ const columns = [
     key: 'name',
     customRender: ({ record }: { record: TagItem }) => {
       return h(Tag, { color: record.color || '#1890ff' }, () => record.name);
-    }
+    },
   },
   { title: '描述', dataIndex: 'description', key: 'description' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
   {
     title: '操作',
@@ -46,9 +61,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: TagItem[]; total: number }>('/tags', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ items: TagItem[]; total: number }>(
+      '/tags',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.items;
     pagination.value.total = res.total;
   } catch (e) {
@@ -115,7 +136,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">标签管理</h2>
       <Button type="primary" @click="handleAdd">新增标签</Button>
     </div>
@@ -131,7 +152,9 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -146,10 +169,16 @@ onMounted(() => {
           <Input v-model:value="formState.name" placeholder="请输入标签名称" />
         </Form.Item>
         <Form.Item label="颜色">
-          <Input v-model:value="formState.color" placeholder="请输入颜色值，如 #1890ff" />
+          <Input
+            v-model:value="formState.color"
+            placeholder="请输入颜色值，如 #1890ff"
+          />
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+          />
         </Form.Item>
       </Form>
     </Modal>

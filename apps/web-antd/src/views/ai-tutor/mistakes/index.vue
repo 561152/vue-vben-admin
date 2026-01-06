@@ -134,7 +134,9 @@ const filteredMistakes = computed(() => {
 const stats = computed(() => {
   const total = mistakes.value.length;
   const pending = mistakes.value.filter((m) => m.status === 'pending').length;
-  const reviewing = mistakes.value.filter((m) => m.status === 'reviewing').length;
+  const reviewing = mistakes.value.filter(
+    (m) => m.status === 'reviewing',
+  ).length;
   const mastered = mistakes.value.filter((m) => m.status === 'mastered').length;
   const masteredRate = total > 0 ? Math.round((mastered / total) * 100) : 0;
   return { total, pending, reviewing, mastered, masteredRate };
@@ -179,11 +181,7 @@ onMounted(loadMistakes);
     <Row :gutter="16" class="stats-row">
       <Col :xs="12" :sm="6">
         <Card :bordered="false">
-          <Statistic
-            title="错题总数"
-            :value="stats.total"
-            suffix="题"
-          >
+          <Statistic title="错题总数" :value="stats.total" suffix="题">
             <template #prefix>
               <BookOutlined />
             </template>
@@ -271,22 +269,39 @@ onMounted(loadMistakes);
       </template>
 
       <Spin :spinning="isLoading">
-        <Empty v-if="!isLoading && filteredMistakes.length === 0" description="暂无错题记录" />
+        <Empty
+          v-if="!isLoading && filteredMistakes.length === 0"
+          description="暂无错题记录"
+        />
         <Table
           v-else
           :columns="columns"
           :data-source="filteredMistakes.map((m, i) => ({ ...m, key: i }))"
-          :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 题` }"
+          :pagination="{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total: number) => `共 ${total} 题`,
+          }"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'subject'">
-              <Tag color="blue">{{ subjectNames[record.subject] || record.subject }}</Tag>
+              <Tag color="blue">{{
+                subjectNames[record.subject] || record.subject
+              }}</Tag>
             </template>
             <template v-else-if="column.key === 'question'">
               <MathRenderer :content="record.question" />
             </template>
             <template v-else-if="column.key === 'errorCount'">
-              <Tag :color="record.errorCount >= 3 ? 'red' : record.errorCount >= 2 ? 'orange' : 'default'">
+              <Tag
+                :color="
+                  record.errorCount >= 3
+                    ? 'red'
+                    : record.errorCount >= 2
+                      ? 'orange'
+                      : 'default'
+                "
+              >
                 {{ record.errorCount }} 次
               </Tag>
             </template>
@@ -299,7 +314,12 @@ onMounted(loadMistakes);
               {{ formatDate(record.createdAt) }}
             </template>
             <template v-else-if="column.key === 'actions'">
-              <Button type="link" size="small" :icon="h(EyeOutlined)" @click="showDetail(record as MistakeRecord)">
+              <Button
+                type="link"
+                size="small"
+                :icon="h(EyeOutlined)"
+                @click="showDetail(record as MistakeRecord)"
+              >
                 详情
               </Button>
               <Button
@@ -328,7 +348,9 @@ onMounted(loadMistakes);
         <div class="detail-section">
           <div class="detail-label">科目</div>
           <div class="detail-value">
-            <Tag color="blue">{{ subjectNames[currentMistake.subject] || currentMistake.subject }}</Tag>
+            <Tag color="blue">{{
+              subjectNames[currentMistake.subject] || currentMistake.subject
+            }}</Tag>
           </div>
         </div>
 
@@ -368,12 +390,17 @@ onMounted(loadMistakes);
         <div class="detail-section">
           <div class="detail-label">状态信息</div>
           <div class="detail-value">
-            <Tag :color="statusConfig[currentMistake.status]?.color || 'default'">
-              {{ statusConfig[currentMistake.status]?.text || currentMistake.status }}
+            <Tag
+              :color="statusConfig[currentMistake.status]?.color || 'default'"
+            >
+              {{
+                statusConfig[currentMistake.status]?.text ||
+                currentMistake.status
+              }}
             </Tag>
             <span class="meta-info">
-              错误 {{ currentMistake.errorCount }} 次 ·
-              添加于 {{ formatDate(currentMistake.createdAt) }}
+              错误 {{ currentMistake.errorCount }} 次 · 添加于
+              {{ formatDate(currentMistake.createdAt) }}
             </span>
           </div>
         </div>
@@ -383,7 +410,10 @@ onMounted(loadMistakes);
             v-if="currentMistake.status !== 'mastered'"
             type="primary"
             :icon="h(RedoOutlined)"
-            @click="startReview(currentMistake); detailVisible = false"
+            @click="
+              startReview(currentMistake);
+              detailVisible = false;
+            "
           >
             开始复习
           </Button>
@@ -427,8 +457,8 @@ onMounted(loadMistakes);
 }
 
 .detail-section {
-  margin-bottom: 16px;
   padding-bottom: 16px;
+  margin-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -437,9 +467,9 @@ onMounted(loadMistakes);
 }
 
 .detail-label {
+  margin-bottom: 8px;
   font-size: 12px;
   color: #999;
-  margin-bottom: 8px;
 }
 
 .detail-value {
@@ -456,15 +486,15 @@ onMounted(loadMistakes);
 .wrong-answer {
   padding: 12px;
   background: #fff1f0;
-  border-radius: 4px;
   border-left: 3px solid #ff4d4f;
+  border-radius: 4px;
 }
 
 .correct-answer {
   padding: 12px;
   background: #f6ffed;
-  border-radius: 4px;
   border-left: 3px solid #52c41a;
+  border-radius: 4px;
 }
 
 .explanation {
@@ -475,8 +505,8 @@ onMounted(loadMistakes);
 
 .meta-info {
   margin-left: 12px;
-  color: #999;
   font-size: 12px;
+  color: #999;
 }
 
 .detail-actions {

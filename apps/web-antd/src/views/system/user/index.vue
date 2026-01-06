@@ -1,6 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, Select, message, Tag, Popconfirm } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Tag,
+  Popconfirm,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface UserItem {
@@ -57,16 +68,22 @@ const columns = [
     dataIndex: 'roles',
     key: 'roles',
     customRender: ({ record }: { record: UserItem }) => {
-      return h('div', {}, record.roles.map(r => h(Tag, { color: 'blue' }, () => r.roleName)));
-    }
+      return h(
+        'div',
+        {},
+        record.roles.map((r) => h(Tag, { color: 'blue' }, () => r.roleName)),
+      );
+    },
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     customRender: ({ text }: { text: string }) => {
-      return h(Tag, { color: text === 'ACTIVE' ? 'green' : 'red' }, () => text === 'ACTIVE' ? '正常' : '禁用');
-    }
+      return h(Tag, { color: text === 'ACTIVE' ? 'green' : 'red' }, () =>
+        text === 'ACTIVE' ? '正常' : '禁用',
+      );
+    },
   },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
   {
@@ -79,9 +96,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: UserItem[]; total: number }>('/users', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ items: UserItem[]; total: number }>(
+      '/users',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.items;
     pagination.value.total = res.total;
   } catch (e) {
@@ -121,7 +144,15 @@ async function fetchDepartments() {
 function handleAdd() {
   editingId.value = null;
   modalTitle.value = '新增用户';
-  formState.value = { username: '', password: '', realName: '', email: '', phone: '', departmentId: undefined, roleIds: [] };
+  formState.value = {
+    username: '',
+    password: '',
+    realName: '',
+    email: '',
+    phone: '',
+    departmentId: undefined,
+    roleIds: [],
+  };
   modalVisible.value = true;
 }
 
@@ -135,7 +166,7 @@ async function handleEdit(record: UserItem) {
     email: record.email || '',
     phone: record.phone || '',
     departmentId: record.departmentId || undefined,
-    roleIds: record.roles.map(r => r.roleId),
+    roleIds: record.roles.map((r) => r.roleId),
   };
   modalVisible.value = true;
 }
@@ -160,7 +191,9 @@ async function handleSubmit() {
         departmentId: formState.value.departmentId,
       });
       if (formState.value.roleIds.length > 0) {
-        await requestClient.put(`/users/${editingId.value}/roles`, { roleIds: formState.value.roleIds });
+        await requestClient.put(`/users/${editingId.value}/roles`, {
+          roleIds: formState.value.roleIds,
+        });
       }
       message.success('更新成功');
     } else {
@@ -191,7 +224,9 @@ function handleResetPassword(id: number) {
 async function handlePasswordSubmit() {
   if (!resetPasswordUserId.value) return;
   try {
-    await requestClient.put(`/users/${resetPasswordUserId.value}/password`, { password: passwordForm.value.password });
+    await requestClient.put(`/users/${resetPasswordUserId.value}/password`, {
+      password: passwordForm.value.password,
+    });
     message.success('密码重置成功');
     passwordModalVisible.value = false;
   } catch (e: any) {
@@ -214,7 +249,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">用户管理</h2>
       <Button type="primary" @click="handleAdd">新增用户</Button>
     </div>
@@ -230,8 +265,15 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
-            <Button type="link" size="small" @click="handleResetPassword(record.id)">重置密码</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleResetPassword(record.id)"
+              >重置密码</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -243,10 +285,16 @@ onMounted(() => {
     <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit">
       <Form layout="vertical" class="mt-4">
         <Form.Item label="用户名" v-if="!editingId">
-          <Input v-model:value="formState.username" placeholder="请输入用户名" />
+          <Input
+            v-model:value="formState.username"
+            placeholder="请输入用户名"
+          />
         </Form.Item>
         <Form.Item label="密码" v-if="!editingId">
-          <Input.Password v-model:value="formState.password" placeholder="请输入密码" />
+          <Input.Password
+            v-model:value="formState.password"
+            placeholder="请输入密码"
+          />
         </Form.Item>
         <Form.Item label="姓名">
           <Input v-model:value="formState.realName" placeholder="请输入姓名" />
@@ -258,15 +306,31 @@ onMounted(() => {
           <Input v-model:value="formState.phone" placeholder="请输入手机号" />
         </Form.Item>
         <Form.Item label="部门">
-          <Select v-model:value="formState.departmentId" placeholder="请选择部门" allowClear>
-            <Select.Option v-for="dept in departments" :key="dept.id" :value="dept.id">
+          <Select
+            v-model:value="formState.departmentId"
+            placeholder="请选择部门"
+            allowClear
+          >
+            <Select.Option
+              v-for="dept in departments"
+              :key="dept.id"
+              :value="dept.id"
+            >
               {{ dept.name }}
             </Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="角色">
-          <Select v-model:value="formState.roleIds" mode="multiple" placeholder="请选择角色">
-            <Select.Option v-for="role in roles" :key="role.id" :value="role.id">
+          <Select
+            v-model:value="formState.roleIds"
+            mode="multiple"
+            placeholder="请选择角色"
+          >
+            <Select.Option
+              v-for="role in roles"
+              :key="role.id"
+              :value="role.id"
+            >
               {{ role.name }}
             </Select.Option>
           </Select>
@@ -274,10 +338,17 @@ onMounted(() => {
       </Form>
     </Modal>
 
-    <Modal v-model:open="passwordModalVisible" title="重置密码" @ok="handlePasswordSubmit">
+    <Modal
+      v-model:open="passwordModalVisible"
+      title="重置密码"
+      @ok="handlePasswordSubmit"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="新密码">
-          <Input.Password v-model:value="passwordForm.password" placeholder="请输入新密码" />
+          <Input.Password
+            v-model:value="passwordForm.password"
+            placeholder="请输入新密码"
+          />
         </Form.Item>
       </Form>
     </Modal>

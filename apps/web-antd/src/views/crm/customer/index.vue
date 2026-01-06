@@ -15,7 +15,11 @@ import {
   Card,
   InputSearch,
 } from 'ant-design-vue';
-import { UserOutlined, WechatOutlined, SearchOutlined } from '@ant-design/icons-vue';
+import {
+  UserOutlined,
+  WechatOutlined,
+  SearchOutlined,
+} from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import dayjs from 'dayjs';
 import CustomerDetailDrawer from './components/CustomerDetailDrawer.vue';
@@ -100,16 +104,26 @@ const columns = [
     fixed: 'left',
   },
   { title: '电话', dataIndex: 'phone', key: 'phone', width: 140 },
-  { title: '公司', dataIndex: 'company', key: 'company', ellipsis: true, width: 150 },
+  {
+    title: '公司',
+    dataIndex: 'company',
+    key: 'company',
+    ellipsis: true,
+    width: 150,
+  },
   {
     title: '等级',
     dataIndex: 'customerLevel',
     key: 'customerLevel',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = levelOptions.find(o => o.value === text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
-    }
+      const opt = levelOptions.find((o) => o.value === text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
+    },
   },
   {
     title: '来源',
@@ -117,10 +131,10 @@ const columns = [
     key: 'source',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = sourceOptions.find(o => o.value === text);
+      const opt = sourceOptions.find((o) => o.value === text);
       if (!opt) return h(Tag, { color: 'default' }, () => text || '-');
       return h(Tag, { color: opt.color }, () => opt.label);
-    }
+    },
   },
   {
     title: '状态',
@@ -128,16 +142,20 @@ const columns = [
     key: 'status',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = statusOptions.find(o => o.value === text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
-    }
+      const opt = statusOptions.find((o) => o.value === text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
+    },
   },
   {
     title: '消费总额',
     dataIndex: 'totalAmount',
     key: 'totalAmount',
     width: 120,
-    customRender: ({ text }: { text: number }) => `¥${(text || 0).toFixed(2)}`
+    customRender: ({ text }: { text: number }) => `¥${(text || 0).toFixed(2)}`,
   },
   { title: '负责人', dataIndex: 'ownerName', key: 'ownerName', width: 100 },
   {
@@ -148,7 +166,7 @@ const columns = [
     customRender: ({ text }: { text: string }) => {
       if (!text) return '-';
       return dayjs(text).fromNow();
-    }
+    },
   },
   {
     title: '操作',
@@ -170,7 +188,10 @@ async function fetchData() {
     if (filterLevel.value) params.customerLevel = filterLevel.value;
     if (searchKeyword.value) params.keyword = searchKeyword.value;
 
-    const res = await requestClient.get<{ items: CustomerItem[]; total: number }>('/customers', { params });
+    const res = await requestClient.get<{
+      items: CustomerItem[];
+      total: number;
+    }>('/customers', { params });
     dataSource.value = res.items;
     pagination.value.total = res.total;
   } catch (e) {
@@ -183,7 +204,15 @@ async function fetchData() {
 function handleAdd() {
   editingId.value = null;
   modalTitle.value = '新增客户';
-  formState.value = { name: '', phone: '', email: '', company: '', status: 'LEAD', source: '', remark: '' };
+  formState.value = {
+    name: '',
+    phone: '',
+    email: '',
+    company: '',
+    status: 'LEAD',
+    source: '',
+    remark: '',
+  };
   modalVisible.value = true;
 }
 
@@ -266,14 +295,14 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">客户列表</h2>
       <Button type="primary" @click="handleAdd">新增客户</Button>
     </div>
 
     <!-- Filters -->
     <Card class="mb-4" size="small">
-      <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex flex-wrap items-center gap-4">
         <InputSearch
           v-model:value="searchKeyword"
           placeholder="搜索客户名称/电话"
@@ -318,19 +347,23 @@ onMounted(() => {
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'customer'">
-          <div class="flex items-center gap-2 cursor-pointer" @click="handleView(record)">
-            <Avatar
-              v-if="record.avatar"
-              :src="record.avatar"
-              :size="40"
-            />
+          <div
+            class="flex cursor-pointer items-center gap-2"
+            @click="handleView(record)"
+          >
+            <Avatar v-if="record.avatar" :src="record.avatar" :size="40" />
             <Avatar v-else :size="40">
               <template #icon><UserOutlined /></template>
             </Avatar>
             <div>
-              <div class="font-medium text-blue-600 hover:text-blue-800">{{ record.name }}</div>
-              <div class="text-xs text-gray-400 flex items-center gap-1">
-                <WechatOutlined v-if="record.source === 'WECOM'" class="text-green-500" />
+              <div class="font-medium text-blue-600 hover:text-blue-800">
+                {{ record.name }}
+              </div>
+              <div class="flex items-center gap-1 text-xs text-gray-400">
+                <WechatOutlined
+                  v-if="record.source === 'WECOM'"
+                  class="text-green-500"
+                />
                 <span>订单 {{ record.orderCount || 0 }}</span>
               </div>
             </div>
@@ -338,8 +371,12 @@ onMounted(() => {
         </template>
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleView(record)">详情</Button>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleView(record)"
+              >详情</Button
+            >
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -361,16 +398,26 @@ onMounted(() => {
           <Input v-model:value="formState.email" placeholder="请输入邮箱" />
         </Form.Item>
         <Form.Item label="公司">
-          <Input v-model:value="formState.company" placeholder="请输入公司名称" />
+          <Input
+            v-model:value="formState.company"
+            placeholder="请输入公司名称"
+          />
         </Form.Item>
         <Form.Item label="状态">
           <Select v-model:value="formState.status" :options="statusOptions" />
         </Form.Item>
         <Form.Item label="来源">
-          <Select v-model:value="formState.source" :options="sourceOptions" allowClear />
+          <Select
+            v-model:value="formState.source"
+            :options="sourceOptions"
+            allowClear
+          />
         </Form.Item>
         <Form.Item label="备注">
-          <Input.TextArea v-model:value="formState.remark" placeholder="请输入备注" />
+          <Input.TextArea
+            v-model:value="formState.remark"
+            placeholder="请输入备注"
+          />
         </Form.Item>
       </Form>
     </Modal>

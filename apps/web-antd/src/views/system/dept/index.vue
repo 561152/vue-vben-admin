@@ -1,6 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, Select, message, Tag, Popconfirm } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Tag,
+  Popconfirm,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface DeptItem {
@@ -49,8 +60,10 @@ const columns = [
     key: 'status',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      return h(Tag, { color: text === 'ACTIVE' ? 'green' : 'red' }, () => text === 'ACTIVE' ? '正常' : '禁用');
-    }
+      return h(Tag, { color: text === 'ACTIVE' ? 'green' : 'red' }, () =>
+        text === 'ACTIVE' ? '正常' : '禁用',
+      );
+    },
   },
   {
     title: '操作',
@@ -60,7 +73,10 @@ const columns = [
 ];
 
 // 将树形数据扁平化为 Select 需要的格式
-function flattenDepts(items: DeptItem[], prefix = ''): { id: number; name: string }[] {
+function flattenDepts(
+  items: DeptItem[],
+  prefix = '',
+): { id: number; name: string }[] {
   const result: { id: number; name: string }[] = [];
   for (const item of items) {
     result.push({ id: item.id, name: prefix + item.name });
@@ -133,7 +149,10 @@ async function handleDelete(id: number) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/departments/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/departments/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/departments', formState.value);
@@ -154,7 +173,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">部门管理</h2>
       <Button type="primary" @click="handleAdd()">新增部门</Button>
     </div>
@@ -170,8 +189,12 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleAdd(record.id)">新增</Button>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleAdd(record.id)"
+              >新增</Button
+            >
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -189,24 +212,48 @@ onMounted(() => {
           <Input v-model:value="formState.code" placeholder="请输入部门代码" />
         </Form.Item>
         <Form.Item label="上级部门">
-          <Select v-model:value="formState.parentId" placeholder="请选择上级部门" allowClear>
-            <Select.Option v-for="dept in flattenDepts(dataSource)" :key="dept.id" :value="dept.id">
+          <Select
+            v-model:value="formState.parentId"
+            placeholder="请选择上级部门"
+            allowClear
+          >
+            <Select.Option
+              v-for="dept in flattenDepts(dataSource)"
+              :key="dept.id"
+              :value="dept.id"
+            >
               {{ dept.name }}
             </Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="负责人">
-          <Select v-model:value="formState.leaderId" placeholder="请选择负责人" allowClear show-search>
-            <Select.Option v-for="user in users" :key="user.id" :value="user.id">
+          <Select
+            v-model:value="formState.leaderId"
+            placeholder="请选择负责人"
+            allowClear
+            show-search
+          >
+            <Select.Option
+              v-for="user in users"
+              :key="user.id"
+              :value="user.id"
+            >
               {{ user.realName || user.username }}
             </Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="排序">
-          <Input v-model:value.number="formState.sort" type="number" placeholder="请输入排序" />
+          <Input
+            v-model:value.number="formState.sort"
+            type="number"
+            placeholder="请输入排序"
+          />
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+          />
         </Form.Item>
       </Form>
     </Modal>

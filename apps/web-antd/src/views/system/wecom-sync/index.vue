@@ -1,8 +1,5 @@
 <template>
-  <Page
-    title="数据同步"
-    description="从企业微信同步员工和客户数据"
-  >
+  <Page title="数据同步" description="从企业微信同步员工和客户数据">
     <!-- 顶部统计卡片 -->
     <Row :gutter="16" class="mb-6">
       <Col :span="8">
@@ -12,7 +9,10 @@
           </div>
           <div class="stats-info">
             <div class="stats-label">已同步员工</div>
-            <div class="stats-value">{{ syncStats.users.total }} <span class="text-gray-400 text-sm">人</span></div>
+            <div class="stats-value">
+              {{ syncStats.users.total }}
+              <span class="text-sm text-gray-400">人</span>
+            </div>
             <div class="stats-time" v-if="syncStats.users.lastSyncAt">
               最后同步: {{ formatTime(syncStats.users.lastSyncAt) }}
             </div>
@@ -26,7 +26,10 @@
           </div>
           <div class="stats-info">
             <div class="stats-label">已同步客户</div>
-            <div class="stats-value">{{ syncStats.customers.total }} <span class="text-gray-400 text-sm">人</span></div>
+            <div class="stats-value">
+              {{ syncStats.customers.total }}
+              <span class="text-sm text-gray-400">人</span>
+            </div>
             <div class="stats-time" v-if="syncStats.customers.lastSyncAt">
               最后同步: {{ formatTime(syncStats.customers.lastSyncAt) }}
             </div>
@@ -40,7 +43,10 @@
           </div>
           <div class="stats-info">
             <div class="stats-label">跟进关系</div>
-            <div class="stats-value">{{ syncStats.customers.relations }} <span class="text-gray-400 text-sm">条</span></div>
+            <div class="stats-value">
+              {{ syncStats.customers.relations }}
+              <span class="text-sm text-gray-400">条</span>
+            </div>
             <div class="stats-time" v-if="syncStats.customers.lastSyncAt">
               更新时间: {{ formatTime(syncStats.customers.lastSyncAt) }}
             </div>
@@ -105,7 +111,9 @@
             <TeamOutlined class="action-icon text-purple-500" />
             <div>
               <div class="action-title">同步客户</div>
-              <div class="action-desc">从企微拉取外部联系人（客户）及跟进关系</div>
+              <div class="action-desc">
+                从企微拉取外部联系人（客户）及跟进关系
+              </div>
             </div>
           </div>
           <Button
@@ -126,7 +134,9 @@
             <CloudSyncOutlined class="action-icon text-green-500" />
             <div>
               <div class="action-title">全量同步</div>
-              <div class="action-desc">一键同步所有员工和客户数据（推荐首次使用）</div>
+              <div class="action-desc">
+                一键同步所有员工和客户数据（推荐首次使用）
+              </div>
             </div>
           </div>
           <Button
@@ -186,7 +196,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { message, Row, Col, Card, Button, Alert, Divider } from 'ant-design-vue';
+import {
+  message,
+  Row,
+  Col,
+  Card,
+  Button,
+  Alert,
+  Divider,
+} from 'ant-design-vue';
 import {
   UserOutlined,
   TeamOutlined,
@@ -319,7 +337,12 @@ const handleSyncAll = async () => {
     const res = await requestClient.post<{
       success: boolean;
       users: { created: number; updated: number; failed: number };
-      customers: { created: number; updated: number; failed: number; relationsCreated: number };
+      customers: {
+        created: number;
+        updated: number;
+        failed: number;
+        relationsCreated: number;
+      };
     }>('/wecom/sync/all', {}, { timeout: 600000 });
 
     message.destroy();
@@ -338,7 +361,8 @@ const handleSyncAll = async () => {
     if (error.message && error.message.includes('timeout')) {
       lastSyncResult.value = {
         success: false,
-        message: '同步请求超时，但后台仍在继续同步。请稍后刷新页面查看同步结果。',
+        message:
+          '同步请求超时，但后台仍在继续同步。请稍后刷新页面查看同步结果。',
       };
       message.warning('请求超时，但同步仍在后台进行，请稍后查看结果');
 
@@ -366,26 +390,26 @@ onMounted(() => {
 <style scoped>
 /* 统计卡片 */
 .stats-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 24px;
   background: var(--component-background, #fff);
   border: 1px solid var(--border-color, #f0f0f0);
   border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
   transition: all 0.3s;
 }
 
 .stats-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #1890ff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
 }
 
 .stats-icon {
-  font-size: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 40px;
 }
 
 .stats-info {
@@ -393,16 +417,16 @@ onMounted(() => {
 }
 
 .stats-label {
-  color: var(--text-color-secondary, #666);
-  font-size: 14px;
   margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-color-secondary, #666);
 }
 
 .stats-value {
+  margin-bottom: 4px;
   font-size: 32px;
   font-weight: 600;
   color: var(--text-color, #333);
-  margin-bottom: 4px;
 }
 
 .stats-time {
@@ -416,8 +440,8 @@ onMounted(() => {
 }
 
 .sync-card :deep(.ant-card-head) {
-  border-bottom: 1px solid var(--border-color, #f0f0f0);
   padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
 }
 
 .sync-card :deep(.ant-card-body) {
@@ -451,8 +475,8 @@ onMounted(() => {
 
 .action-info {
   display: flex;
-  align-items: center;
   gap: 16px;
+  align-items: center;
 }
 
 .action-icon {
@@ -460,10 +484,10 @@ onMounted(() => {
 }
 
 .action-title {
+  margin-bottom: 4px;
   font-size: 16px;
   font-weight: 600;
   color: var(--text-color, #333);
-  margin-bottom: 4px;
 }
 
 .action-desc {
@@ -477,9 +501,9 @@ onMounted(() => {
 }
 
 .help-card :deep(.ant-card-head) {
-  border-bottom: 1px solid var(--border-color, #f0f0f0);
-  padding: 12px 20px;
   min-height: auto;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
 }
 
 .help-card :deep(.ant-card-body) {
@@ -502,17 +526,17 @@ onMounted(() => {
 
 .notice-item {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
+  align-items: flex-start;
   font-size: 13px;
-  color: var(--text-color, #333);
   line-height: 1.5;
+  color: var(--text-color, #333);
 }
 
 .notice-icon {
-  color: var(--text-color-secondary, #999);
-  margin-top: 3px;
   flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--text-color-secondary, #999);
 }
 
 /* 暗色模式适配 */

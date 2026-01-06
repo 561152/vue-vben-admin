@@ -108,7 +108,9 @@ export interface PaginatedResponse<T> {
 // ==================== Customer API ====================
 
 export async function getCustomers(params?: Record<string, unknown>) {
-  return requestClient.get<PaginatedResponse<Customer>>('/customers', { params });
+  return requestClient.get<PaginatedResponse<Customer>>('/customers', {
+    params,
+  });
 }
 
 export async function getCustomer(id: number) {
@@ -130,7 +132,9 @@ export async function deleteCustomer(id: number) {
 // ==================== Customer Channel API ====================
 
 export async function getCustomerChannels(customerId: number) {
-  return requestClient.get<CustomerChannel[]>(`/customer-channels/customer/${customerId}`);
+  return requestClient.get<CustomerChannel[]>(
+    `/customer-channels/customer/${customerId}`,
+  );
 }
 
 export async function getChannelStats() {
@@ -139,7 +143,10 @@ export async function getChannelStats() {
 
 // ==================== Customer Activity API ====================
 
-export async function getCustomerTimeline(customerId: number, params?: { limit?: number; offset?: number }) {
+export async function getCustomerTimeline(
+  customerId: number,
+  params?: { limit?: number; offset?: number },
+) {
   return requestClient.get<{
     customerId: number;
     activities: CustomerActivity[];
@@ -150,7 +157,9 @@ export async function getCustomerTimeline(customerId: number, params?: { limit?:
 
 export async function getActivityStats(customerId?: number) {
   const params = customerId ? { customerId } : {};
-  return requestClient.get<ActivityStats>('/customer-activities/stats', { params });
+  return requestClient.get<ActivityStats>('/customer-activities/stats', {
+    params,
+  });
 }
 
 export async function createActivity(data: {
@@ -167,22 +176,34 @@ export async function createActivity(data: {
 // ==================== Follow-up API ====================
 
 export async function getFollowUps(params?: Record<string, unknown>) {
-  return requestClient.get<PaginatedResponse<FollowUp>>('/follow-ups', { params });
+  return requestClient.get<PaginatedResponse<FollowUp>>('/follow-ups', {
+    params,
+  });
 }
 
 export async function getFollowUp(id: number) {
   return requestClient.get<FollowUp>(`/follow-ups/${id}`);
 }
 
-export async function getCustomerFollowUps(customerId: number, params?: { page?: number; pageSize?: number }) {
-  return requestClient.get<PaginatedResponse<FollowUp>>(`/follow-ups/customer/${customerId}`, { params });
+export async function getCustomerFollowUps(
+  customerId: number,
+  params?: { page?: number; pageSize?: number },
+) {
+  return requestClient.get<PaginatedResponse<FollowUp>>(
+    `/follow-ups/customer/${customerId}`,
+    { params },
+  );
 }
 
 export async function getTodayFollowUps() {
   return requestClient.get<TodayFollowUp>('/follow-ups/today');
 }
 
-export async function getPendingFollowUps(params?: { includeOverdue?: boolean; daysAhead?: number; limit?: number }) {
+export async function getPendingFollowUps(params?: {
+  includeOverdue?: boolean;
+  daysAhead?: number;
+  limit?: number;
+}) {
   return requestClient.get<FollowUp[]>('/follow-ups/pending', { params });
 }
 
@@ -200,11 +221,14 @@ export async function createFollowUp(data: {
   return requestClient.post<FollowUp>('/follow-ups', data);
 }
 
-export async function updateFollowUp(id: number, data: {
-  type?: string;
-  content?: string;
-  nextPlanAt?: string | null;
-}) {
+export async function updateFollowUp(
+  id: number,
+  data: {
+    type?: string;
+    content?: string;
+    nextPlanAt?: string | null;
+  },
+) {
   return requestClient.put<FollowUp>(`/follow-ups/${id}`, data);
 }
 

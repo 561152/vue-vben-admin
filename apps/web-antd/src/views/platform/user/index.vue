@@ -1,6 +1,18 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Select, Tag, Popconfirm, Checkbox } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Select,
+  Tag,
+  Popconfirm,
+  Checkbox,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface Role {
@@ -75,7 +87,7 @@ const columns = [
       };
       const status = statusMap[text] || { color: 'default', label: text };
       return h(Tag, { color: status.color }, () => status.label);
-    }
+    },
   },
   {
     title: '角色',
@@ -86,9 +98,11 @@ const columns = [
         return h('span', { style: 'color: #999' }, '无');
       }
       return h(Space, { size: 4 }, () =>
-        record.roles!.map(ur => h(Tag, { color: 'blue', key: ur.id }, () => ur.role.name))
+        record.roles!.map((ur) =>
+          h(Tag, { color: 'blue', key: ur.id }, () => ur.role.name),
+        ),
       );
-    }
+    },
   },
   {
     title: '最后登录',
@@ -97,7 +111,7 @@ const columns = [
     width: 160,
     customRender: ({ text }: { text: string | null }) => {
       return text ? new Date(text).toLocaleString('zh-CN') : '从未登录';
-    }
+    },
   },
   {
     title: '创建时间',
@@ -106,7 +120,7 @@ const columns = [
     width: 160,
     customRender: ({ text }: { text: string }) => {
       return new Date(text).toLocaleString('zh-CN');
-    }
+    },
   },
   {
     title: '操作',
@@ -118,9 +132,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ data: UserItem[]; total: number }>('/platform/users', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ data: UserItem[]; total: number }>(
+      '/platform/users',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.data;
     pagination.value.total = res.total;
   } catch (e: any) {
@@ -133,9 +153,12 @@ async function fetchData() {
 
 async function fetchTenants() {
   try {
-    const res = await requestClient.get<{ data: Tenant[] }>('/platform/tenants', {
-      params: { page: 1, pageSize: 100 }
-    });
+    const res = await requestClient.get<{ data: Tenant[] }>(
+      '/platform/tenants',
+      {
+        params: { page: 1, pageSize: 100 },
+      },
+    );
     tenants.value = res.data;
   } catch (e: any) {
     console.error(e);
@@ -146,7 +169,7 @@ async function fetchTenants() {
 async function fetchAllRoles() {
   try {
     const res = await requestClient.get<{ data: Role[] }>('/platform/roles', {
-      params: { page: 1, pageSize: 100 }
+      params: { page: 1, pageSize: 100 },
     });
     allRoles.value = res.data;
   } catch (e: any) {
@@ -161,8 +184,10 @@ async function handleAssignRoles(record: UserItem) {
 
   // 获取用户当前角色
   try {
-    const res = await requestClient.get<Role[]>(`/platform/users/${record.id}/roles`);
-    currentUserRoles.value = res.map(r => r.id);
+    const res = await requestClient.get<Role[]>(
+      `/platform/users/${record.id}/roles`,
+    );
+    currentUserRoles.value = res.map((r) => r.id);
   } catch (e: any) {
     console.error(e);
     message.error(e.message || '获取用户角色失败');
@@ -176,7 +201,7 @@ async function handleRoleSubmit() {
   roleModalLoading.value = true;
   try {
     await requestClient.put(`/platform/users/${currentUserId.value}/roles`, {
-      roleIds: currentUserRoles.value
+      roleIds: currentUserRoles.value,
     });
     message.success('角色分配成功');
     roleModalVisible.value = false;
@@ -231,7 +256,10 @@ async function handleDelete(id: string) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/platform/users/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/platform/users/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/platform/users', formState.value);
@@ -259,7 +287,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">用户管理</h2>
       <Button type="primary" @click="handleAdd">新增用户</Button>
     </div>
@@ -275,8 +303,12 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
-            <Button type="link" size="small" @click="handleAssignRoles(record)">分配角色</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
+            <Button type="link" size="small" @click="handleAssignRoles(record)"
+              >分配角色</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -285,19 +317,38 @@ onMounted(() => {
       </template>
     </Table>
 
-    <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit" width="600px">
+    <Modal
+      v-model:open="modalVisible"
+      :title="modalTitle"
+      @ok="handleSubmit"
+      width="600px"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="用户名" required>
-          <Input v-model:value="formState.username" placeholder="请输入用户名（3-50字符）" :disabled="!!editingId" />
+          <Input
+            v-model:value="formState.username"
+            placeholder="请输入用户名（3-50字符）"
+            :disabled="!!editingId"
+          />
         </Form.Item>
         <Form.Item label="密码" :required="!editingId">
-          <Input.Password v-model:value="formState.password" placeholder="请输入密码（6位以上）" />
+          <Input.Password
+            v-model:value="formState.password"
+            placeholder="请输入密码（6位以上）"
+          />
         </Form.Item>
         <Form.Item label="真实姓名" required>
-          <Input v-model:value="formState.realName" placeholder="请输入真实姓名" />
+          <Input
+            v-model:value="formState.realName"
+            placeholder="请输入真实姓名"
+          />
         </Form.Item>
         <Form.Item label="邮箱">
-          <Input v-model:value="formState.email" placeholder="请输入邮箱" type="email" />
+          <Input
+            v-model:value="formState.email"
+            placeholder="请输入邮箱"
+            type="email"
+          />
         </Form.Item>
         <Form.Item label="手机号">
           <Input v-model:value="formState.phone" placeholder="请输入手机号" />
@@ -310,8 +361,17 @@ onMounted(() => {
           </Select>
         </Form.Item>
         <Form.Item label="所属租户" required>
-          <Select v-model:value="formState.tenantId" placeholder="请选择租户" :disabled="!!editingId" show-search>
-            <Select.Option v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
+          <Select
+            v-model:value="formState.tenantId"
+            placeholder="请选择租户"
+            :disabled="!!editingId"
+            show-search
+          >
+            <Select.Option
+              v-for="tenant in tenants"
+              :key="tenant.id"
+              :value="tenant.id"
+            >
               {{ tenant.name }} ({{ tenant.code }})
             </Select.Option>
           </Select>

@@ -1,6 +1,14 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { Card, Tag, Descriptions, DescriptionsItem, List, ListItem, Tooltip } from 'ant-design-vue';
+import {
+  Card,
+  Tag,
+  Descriptions,
+  DescriptionsItem,
+  List,
+  ListItem,
+  Tooltip,
+} from 'ant-design-vue';
 import {
   BookOutlined,
   AimOutlined,
@@ -174,7 +182,9 @@ const gradeText = computed(() => {
         <FunctionOutlined />
         <span>数学模型</span>
       </div>
-      <div class="model-explanation">{{ analysis.mathematicalModel.explanation }}</div>
+      <div class="model-explanation">
+        {{ analysis.mathematicalModel.explanation }}
+      </div>
       <div class="equations-list">
         <div
           v-for="(eq, i) in analysis.mathematicalModel.latex"
@@ -193,7 +203,11 @@ const gradeText = computed(() => {
         <span>涉及知识点</span>
       </div>
       <div class="knowledge-tags">
-        <Tag v-for="(kp, i) in analysis.knowledgePoints" :key="i" color="geekblue">
+        <Tag
+          v-for="(kp, i) in analysis.knowledgePoints"
+          :key="i"
+          color="geekblue"
+        >
           {{ kp }}
         </Tag>
       </div>
@@ -208,7 +222,9 @@ const gradeText = computed(() => {
           :style="{ width: `${analysis.confidence * 100}%` }"
         ></div>
       </div>
-      <span class="confidence-value">{{ Math.round(analysis.confidence * 100) }}%</span>
+      <span class="confidence-value"
+        >{{ Math.round(analysis.confidence * 100) }}%</span
+      >
     </div>
   </Card>
 </template>
@@ -221,8 +237,8 @@ const gradeText = computed(() => {
 
 .card-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   font-weight: 600;
 }
 
@@ -232,16 +248,16 @@ const gradeText = computed(() => {
 }
 
 .original-section {
-  margin-bottom: 16px;
   padding: 12px;
+  margin-bottom: 16px;
   background: #f5f5f5;
   border-radius: 6px;
 }
 
 .section-label {
+  margin-bottom: 4px;
   font-size: 12px;
   color: #666;
-  margin-bottom: 4px;
 }
 
 .original-text {
@@ -255,12 +271,12 @@ const gradeText = computed(() => {
 
 .section-title {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   margin-bottom: 8px;
+  font-size: 13px;
   font-weight: 500;
   color: #333;
-  font-size: 13px;
 }
 
 .value {
@@ -269,25 +285,25 @@ const gradeText = computed(() => {
 }
 
 .unit {
-  color: #666;
   margin-left: 4px;
   font-size: 12px;
+  color: #666;
 }
 
 .desc {
-  color: #999;
-  font-size: 12px;
   margin-left: 4px;
+  font-size: 12px;
+  color: #999;
 }
 
 .model-explanation {
+  padding: 8px 12px;
+  margin-bottom: 8px;
   font-size: 13px;
   color: #666;
-  margin-bottom: 8px;
-  padding: 8px 12px;
   background: #e6f7ff;
-  border-radius: 4px;
   border-left: 3px solid #1890ff;
+  border-radius: 4px;
 }
 
 .equations-list {
@@ -309,25 +325,25 @@ const gradeText = computed(() => {
 
 .confidence-bar {
   display: flex;
-  align-items: center;
   gap: 8px;
-  margin-top: 16px;
+  align-items: center;
   padding-top: 12px;
+  margin-top: 16px;
   border-top: 1px solid #f0f0f0;
 }
 
 .confidence-label {
+  flex-shrink: 0;
   font-size: 12px;
   color: #666;
-  flex-shrink: 0;
 }
 
 .confidence-track {
   flex: 1;
   height: 6px;
+  overflow: hidden;
   background: #f0f0f0;
   border-radius: 3px;
-  overflow: hidden;
 }
 
 .confidence-fill {
@@ -338,9 +354,9 @@ const gradeText = computed(() => {
 }
 
 .confidence-value {
+  flex-shrink: 0;
   font-size: 12px;
   font-weight: 600;
   color: #1890ff;
-  flex-shrink: 0;
 }
 </style>

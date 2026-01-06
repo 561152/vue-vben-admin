@@ -1,6 +1,13 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { Card, Tag, Collapse, CollapsePanel, Steps, Step } from 'ant-design-vue';
+import {
+  Card,
+  Tag,
+  Collapse,
+  CollapsePanel,
+  Steps,
+  Step,
+} from 'ant-design-vue';
 import {
   UserOutlined,
   RobotOutlined,
@@ -94,7 +101,11 @@ const strategyText = computed(() => {
       <div class="message-header">
         <span class="sender">{{ isAI ? 'AI 教师' : '我' }}</span>
         <span class="time">{{ formattedTime }}</span>
-        <Tag v-if="isAI && message.strategy" :color="strategyColor" size="small">
+        <Tag
+          v-if="isAI && message.strategy"
+          :color="strategyColor"
+          size="small"
+        >
           {{ strategyText }}
         </Tag>
       </div>
@@ -115,7 +126,10 @@ const strategyText = computed(() => {
         </Collapse>
 
         <!-- 解题步骤 -->
-        <div v-if="message.mathSteps && message.mathSteps.length > 0" class="math-steps">
+        <div
+          v-if="message.mathSteps && message.mathSteps.length > 0"
+          class="math-steps"
+        >
           <div class="section-title">
             <CalculatorOutlined />
             <span>解题步骤</span>
@@ -128,7 +142,10 @@ const strategyText = computed(() => {
             >
               <template #description>
                 <div class="step-content">
-                  <MathRenderer v-if="step.latex" :content="`$${step.latex}$`" />
+                  <MathRenderer
+                    v-if="step.latex"
+                    :content="`$${step.latex}$`"
+                  />
                   <span v-else>{{ step.expression }}</span>
                   <p v-if="step.explanation" class="step-explanation">
                     {{ step.explanation }}
@@ -140,13 +157,20 @@ const strategyText = computed(() => {
         </div>
 
         <!-- 提示 -->
-        <div v-if="message.hints && message.hints.length > 0" class="hints-section">
+        <div
+          v-if="message.hints && message.hints.length > 0"
+          class="hints-section"
+        >
           <div class="section-title">
             <BulbOutlined />
             <span>思考提示</span>
           </div>
           <div class="hints-list">
-            <div v-for="(hint, index) in message.hints" :key="index" class="hint-item">
+            <div
+              v-for="(hint, index) in message.hints"
+              :key="index"
+              class="hint-item"
+            >
               <Tag color="gold">提示 {{ index + 1 }}</Tag>
               <span>{{ hint }}</span>
             </div>
@@ -154,7 +178,12 @@ const strategyText = computed(() => {
         </div>
 
         <!-- 追问建议 -->
-        <div v-if="message.followUpQuestions && message.followUpQuestions.length > 0" class="follow-up-section">
+        <div
+          v-if="
+            message.followUpQuestions && message.followUpQuestions.length > 0
+          "
+          class="follow-up-section"
+        >
           <div class="section-title">
             <QuestionCircleOutlined />
             <span>可以继续问</span>
@@ -179,8 +208,8 @@ const strategyText = computed(() => {
 .message-bubble {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
   padding: 0 20px;
+  margin-bottom: 20px;
 }
 
 .message-bubble.is-ai {
@@ -192,21 +221,21 @@ const strategyText = computed(() => {
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   font-size: 20px;
-  flex-shrink: 0;
-  background: #e6f7ff;
   color: #1890ff;
+  background: #e6f7ff;
+  border-radius: 50%;
 }
 
 .avatar.ai-avatar {
-  background: #f6ffed;
   color: #52c41a;
+  background: #f6ffed;
 }
 
 .message-content {
@@ -222,8 +251,8 @@ const strategyText = computed(() => {
 
 .message-header {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   margin-bottom: 4px;
   font-size: 12px;
 }
@@ -243,8 +272,8 @@ const strategyText = computed(() => {
 }
 
 .message-bubble:not(.is-ai) .message-body {
-  background: #1890ff;
   color: #fff;
+  background: #1890ff;
 }
 
 .message-bubble:not(.is-ai) .message-body :deep(.ant-card-body) {
@@ -267,29 +296,29 @@ const strategyText = computed(() => {
 }
 
 .thinking-content {
+  max-height: 200px;
+  padding: 12px;
+  overflow-y: auto;
   font-size: 12px;
   color: #666;
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
   white-space: pre-wrap;
+  background: #f5f5f5;
+  border-radius: 4px;
 }
 
 .section-title {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   margin: 16px 0 8px;
+  font-size: 13px;
   font-weight: 500;
   color: #666;
-  font-size: 13px;
 }
 
 .math-steps {
-  margin-top: 12px;
   padding: 12px;
+  margin-top: 12px;
   background: #fafafa;
   border-radius: 8px;
 }
@@ -305,8 +334,8 @@ const strategyText = computed(() => {
 }
 
 .hints-section {
-  margin-top: 12px;
   padding: 12px;
+  margin-top: 12px;
   background: #fffbe6;
   border-radius: 8px;
 }
@@ -319,8 +348,8 @@ const strategyText = computed(() => {
 
 .hint-item {
   display: flex;
-  align-items: flex-start;
   gap: 8px;
+  align-items: flex-start;
   font-size: 13px;
 }
 
@@ -335,8 +364,8 @@ const strategyText = computed(() => {
 }
 
 .follow-up-tag {
-  cursor: pointer;
   padding: 4px 12px;
+  cursor: pointer;
 }
 
 .follow-up-tag:hover {

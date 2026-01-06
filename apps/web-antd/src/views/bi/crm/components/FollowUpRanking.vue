@@ -48,13 +48,13 @@ function getRankColor(index: number): string {
       <div
         v-for="(user, index) in data.byUser"
         :key="user.userId"
-        class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 last:border-b-0"
+        class="mb-3 flex items-center justify-between border-b border-gray-200 pb-3 last:border-b-0"
       >
         <!-- 排名和用户信息 -->
         <div class="flex items-center gap-3">
           <!-- 排名徽章 -->
           <div
-            class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md"
+            class="flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white shadow-md"
             :class="getRankBadgeClass(index)"
           >
             {{ index + 1 }}
@@ -62,16 +62,13 @@ function getRankColor(index: number): string {
 
           <!-- 用户信息 -->
           <div>
-            <div class="font-medium text-base">{{ user.userName }}</div>
+            <div class="text-base font-medium">{{ user.userName }}</div>
             <div class="text-xs text-gray-500">ID: {{ user.userId }}</div>
           </div>
         </div>
 
         <!-- 跟进数量 -->
-        <div
-          class="text-2xl font-bold"
-          :style="{ color: getRankColor(index) }"
-        >
+        <div class="text-2xl font-bold" :style="{ color: getRankColor(index) }">
           {{ user.count }}
         </div>
       </div>

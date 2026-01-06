@@ -1,6 +1,18 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Select, Tag, Popconfirm, Checkbox } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Select,
+  Tag,
+  Popconfirm,
+  Checkbox,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface TenantItem {
@@ -68,7 +80,7 @@ const columns = [
       };
       const status = statusMap[text] || { color: 'default', label: text };
       return h(Tag, { color: status.color }, () => status.label);
-    }
+    },
   },
   {
     title: '套餐',
@@ -83,7 +95,7 @@ const columns = [
         ENTERPRISE: '企业版',
       };
       return planMap[text] || text;
-    }
+    },
   },
   {
     title: '用户数',
@@ -91,10 +103,15 @@ const columns = [
     width: 80,
     customRender: ({ record }: { record: TenantItem }) => {
       return record._count?.users || 0;
-    }
+    },
   },
   { title: '用户限额', dataIndex: 'maxUsers', key: 'maxUsers', width: 90 },
-  { title: '客户限额', dataIndex: 'maxCustomers', key: 'maxCustomers', width: 90 },
+  {
+    title: '客户限额',
+    dataIndex: 'maxCustomers',
+    key: 'maxCustomers',
+    width: 90,
+  },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
@@ -102,7 +119,7 @@ const columns = [
     width: 160,
     customRender: ({ text }: { text: string }) => {
       return new Date(text).toLocaleString('zh-CN');
-    }
+    },
   },
   {
     title: '操作',
@@ -114,9 +131,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ data: TenantItem[]; total: number }>('/platform/tenants', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ data: TenantItem[]; total: number }>(
+      '/platform/tenants',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.data;
     pagination.value.total = res.total;
   } catch (e: any) {
@@ -170,7 +193,10 @@ async function handleDelete(id: string) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/platform/tenants/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/platform/tenants/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/platform/tenants', formState.value);
@@ -192,7 +218,9 @@ function handleTableChange(pag: any) {
 // Subscription management functions
 async function fetchAllAppModules() {
   try {
-    const res = await requestClient.get<{ data: AppModule[] }>('/platform/app-modules');
+    const res = await requestClient.get<{ data: AppModule[] }>(
+      '/platform/app-modules',
+    );
     allAppModules.value = res.data;
   } catch (e: any) {
     console.error(e);
@@ -206,8 +234,10 @@ async function handleManageSubscriptions(record: TenantItem) {
 
   // Get tenant's current subscriptions
   try {
-    const res = await requestClient.get<{ appModule: AppModule }[]>(`/platform/tenants/${record.id}/subscriptions`);
-    currentSubscriptions.value = res.map(s => s.appModule.code);
+    const res = await requestClient.get<{ appModule: AppModule }[]>(
+      `/platform/tenants/${record.id}/subscriptions`,
+    );
+    currentSubscriptions.value = res.map((s) => s.appModule.code);
   } catch (e: any) {
     console.error(e);
     message.error(e.message || '获取租户订阅失败');
@@ -220,9 +250,12 @@ async function handleSubscriptionSubmit() {
 
   subscriptionModalLoading.value = true;
   try {
-    await requestClient.put(`/platform/tenants/${currentTenantId.value}/subscriptions`, {
-      appModuleCodes: currentSubscriptions.value
-    });
+    await requestClient.put(
+      `/platform/tenants/${currentTenantId.value}/subscriptions`,
+      {
+        appModuleCodes: currentSubscriptions.value,
+      },
+    );
     message.success('订阅管理成功');
     subscriptionModalVisible.value = false;
     fetchData();
@@ -241,7 +274,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">租户管理</h2>
       <Button type="primary" @click="handleAdd">新增租户</Button>
     </div>
@@ -257,8 +290,15 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
-            <Button type="link" size="small" @click="handleManageSubscriptions(record)">管理订阅</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleManageSubscriptions(record)"
+              >管理订阅</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -267,16 +307,28 @@ onMounted(() => {
       </template>
     </Table>
 
-    <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit" width="600px">
+    <Modal
+      v-model:open="modalVisible"
+      :title="modalTitle"
+      @ok="handleSubmit"
+      width="600px"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="租户代码" required>
-          <Input v-model:value="formState.code" placeholder="请输入租户代码（英文字母）" :disabled="!!editingId" />
+          <Input
+            v-model:value="formState.code"
+            placeholder="请输入租户代码（英文字母）"
+            :disabled="!!editingId"
+          />
         </Form.Item>
         <Form.Item label="租户名称" required>
           <Input v-model:value="formState.name" placeholder="请输入租户名称" />
         </Form.Item>
         <Form.Item label="域名">
-          <Input v-model:value="formState.domain" placeholder="请输入域名（可选）" />
+          <Input
+            v-model:value="formState.domain"
+            placeholder="请输入域名（可选）"
+          />
         </Form.Item>
         <Form.Item label="状态">
           <Select v-model:value="formState.status">
@@ -294,10 +346,18 @@ onMounted(() => {
           </Select>
         </Form.Item>
         <Form.Item label="用户限额">
-          <Input v-model:value="formState.maxUsers" type="number" placeholder="请输入用户限额" />
+          <Input
+            v-model:value="formState.maxUsers"
+            type="number"
+            placeholder="请输入用户限额"
+          />
         </Form.Item>
         <Form.Item label="客户限额">
-          <Input v-model:value="formState.maxCustomers" type="number" placeholder="请输入客户限额" />
+          <Input
+            v-model:value="formState.maxCustomers"
+            type="number"
+            placeholder="请输入客户限额"
+          />
         </Form.Item>
       </Form>
     </Modal>
@@ -310,8 +370,13 @@ onMounted(() => {
       width="600px"
     >
       <div class="mt-4">
-        <p class="mb-4 text-gray-600">请选择租户可以使用的应用模块（可多选）：</p>
-        <Checkbox.Group v-model:value="currentSubscriptions" style="width: 100%">
+        <p class="mb-4 text-gray-600">
+          请选择租户可以使用的应用模块（可多选）：
+        </p>
+        <Checkbox.Group
+          v-model:value="currentSubscriptions"
+          style="width: 100%"
+        >
           <div class="grid grid-cols-1 gap-3">
             <Checkbox
               v-for="module in allAppModules"
@@ -321,7 +386,9 @@ onMounted(() => {
             >
               <div class="flex flex-col">
                 <span class="font-medium">{{ module.name }}</span>
-                <span class="text-xs text-gray-500">{{ module.description }}</span>
+                <span class="text-xs text-gray-500">{{
+                  module.description
+                }}</span>
               </div>
             </Checkbox>
           </div>

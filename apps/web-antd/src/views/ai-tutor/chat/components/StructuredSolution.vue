@@ -1,6 +1,15 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Card, Timeline, TimelineItem, Tag, Result, Button, Collapse, CollapsePanel } from 'ant-design-vue';
+import {
+  Card,
+  Timeline,
+  TimelineItem,
+  Tag,
+  Result,
+  Button,
+  Collapse,
+  CollapsePanel,
+} from 'ant-design-vue';
 import {
   CheckCircleOutlined,
   CalculatorOutlined,
@@ -51,7 +60,8 @@ const toggleStep = (stepNumber: number) => {
 };
 
 // 是否展开
-const isExpanded = (stepNumber: number) => expandedSteps.value.includes(stepNumber);
+const isExpanded = (stepNumber: number) =>
+  expandedSteps.value.includes(stepNumber);
 
 // 复制答案
 const copyAnswer = async () => {
@@ -108,10 +118,7 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
           <div class="step-content">
             <!-- 数学表达式 -->
             <div class="step-expression">
-              <MathRenderer
-                v-if="step.latex"
-                :content="`$${step.latex}$`"
-              />
+              <MathRenderer v-if="step.latex" :content="`$${step.latex}$`" />
               <span v-else class="plain-expr">{{ step.expression }}</span>
             </div>
 
@@ -134,10 +141,7 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
           </div>
 
           <!-- 验证标记 -->
-          <CheckCircleOutlined
-            v-if="step.verified"
-            class="verified-icon"
-          />
+          <CheckCircleOutlined v-if="step.verified" class="verified-icon" />
         </TimelineItem>
       </Timeline>
     </div>
@@ -155,7 +159,9 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
               :content="`$$${solution.finalAnswer.latex}$$`"
               display-mode
             />
-            <span v-else class="plain-answer">{{ solution.finalAnswer.value }}</span>
+            <span v-else class="plain-answer">{{
+              solution.finalAnswer.value
+            }}</span>
             <span v-if="solution.finalAnswer.unit" class="answer-unit">
               {{ solution.finalAnswer.unit }}
             </span>
@@ -170,9 +176,18 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
       </Result>
 
       <!-- 多个答案 -->
-      <div v-if="solution.alternativeAnswers && solution.alternativeAnswers.length > 1" class="alt-answers">
+      <div
+        v-if="
+          solution.alternativeAnswers && solution.alternativeAnswers.length > 1
+        "
+        class="alt-answers"
+      >
         <span class="alt-label">其他解：</span>
-        <Tag v-for="(ans, i) in solution.alternativeAnswers" :key="i" color="default">
+        <Tag
+          v-for="(ans, i) in solution.alternativeAnswers"
+          :key="i"
+          color="default"
+        >
           {{ ans }}
         </Tag>
       </div>
@@ -188,8 +203,8 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 
 .card-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   font-weight: 600;
 }
 
@@ -214,8 +229,8 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 
 .step-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .step-desc {
@@ -240,10 +255,10 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 
 .step-expression {
   padding: 8px 12px;
-  background: #f5f5f5;
-  border-radius: 6px;
   margin-bottom: 8px;
   font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  border-radius: 6px;
 }
 
 .plain-expr {
@@ -264,25 +279,25 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 }
 
 .step-explanation {
+  padding: 8px 12px;
+  margin-top: 4px;
   font-size: 13px;
   color: #666;
-  padding: 8px 12px;
   background: #e6f7ff;
-  border-radius: 4px;
   border-left: 3px solid #1890ff;
-  margin-top: 4px;
+  border-radius: 4px;
 }
 
 .verified-icon {
-  color: #52c41a;
-  font-size: 16px;
   margin-left: 8px;
+  font-size: 16px;
+  color: #52c41a;
 }
 
 .final-answer-section {
-  border-top: 1px solid #f0f0f0;
   padding-top: 16px;
   margin-top: 8px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .answer-result {
@@ -306,9 +321,9 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 
 .answer-value {
   display: flex;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
 }
 
 .plain-answer {
@@ -324,10 +339,10 @@ const getStepColor = (step: SolutionStep, index: number, total: number) => {
 
 .alt-answers {
   display: flex;
-  align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  align-items: center;
   padding: 8px 12px;
+  margin-top: 12px;
   background: #fafafa;
   border-radius: 4px;
 }

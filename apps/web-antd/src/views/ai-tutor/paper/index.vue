@@ -22,7 +22,11 @@ import {
 } from '@ant-design/icons-vue';
 import type { UploadFile, TableColumnsType } from 'ant-design-vue';
 import { analyzePaper, importQuestions } from '#/api/ai';
-import type { PaperAnalysisResponse, ParsedQuestion, ImportQuestionsResponse } from '#/api/ai';
+import type {
+  PaperAnalysisResponse,
+  ParsedQuestion,
+  ImportQuestionsResponse,
+} from '#/api/ai';
 
 // 状态
 const isAnalyzing = ref(false);
@@ -70,7 +74,10 @@ const columns: TableColumnsType = [
 ];
 
 // 处理文件选择
-const handleFileChange = (info: { file: UploadFile; fileList: UploadFile[] }) => {
+const handleFileChange = (info: {
+  file: UploadFile;
+  fileList: UploadFile[];
+}) => {
   fileList.value = info.fileList.slice(-1);
 
   if (info.file.originFileObj) {
@@ -153,12 +160,12 @@ const handleClear = () => {
 // 获取题型标签颜色
 const getTypeColor = (type: string) => {
   const colorMap: Record<string, string> = {
-    '选择题': 'blue',
-    '填空题': 'green',
-    '判断题': 'orange',
-    '计算题': 'purple',
-    '解答题': 'cyan',
-    '应用题': 'magenta',
+    选择题: 'blue',
+    填空题: 'green',
+    判断题: 'orange',
+    计算题: 'purple',
+    解答题: 'cyan',
+    应用题: 'magenta',
   };
   return colorMap[type] || 'default';
 };
@@ -218,7 +225,12 @@ const getImportStatus = (index: number) => {
         </Card>
 
         <!-- 试卷信息 -->
-        <Card v-if="analysisResult" title="试卷信息" :bordered="false" class="info-card">
+        <Card
+          v-if="analysisResult"
+          title="试卷信息"
+          :bordered="false"
+          class="info-card"
+        >
           <Descriptions :column="1" size="small">
             <DescriptionsItem label="试卷标题">
               {{ analysisResult.paperInfo.title || '未识别' }}
@@ -230,7 +242,9 @@ const getImportStatus = (index: number) => {
               {{ analysisResult.paperInfo.totalScore || '-' }}
             </DescriptionsItem>
             <DescriptionsItem label="题目数量">
-              <Tag color="blue">{{ analysisResult.paperInfo.questionCount }}</Tag>
+              <Tag color="blue">{{
+                analysisResult.paperInfo.questionCount
+              }}</Tag>
             </DescriptionsItem>
             <DescriptionsItem label="处理耗时">
               {{ analysisResult.processingMs }}ms
@@ -290,14 +304,16 @@ const getImportStatus = (index: number) => {
               :pagination="false"
               :row-selection="{
                 selectedRowKeys,
-                onChange: (keys: number[]) => selectedRowKeys = keys,
+                onChange: (keys: number[]) => (selectedRowKeys = keys),
               }"
               size="small"
               row-key="index"
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.dataIndex === 'type'">
-                  <Tag :color="getTypeColor(record.type)">{{ record.type }}</Tag>
+                  <Tag :color="getTypeColor(record.type)">{{
+                    record.type
+                  }}</Tag>
                 </template>
                 <template v-if="column.dataIndex === 'score'">
                   {{ record.score || '-' }}
@@ -313,20 +329,20 @@ const getImportStatus = (index: number) => {
                     </Button>
                     <template v-if="getImportStatus(record.index)">
                       <Badge
-                        v-if="getImportStatus(record.index)!.status === 'imported'"
+                        v-if="
+                          getImportStatus(record.index)!.status === 'imported'
+                        "
                         status="success"
                         text="已导入"
                       />
                       <Badge
-                        v-else-if="getImportStatus(record.index)!.status === 'duplicate'"
+                        v-else-if="
+                          getImportStatus(record.index)!.status === 'duplicate'
+                        "
                         status="warning"
                         text="重复"
                       />
-                      <Badge
-                        v-else
-                        status="error"
-                        text="失败"
-                      />
+                      <Badge v-else status="error" text="失败" />
                     </template>
                   </div>
                 </template>
@@ -386,7 +402,7 @@ const getImportStatus = (index: number) => {
 }
 
 .page-header h2 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 24px;
 }
 
@@ -450,8 +466,8 @@ const getImportStatus = (index: number) => {
 }
 
 .empty-icon {
-  font-size: 64px;
   margin-bottom: 16px;
+  font-size: 64px;
 }
 
 .import-toolbar {
@@ -469,18 +485,18 @@ const getImportStatus = (index: number) => {
 
 .action-cell {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .question-content {
-  white-space: pre-wrap;
   line-height: 1.8;
+  white-space: pre-wrap;
 }
 
 .options-list {
-  margin: 0;
   padding-left: 20px;
+  margin: 0;
 }
 
 .options-list li {

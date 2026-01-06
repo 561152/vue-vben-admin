@@ -1,6 +1,19 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Select, Tag, Popconfirm, Checkbox, Collapse } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Select,
+  Tag,
+  Popconfirm,
+  Checkbox,
+  Collapse,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface RoleItem {
@@ -54,7 +67,12 @@ const activeKeys = ref<string[]>([]);
 const columns = [
   { title: '角色代码', dataIndex: 'code', key: 'code', width: 150 },
   { title: '角色名称', dataIndex: 'name', key: 'name' },
-  { title: '应用模块', dataIndex: 'appModuleCode', key: 'appModuleCode', width: 100 },
+  {
+    title: '应用模块',
+    dataIndex: 'appModuleCode',
+    key: 'appModuleCode',
+    width: 100,
+  },
   {
     title: '数据范围',
     dataIndex: 'dataScope',
@@ -68,7 +86,7 @@ const columns = [
       };
       const scope = scopeMap[text] || { label: text, color: 'default' };
       return h(Tag, { color: scope.color }, () => scope.label);
-    }
+    },
   },
   {
     title: '状态',
@@ -78,7 +96,7 @@ const columns = [
     customRender: ({ text }: { text: string }) => {
       const color = text === 'ACTIVE' ? 'green' : 'red';
       return h(Tag, { color }, () => text);
-    }
+    },
   },
   { title: '描述', dataIndex: 'description', key: 'description' },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
@@ -92,9 +110,15 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ data: RoleItem[]; total: number }>('/platform/roles', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
-    });
+    const res = await requestClient.get<{ data: RoleItem[]; total: number }>(
+      '/platform/roles',
+      {
+        params: {
+          page: pagination.value.current,
+          pageSize: pagination.value.pageSize,
+        },
+      },
+    );
     dataSource.value = res.data;
     pagination.value.total = res.total;
   } catch (e: any) {
@@ -108,7 +132,9 @@ async function fetchData() {
 // Permission management functions
 async function fetchAllPermissions() {
   try {
-    const res = await requestClient.get<Record<string, Permission[]>>('/platform/permissions/for-assignment');
+    const res = await requestClient.get<Record<string, Permission[]>>(
+      '/platform/permissions/for-assignment',
+    );
     allPermissions.value = res;
   } catch (e: any) {
     console.error(e);
@@ -128,8 +154,10 @@ async function handleAssignPermissions(record: RoleItem) {
 
   // Get role's current permissions
   try {
-    const res = await requestClient.get<Permission[]>(`/platform/roles/${record.id}/permissions`);
-    currentPermissions.value = res.map(p => p.id);
+    const res = await requestClient.get<Permission[]>(
+      `/platform/roles/${record.id}/permissions`,
+    );
+    currentPermissions.value = res.map((p) => p.id);
   } catch (e: any) {
     console.error(e);
     message.error(e.message || '获取角色权限失败');
@@ -142,9 +170,12 @@ async function handlePermissionSubmit() {
 
   permissionModalLoading.value = true;
   try {
-    await requestClient.put(`/platform/roles/${currentRoleId.value}/permissions`, {
-      permissionIds: currentPermissions.value
-    });
+    await requestClient.put(
+      `/platform/roles/${currentRoleId.value}/permissions`,
+      {
+        permissionIds: currentPermissions.value,
+      },
+    );
     message.success('权限分配成功');
     permissionModalVisible.value = false;
     fetchData();
@@ -196,7 +227,10 @@ async function handleDelete(id: number) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/platform/roles/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/platform/roles/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/platform/roles', formState.value);
@@ -223,7 +257,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">角色权限管理</h2>
       <Button type="primary" @click="handleAdd">新增角色</Button>
     </div>
@@ -239,8 +273,15 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
-            <Button type="link" size="small" @click="handleAssignPermissions(record)">分配权限</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleAssignPermissions(record)"
+              >分配权限</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -252,13 +293,20 @@ onMounted(() => {
     <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit">
       <Form layout="vertical" class="mt-4">
         <Form.Item label="角色代码" required>
-          <Input v-model:value="formState.code" placeholder="如：CRM_ADMIN" :disabled="!!editingId" />
+          <Input
+            v-model:value="formState.code"
+            placeholder="如：CRM_ADMIN"
+            :disabled="!!editingId"
+          />
         </Form.Item>
         <Form.Item label="角色名称" required>
           <Input v-model:value="formState.name" placeholder="请输入角色名称" />
         </Form.Item>
         <Form.Item label="应用模块" required>
-          <Input v-model:value="formState.appModuleCode" placeholder="如：CRM" />
+          <Input
+            v-model:value="formState.appModuleCode"
+            placeholder="如：CRM"
+          />
         </Form.Item>
         <Form.Item label="数据范围">
           <Select v-model:value="formState.dataScope">
@@ -274,7 +322,10 @@ onMounted(() => {
           </Select>
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+          />
         </Form.Item>
       </Form>
     </Modal>
@@ -294,7 +345,10 @@ onMounted(() => {
             :key="moduleName"
             :header="`${moduleName} (${permissions.length}个权限)`"
           >
-            <Checkbox.Group v-model:value="currentPermissions" style="width: 100%">
+            <Checkbox.Group
+              v-model:value="currentPermissions"
+              style="width: 100%"
+            >
               <div class="grid grid-cols-2 gap-2">
                 <Checkbox
                   v-for="perm in permissions"
@@ -303,9 +357,13 @@ onMounted(() => {
                   class="mb-2"
                 >
                   <div class="flex flex-col">
-                    <span class="font-medium text-sm">{{ perm.name }}</span>
+                    <span class="text-sm font-medium">{{ perm.name }}</span>
                     <span class="text-xs text-gray-500">{{ perm.code }}</span>
-                    <span v-if="perm.description" class="text-xs text-gray-400">{{ perm.description }}</span>
+                    <span
+                      v-if="perm.description"
+                      class="text-xs text-gray-400"
+                      >{{ perm.description }}</span
+                    >
                   </div>
                 </Checkbox>
               </div>

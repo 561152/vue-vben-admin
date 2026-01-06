@@ -147,10 +147,19 @@ export async function quickAnswer(data: {
  */
 export async function mathCalculate(data: {
   expression: string;
-  type: 'equation' | 'simplify' | 'factor' | 'expand' | 'derivative' | 'integral';
+  type:
+    | 'equation'
+    | 'simplify'
+    | 'factor'
+    | 'expand'
+    | 'derivative'
+    | 'integral';
   variable?: string;
 }) {
-  return requestClient.post<MathCalculateResult>('/education/math/calculate', data);
+  return requestClient.post<MathCalculateResult>(
+    '/education/math/calculate',
+    data,
+  );
 }
 
 /**
@@ -212,7 +221,10 @@ export async function addMistake(data: {
  */
 export async function getMistakes(studentId: string, subject?: string) {
   const params = subject ? { subject } : {};
-  return requestClient.get<MistakeRecord[]>(`/education/mistakes/${studentId}`, { params });
+  return requestClient.get<MistakeRecord[]>(
+    `/education/mistakes/${studentId}`,
+    { params },
+  );
 }
 
 /**
@@ -376,7 +388,9 @@ export async function verifySolution(data: {
   equation: string;
   solutions: Array<{ variable: string; value: string | number }>;
   originalQuestion?: string;
-  enabledMethods?: Array<'substitution' | 'alternative_method' | 'reasonableness'>;
+  enabledMethods?: Array<
+    'substitution' | 'alternative_method' | 'reasonableness'
+  >;
   includeSteps?: boolean;
 }) {
   return requestClient.post<VerificationResult>(
@@ -442,9 +456,13 @@ export async function getOcrCacheStats() {
  * 识别题目并解答
  */
 export async function recognizeQuestion(formData: FormData) {
-  return requestClient.post<RecognizeQuestionResponse>('/lms/ocr/recognize', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return requestClient.post<RecognizeQuestionResponse>(
+    '/lms/ocr/recognize',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
 }
 
 /**
@@ -530,9 +548,13 @@ export interface PaginatedResponse<T> {
  * 批改作业
  */
 export async function gradeHomework(formData: FormData) {
-  return requestClient.post<HomeworkGradingResponse>('/lms/homework/grade', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return requestClient.post<HomeworkGradingResponse>(
+    '/lms/homework/grade',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
 }
 
 /**
@@ -606,16 +628,24 @@ export interface ImportQuestionsResponse {
  * 分析试卷
  */
 export async function analyzePaper(formData: FormData) {
-  return requestClient.post<PaperAnalysisResponse>('/lms/paper/analyze', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return requestClient.post<PaperAnalysisResponse>(
+    '/lms/paper/analyze',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
 }
 
 /**
  * 导入题目到题库
  */
 export async function importQuestions(formData: FormData) {
-  return requestClient.post<ImportQuestionsResponse>('/lms/paper/import-questions', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return requestClient.post<ImportQuestionsResponse>(
+    '/lms/paper/import-questions',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
 }

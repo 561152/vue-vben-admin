@@ -100,7 +100,9 @@ onMounted(loadProgress);
               title="待复习错题"
               :value="progress?.pendingMistakes || 0"
               suffix="题"
-              :value-style="progress?.pendingMistakes ? { color: '#cf1322' } : {}"
+              :value-style="
+                progress?.pendingMistakes ? { color: '#cf1322' } : {}
+              "
             >
               <template #prefix>
                 <ClockCircleOutlined />
@@ -125,18 +127,35 @@ onMounted(loadProgress);
 
       <!-- 知识点掌握度 -->
       <Card title="知识点掌握情况" :bordered="false" class="section-card">
-        <Empty v-if="!progress?.knowledgePoints?.length" description="暂无知识点数据" />
+        <Empty
+          v-if="!progress?.knowledgePoints?.length"
+          description="暂无知识点数据"
+        />
         <Row v-else :gutter="[16, 16]">
-          <Col v-for="kp in progress.knowledgePoints" :key="kp.topic" :xs="24" :sm="12" :md="8">
+          <Col
+            v-for="kp in progress.knowledgePoints"
+            :key="kp.topic"
+            :xs="24"
+            :sm="12"
+            :md="8"
+          >
             <div class="knowledge-item">
               <div class="kp-header">
                 <span class="kp-name">{{ kp.topic }}</span>
-                <span class="kp-value">{{ Math.round(kp.mastery * 100) }}%</span>
+                <span class="kp-value"
+                  >{{ Math.round(kp.mastery * 100) }}%</span
+                >
               </div>
               <Progress
                 :percent="Math.round(kp.mastery * 100)"
                 :show-info="false"
-                :stroke-color="kp.mastery >= 0.8 ? '#52c41a' : kp.mastery >= 0.5 ? '#faad14' : '#ff4d4f'"
+                :stroke-color="
+                  kp.mastery >= 0.8
+                    ? '#52c41a'
+                    : kp.mastery >= 0.5
+                      ? '#faad14'
+                      : '#ff4d4f'
+                "
               />
             </div>
           </Col>
@@ -147,12 +166,16 @@ onMounted(loadProgress);
       <Card title="最近学习记录" :bordered="false" class="section-card">
         <Table
           :columns="sessionColumns"
-          :data-source="progress?.recentSessions?.map((s, i) => ({ ...s, key: i })) || []"
+          :data-source="
+            progress?.recentSessions?.map((s, i) => ({ ...s, key: i })) || []
+          "
           :pagination="false"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'subject'">
-              <Tag color="blue">{{ subjectNames[record.subject] || record.subject }}</Tag>
+              <Tag color="blue">{{
+                subjectNames[record.subject] || record.subject
+              }}</Tag>
             </template>
             <template v-else-if="column.key === 'startedAt'">
               {{ formatDate(record.startedAt) }}

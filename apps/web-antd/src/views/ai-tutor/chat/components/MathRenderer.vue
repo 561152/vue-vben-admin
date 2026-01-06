@@ -87,7 +87,11 @@ watch(() => props.content, renderMath);
 </script>
 
 <template>
-  <span ref="containerRef" class="math-renderer" :class="{ 'display-mode': displayMode }"></span>
+  <span
+    ref="containerRef"
+    class="math-renderer"
+    :class="{ 'display-mode': displayMode }"
+  ></span>
 </template>
 
 <style scoped>
@@ -97,8 +101,8 @@ watch(() => props.content, renderMath);
 
 .math-renderer.display-mode {
   display: block;
-  text-align: center;
   margin: 16px 0;
+  text-align: center;
 }
 
 .math-renderer :deep(.katex) {
@@ -110,9 +114,9 @@ watch(() => props.content, renderMath);
 }
 
 .math-renderer :deep(.math-error) {
+  padding: 2px 4px;
   color: #ff4d4f;
   background: #fff1f0;
-  padding: 2px 4px;
   border-radius: 2px;
 }
 </style>

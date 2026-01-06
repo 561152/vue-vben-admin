@@ -65,7 +65,12 @@ export interface ReasonablenessResult extends VerificationMethodResult {
 export interface VerificationResult {
   isVerified: boolean;
   confidence: number;
-  methods: Array<VerificationMethodResult | SubstitutionResult | AlternativeMethodResult | ReasonablenessResult>;
+  methods: Array<
+    | VerificationMethodResult
+    | SubstitutionResult
+    | AlternativeMethodResult
+    | ReasonablenessResult
+  >;
   summary: string;
   warnings?: string[];
   suggestions?: string[];
@@ -106,9 +111,12 @@ const progressColor = computed(() => {
 });
 
 // 获取方法结果类型
-const isSubstitution = (m: any): m is SubstitutionResult => m.name === 'substitution';
-const isAlternative = (m: any): m is AlternativeMethodResult => m.name === 'alternative_method';
-const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reasonableness';
+const isSubstitution = (m: any): m is SubstitutionResult =>
+  m.name === 'substitution';
+const isAlternative = (m: any): m is AlternativeMethodResult =>
+  m.name === 'alternative_method';
+const isReasonableness = (m: any): m is ReasonablenessResult =>
+  m.name === 'reasonableness';
 </script>
 
 <template>
@@ -154,7 +162,11 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
     >
       <template #message>
         <div class="warning-list">
-          <div v-for="(w, i) in verification.warnings" :key="i" class="warning-item">
+          <div
+            v-for="(w, i) in verification.warnings"
+            :key="i"
+            class="warning-item"
+          >
             {{ w }}
           </div>
         </div>
@@ -164,7 +176,12 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
     <Divider style="margin: 16px 0" />
 
     <!-- 验证方法详情 -->
-    <Collapse :default-active-key="collapsed ? [] : verification.methods.map(m => m.name)" ghost>
+    <Collapse
+      :default-active-key="
+        collapsed ? [] : verification.methods.map((m) => m.name)
+      "
+      ghost
+    >
       <CollapsePanel
         v-for="method in verification.methods"
         :key="method.name"
@@ -242,9 +259,14 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
                 </div>
                 <div class="result-item">
                   <span class="result-label">替代方法结果：</span>
-                  <span class="result-value">{{ method.alternativeResult }}</span>
+                  <span class="result-value">{{
+                    method.alternativeResult
+                  }}</span>
                 </div>
-                <Tag :color="method.resultsMatch ? 'success' : 'error'" class="match-tag">
+                <Tag
+                  :color="method.resultsMatch ? 'success' : 'error'"
+                  class="match-tag"
+                >
                   {{ method.resultsMatch ? '结果一致' : '结果不一致' }}
                 </Tag>
               </div>
@@ -258,20 +280,37 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
                 <span class="label">实际场景：</span>
                 <span>{{ method.realWorldContext }}</span>
               </div>
-              <div v-if="method.valueRange.min !== undefined || method.valueRange.max !== undefined" class="range-info">
+              <div
+                v-if="
+                  method.valueRange.min !== undefined ||
+                  method.valueRange.max !== undefined
+                "
+                class="range-info"
+              >
                 <span class="label">合理范围：</span>
                 <span class="range">
-                  {{ method.valueRange.min ?? '-∞' }} ~ {{ method.valueRange.max ?? '+∞' }}
+                  {{ method.valueRange.min ?? '-∞' }} ~
+                  {{ method.valueRange.max ?? '+∞' }}
                   <span v-if="method.unit" class="unit">{{ method.unit }}</span>
                 </span>
               </div>
               <div class="reason">
-                <ExclamationCircleOutlined v-if="!method.isReasonable" class="warn-icon" />
+                <ExclamationCircleOutlined
+                  v-if="!method.isReasonable"
+                  class="warn-icon"
+                />
                 <CheckCircleOutlined v-else class="ok-icon" />
                 <span>{{ method.reason }}</span>
               </div>
-              <div v-if="method.warnings && method.warnings.length > 0" class="method-warnings">
-                <div v-for="(w, i) in method.warnings" :key="i" class="warning-text">
+              <div
+                v-if="method.warnings && method.warnings.length > 0"
+                class="method-warnings"
+              >
+                <div
+                  v-for="(w, i) in method.warnings"
+                  :key="i"
+                  class="warning-text"
+                >
                   {{ w }}
                 </div>
               </div>
@@ -282,7 +321,10 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
           <div class="method-details">{{ method.details }}</div>
 
           <!-- 验证步骤 -->
-          <div v-if="method.steps && method.steps.length > 0" class="verification-steps">
+          <div
+            v-if="method.steps && method.steps.length > 0"
+            class="verification-steps"
+          >
             <div class="steps-title">验证步骤：</div>
             <ol>
               <li v-for="(step, i) in method.steps" :key="i">{{ step }}</li>
@@ -293,7 +335,10 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
     </Collapse>
 
     <!-- 建议 -->
-    <div v-if="verification.suggestions && verification.suggestions.length > 0" class="suggestions-section">
+    <div
+      v-if="verification.suggestions && verification.suggestions.length > 0"
+      class="suggestions-section"
+    >
       <Divider style="margin: 16px 0" />
       <div class="suggestions-title">
         <BulbOutlined />
@@ -302,7 +347,7 @@ const isReasonableness = (m: any): m is ReasonablenessResult => m.name === 'reas
       <List size="small" :data-source="verification.suggestions">
         <template #renderItem="{ item }">
           <ListItem>
-            <CheckCircleOutlined style="color: #1890ff; margin-right: 8px" />
+            <CheckCircleOutlined style=" margin-right: 8px;color: #1890ff" />
             {{ item }}
           </ListItem>
         </template>
@@ -326,8 +371,8 @@ export default {
 
 .card-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   font-weight: 600;
 }
 
@@ -337,8 +382,8 @@ export default {
 
 .confidence-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
 }
 
@@ -353,10 +398,10 @@ export default {
 }
 
 .summary {
+  padding: 8px 12px;
+  margin-top: 8px;
   font-size: 13px;
   color: #666;
-  margin-top: 8px;
-  padding: 8px 12px;
   background: #f5f5f5;
   border-radius: 4px;
 }
@@ -377,8 +422,8 @@ export default {
 
 .method-header {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .method-icon {
@@ -410,33 +455,33 @@ export default {
 
 .detail-row {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   margin-bottom: 8px;
 }
 
 .detail-row .label {
+  flex-shrink: 0;
   font-size: 12px;
   color: #666;
-  flex-shrink: 0;
 }
 
 .comparison {
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: center;
-  gap: 16px;
   padding: 12px;
+  margin-top: 12px;
   background: #fff;
   border-radius: 6px;
-  margin-top: 12px;
 }
 
 .side {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 4px;
+  align-items: center;
 }
 
 .side-label {
@@ -455,10 +500,10 @@ export default {
 }
 
 .error-info {
+  margin-top: 8px;
   font-size: 12px;
   color: #999;
   text-align: center;
-  margin-top: 8px;
 }
 
 .solution-steps {
@@ -470,15 +515,15 @@ export default {
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px;
+  margin-top: 12px;
   background: #fff;
   border-radius: 6px;
-  margin-top: 12px;
 }
 
 .result-item {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
 }
 
 .result-label {
@@ -505,18 +550,18 @@ export default {
 }
 
 .unit {
-  color: #666;
   margin-left: 4px;
+  color: #666;
 }
 
 .reason {
   display: flex;
-  align-items: flex-start;
   gap: 8px;
+  align-items: flex-start;
   padding: 12px;
+  margin-top: 12px;
   background: #fff;
   border-radius: 6px;
-  margin-top: 12px;
 }
 
 .warn-icon {
@@ -532,38 +577,38 @@ export default {
 }
 
 .warning-text {
+  padding: 4px 0;
   font-size: 12px;
   color: #faad14;
-  padding: 4px 0;
 }
 
 .method-details {
+  margin-top: 8px;
   font-size: 13px;
   color: #666;
-  margin-top: 8px;
 }
 
 .verification-steps {
-  margin-top: 12px;
   padding: 12px;
+  margin-top: 12px;
   background: #fff;
   border-radius: 6px;
 }
 
 .steps-title {
+  margin-bottom: 8px;
   font-size: 12px;
   color: #666;
-  margin-bottom: 8px;
 }
 
 .verification-steps ol {
-  margin: 0;
   padding-left: 20px;
+  margin: 0;
 }
 
 .verification-steps li {
-  font-size: 13px;
   margin-bottom: 4px;
+  font-size: 13px;
 }
 
 .suggestions-section {
@@ -572,10 +617,10 @@ export default {
 
 .suggestions-title {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
   font-weight: 500;
   color: #1890ff;
-  margin-bottom: 8px;
 }
 </style>

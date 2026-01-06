@@ -57,7 +57,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean];
-  'refresh': [];
+  refresh: [];
 }>();
 
 const activeTab = ref('info');
@@ -103,28 +103,37 @@ const activityIcons: Record<string, { icon: string; color: string }> = {
 };
 
 const pendingFollowUps = computed(() =>
-  followUps.value.filter(f => f.status === 'PENDING')
+  followUps.value.filter((f) => f.status === 'PENDING'),
 );
 
 const overdueFollowUps = computed(() =>
-  followUps.value.filter(f => f.status === 'OVERDUE')
+  followUps.value.filter((f) => f.status === 'OVERDUE'),
 );
 
-watch(() => [props.open, props.customerId], async ([open, id]) => {
-  if (open && id) {
-    await loadData(id);
-  }
-}, { immediate: true });
+watch(
+  () => [props.open, props.customerId],
+  async ([open, id]) => {
+    if (open && id) {
+      await loadData(id);
+    }
+  },
+  { immediate: true },
+);
 
 async function loadData(id: number) {
   loading.value = true;
   try {
-    const [customerData, channelsData, timelineData, followUpsData] = await Promise.all([
-      getCustomer(id),
-      getCustomerChannels(id).catch(() => []),
-      getCustomerTimeline(id, { limit: 20 }).catch(() => ({ activities: [], total: 0, hasMore: false })),
-      getCustomerFollowUps(id, { pageSize: 50 }).catch(() => ({ items: [] })),
-    ]);
+    const [customerData, channelsData, timelineData, followUpsData] =
+      await Promise.all([
+        getCustomer(id),
+        getCustomerChannels(id).catch(() => []),
+        getCustomerTimeline(id, { limit: 20 }).catch(() => ({
+          activities: [],
+          total: 0,
+          hasMore: false,
+        })),
+        getCustomerFollowUps(id, { pageSize: 50 }).catch(() => ({ items: [] })),
+      ]);
 
     customer.value = customerData;
     channels.value = channelsData;
@@ -145,7 +154,9 @@ async function handleMarkCompleted(followUp: FollowUp) {
     message.success('已标记完成');
     // Refresh follow-ups
     if (props.customerId) {
-      const data = await getCustomerFollowUps(props.customerId, { pageSize: 50 });
+      const data = await getCustomerFollowUps(props.customerId, {
+        pageSize: 50,
+      });
       followUps.value = data.items;
     }
   } catch (e) {
@@ -173,27 +184,22 @@ function handleClose() {
 </script>
 
 <template>
-  <Drawer
-    :open="open"
-    title="客户详情"
-    width="640"
-    @close="handleClose"
-  >
+  <Drawer :open="open" title="客户详情" width="640" @close="handleClose">
     <Spin :spinning="loading">
       <template v-if="customer">
         <!-- Header -->
-        <div class="flex items-start gap-4 mb-6 pb-4 border-b">
+        <div class="mb-6 flex items-start gap-4 border-b pb-4">
           <Avatar :src="customer.avatar" :size="72">
             <template #icon><UserOutlined /></template>
           </Avatar>
           <div class="flex-1">
-            <div class="flex items-center gap-2 mb-2">
-              <h2 class="text-xl font-bold m-0">{{ customer.name }}</h2>
+            <div class="mb-2 flex items-center gap-2">
+              <h2 class="m-0 text-xl font-bold">{{ customer.name }}</h2>
               <Tag :color="statusOptions[customer.status]?.color">
                 {{ statusOptions[customer.status]?.label }}
               </Tag>
             </div>
-            <div class="text-gray-500 space-y-1">
+            <div class="space-y-1 text-gray-500">
               <div v-if="customer.phone" class="flex items-center gap-2">
                 <PhoneOutlined /> {{ customer.phone }}
               </div>
@@ -210,7 +216,12 @@ function handleClose() {
         <!-- Stats -->
         <Row :gutter="16" class="mb-6">
           <Col :span="6">
-            <Statistic title="消费总额" :value="customer.totalAmount" prefix="¥" :precision="2" />
+            <Statistic
+              title="消费总额"
+              :value="customer.totalAmount"
+              prefix="¥"
+              :precision="2"
+            />
           </Col>
           <Col :span="6">
             <Statistic title="订单数" :value="customer.orderCount" />
@@ -236,8 +247,22 @@ function handleClose() {
                 <div>
                   <span class="text-gray-400">流失风险</span>
                   <div>
-                    <Tag :color="customer.churnRisk === 'HIGH' ? 'red' : customer.churnRisk === 'MEDIUM' ? 'orange' : 'green'">
-                      {{ customer.churnRisk === 'HIGH' ? '高' : customer.churnRisk === 'MEDIUM' ? '中' : '低' }}
+                    <Tag
+                      :color="
+                        customer.churnRisk === 'HIGH'
+                          ? 'red'
+                          : customer.churnRisk === 'MEDIUM'
+                            ? 'orange'
+                            : 'green'
+                      "
+                    >
+                      {{
+                        customer.churnRisk === 'HIGH'
+                          ? '高'
+                          : customer.churnRisk === 'MEDIUM'
+                            ? '中'
+                            : '低'
+                      }}
                     </Tag>
                   </div>
                 </div>
@@ -271,14 +296,26 @@ function handleClose() {
             <!-- Channels -->
             <Card title="绑定渠道" size="small">
               <template v-if="channels.length > 0">
-                <div v-for="channel in channels" :key="channel.id" class="flex items-center gap-3 py-2 border-b last:border-0">
-                  <Avatar :style="{ backgroundColor: channelColors[channel.channelType] }" :size="36">
+                <div
+                  v-for="channel in channels"
+                  :key="channel.id"
+                  class="flex items-center gap-3 border-b py-2 last:border-0"
+                >
+                  <Avatar
+                    :style="{
+                      backgroundColor: channelColors[channel.channelType],
+                    }"
+                    :size="36"
+                  >
                     <template #icon><WechatOutlined /></template>
                   </Avatar>
                   <div class="flex-1">
-                    <div class="font-medium">{{ channel.channelUsername || channel.channelUserId }}</div>
+                    <div class="font-medium">
+                      {{ channel.channelUsername || channel.channelUserId }}
+                    </div>
                     <div class="text-xs text-gray-400">
-                      {{ channel.channelType }} · 消息 {{ channel.messageCount }}
+                      {{ channel.channelType }} · 消息
+                      {{ channel.messageCount }}
                     </div>
                   </div>
                   <Tag :color="channel.isFollowing ? 'green' : 'default'">
@@ -286,7 +323,11 @@ function handleClose() {
                   </Tag>
                 </div>
               </template>
-              <Empty v-else description="暂无绑定渠道" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无绑定渠道"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </TabPane>
 
@@ -301,13 +342,16 @@ function handleClose() {
                 :key="activity.id"
                 :color="getActivityIcon(activity.activityType).color"
               >
-                <div class="flex justify-between items-start">
+                <div class="flex items-start justify-between">
                   <div>
                     <div class="font-medium">{{ activity.title }}</div>
-                    <div v-if="activity.content" class="text-gray-500 text-sm mt-1">
+                    <div
+                      v-if="activity.content"
+                      class="mt-1 text-sm text-gray-500"
+                    >
                       {{ activity.content }}
                     </div>
-                    <div class="text-xs text-gray-400 mt-1">
+                    <div class="mt-1 text-xs text-gray-400">
                       <ClockCircleOutlined class="mr-1" />
                       {{ formatTime(activity.createdAt) }}
                       <span v-if="activity.operatorName" class="ml-2">
@@ -329,27 +373,41 @@ function handleClose() {
             <template #tab>
               <span>
                 跟进计划
-                <Badge v-if="overdueFollowUps.length > 0" :count="overdueFollowUps.length" :offset="[8, -4]" />
+                <Badge
+                  v-if="overdueFollowUps.length > 0"
+                  :count="overdueFollowUps.length"
+                  :offset="[8, -4]"
+                />
               </span>
             </template>
 
             <!-- Overdue -->
             <template v-if="overdueFollowUps.length > 0">
               <div class="mb-4">
-                <div class="text-red-500 font-medium mb-2">
+                <div class="mb-2 font-medium text-red-500">
                   <ExclamationCircleOutlined class="mr-1" />
                   已逾期 ({{ overdueFollowUps.length }})
                 </div>
-                <Card v-for="item in overdueFollowUps" :key="item.id" size="small" class="mb-2 border-red-200">
-                  <div class="flex justify-between items-start">
+                <Card
+                  v-for="item in overdueFollowUps"
+                  :key="item.id"
+                  size="small"
+                  class="mb-2 border-red-200"
+                >
+                  <div class="flex items-start justify-between">
                     <div>
                       <Tag color="red">{{ item.type }}</Tag>
                       <span class="ml-2">{{ item.content }}</span>
-                      <div class="text-xs text-gray-400 mt-1">
-                        计划: {{ formatTime(item.nextPlanAt) }} ({{ formatRelativeTime(item.nextPlanAt) }})
+                      <div class="mt-1 text-xs text-gray-400">
+                        计划: {{ formatTime(item.nextPlanAt) }} ({{
+                          formatRelativeTime(item.nextPlanAt)
+                        }})
                       </div>
                     </div>
-                    <Popconfirm title="标记为已完成?" @confirm="handleMarkCompleted(item)">
+                    <Popconfirm
+                      title="标记为已完成?"
+                      @confirm="handleMarkCompleted(item)"
+                    >
                       <Button type="link" size="small">
                         <CheckCircleOutlined /> 完成
                       </Button>
@@ -362,20 +420,30 @@ function handleClose() {
             <!-- Pending -->
             <template v-if="pendingFollowUps.length > 0">
               <div class="mb-4">
-                <div class="text-blue-500 font-medium mb-2">
+                <div class="mb-2 font-medium text-blue-500">
                   <ClockCircleOutlined class="mr-1" />
                   待执行 ({{ pendingFollowUps.length }})
                 </div>
-                <Card v-for="item in pendingFollowUps" :key="item.id" size="small" class="mb-2">
-                  <div class="flex justify-between items-start">
+                <Card
+                  v-for="item in pendingFollowUps"
+                  :key="item.id"
+                  size="small"
+                  class="mb-2"
+                >
+                  <div class="flex items-start justify-between">
                     <div>
                       <Tag color="blue">{{ item.type }}</Tag>
                       <span class="ml-2">{{ item.content }}</span>
-                      <div class="text-xs text-gray-400 mt-1">
-                        计划: {{ formatTime(item.nextPlanAt) }} ({{ formatRelativeTime(item.nextPlanAt) }})
+                      <div class="mt-1 text-xs text-gray-400">
+                        计划: {{ formatTime(item.nextPlanAt) }} ({{
+                          formatRelativeTime(item.nextPlanAt)
+                        }})
                       </div>
                     </div>
-                    <Popconfirm title="标记为已完成?" @confirm="handleMarkCompleted(item)">
+                    <Popconfirm
+                      title="标记为已完成?"
+                      @confirm="handleMarkCompleted(item)"
+                    >
                       <Button type="link" size="small">
                         <CheckCircleOutlined /> 完成
                       </Button>
@@ -386,20 +454,26 @@ function handleClose() {
             </template>
 
             <!-- Completed -->
-            <div v-if="followUps.filter(f => f.status === 'COMPLETED').length > 0">
-              <div class="text-green-500 font-medium mb-2">
+            <div
+              v-if="
+                followUps.filter((f) => f.status === 'COMPLETED').length > 0
+              "
+            >
+              <div class="mb-2 font-medium text-green-500">
                 <CheckCircleOutlined class="mr-1" />
                 已完成
               </div>
               <Card
-                v-for="item in followUps.filter(f => f.status === 'COMPLETED').slice(0, 5)"
+                v-for="item in followUps
+                  .filter((f) => f.status === 'COMPLETED')
+                  .slice(0, 5)"
                 :key="item.id"
                 size="small"
                 class="mb-2 opacity-60"
               >
                 <Tag color="default">{{ item.type }}</Tag>
                 <span class="ml-2">{{ item.content }}</span>
-                <div class="text-xs text-gray-400 mt-1">
+                <div class="mt-1 text-xs text-gray-400">
                   {{ formatTime(item.createdAt) }}
                 </div>
               </Card>

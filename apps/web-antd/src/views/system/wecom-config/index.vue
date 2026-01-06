@@ -6,11 +6,23 @@
     <!-- 顶部操作栏 -->
     <div class="action-bar mb-6">
       <div class="status-info">
-        <CheckCircleFilled v-if="configStatus.isConfigured && configStatus.isEnabled" class="status-icon text-green-500" />
-        <ExclamationCircleFilled v-else-if="configStatus.isConfigured" class="status-icon text-orange-500" />
+        <CheckCircleFilled
+          v-if="configStatus.isConfigured && configStatus.isEnabled"
+          class="status-icon text-green-500"
+        />
+        <ExclamationCircleFilled
+          v-else-if="configStatus.isConfigured"
+          class="status-icon text-orange-500"
+        />
         <CloseCircleFilled v-else class="status-icon text-gray-400" />
         <span class="status-text">
-          {{ configStatus.isConfigured && configStatus.isEnabled ? '已连接' : configStatus.isConfigured ? '未启用' : '未配置' }}
+          {{
+            configStatus.isConfigured && configStatus.isEnabled
+              ? '已连接'
+              : configStatus.isConfigured
+                ? '未启用'
+                : '未配置'
+          }}
         </span>
       </div>
       <Space size="middle">
@@ -19,7 +31,12 @@
           checked-children="已启用"
           un-checked-children="已禁用"
         />
-        <Button type="primary" size="large" :loading="saving" @click="handleSave">
+        <Button
+          type="primary"
+          size="large"
+          :loading="saving"
+          @click="handleSave"
+        >
           <template #icon><SaveOutlined /></template>
           保存配置
         </Button>
@@ -76,7 +93,12 @@
                   <div class="title">自建应用 AgentId</div>
                   <div class="desc">自建应用的唯一标识</div>
                 </div>
-                <Tag v-if="currentConfig.agentId" color="success" class="ml-auto">已配置</Tag>
+                <Tag
+                  v-if="currentConfig.agentId"
+                  color="success"
+                  class="ml-auto"
+                  >已配置</Tag
+                >
               </div>
               <div class="section-content">
                 <Input
@@ -105,12 +127,21 @@
                   <div class="desc">用于同步企业通讯录和员工数据</div>
                 </div>
                 <Tag color="blue" class="ml-auto">推荐</Tag>
-                <Tag v-if="currentConfig.agentSecret" color="success" class="ml-2">已配置</Tag>
+                <Tag
+                  v-if="currentConfig.agentSecret"
+                  color="success"
+                  class="ml-2"
+                  >已配置</Tag
+                >
               </div>
               <div class="section-content">
                 <InputPassword
                   v-model:value="formState.agentSecret"
-                  :placeholder="currentConfig.agentSecret ? '已配置，留空则保持不变' : '请输入自建应用 Secret'"
+                  :placeholder="
+                    currentConfig.agentSecret
+                      ? '已配置，留空则保持不变'
+                      : '请输入自建应用 Secret'
+                  "
                   size="large"
                   class="config-input"
                 >
@@ -124,7 +155,8 @@
                 </div>
                 <Alert type="info" class="mt-3" show-icon>
                   <template #message>
-                    <b>推荐使用自建应用Secret</b>：2022年8月起，企业微信限制通讯录同步助手从新IP调用接口，建议改用自建应用Secret
+                    <b>推荐使用自建应用Secret</b
+                    >：2022年8月起，企业微信限制通讯录同步助手从新IP调用接口，建议改用自建应用Secret
                   </template>
                 </Alert>
               </div>
@@ -139,12 +171,21 @@
                   <div class="desc">旧方式同步通讯录（不推荐）</div>
                 </div>
                 <Tag color="orange" class="ml-auto">可选</Tag>
-                <Tag v-if="currentConfig.contactSecret" color="success" class="ml-2">已配置</Tag>
+                <Tag
+                  v-if="currentConfig.contactSecret"
+                  color="success"
+                  class="ml-2"
+                  >已配置</Tag
+                >
               </div>
               <div class="section-content">
                 <InputPassword
                   v-model:value="formState.contactSecret"
-                  :placeholder="currentConfig.contactSecret ? '已配置，留空则保持不变' : '请输入通讯录 Secret'"
+                  :placeholder="
+                    currentConfig.contactSecret
+                      ? '已配置，留空则保持不变'
+                      : '请输入通讯录 Secret'
+                  "
                   size="large"
                   class="config-input"
                 >
@@ -154,7 +195,8 @@
                 </InputPassword>
                 <div class="input-hint">
                   <InfoCircleOutlined />
-                  获取路径：管理工具 → 通讯录同步 → Secret（已弃用，建议使用上方的自建应用Secret）
+                  获取路径：管理工具 → 通讯录同步 →
+                  Secret（已弃用，建议使用上方的自建应用Secret）
                 </div>
               </div>
             </div>
@@ -167,12 +209,21 @@
                   <div class="title">客户联系 Secret</div>
                   <div class="desc">用于同步外部联系人（客户）数据</div>
                 </div>
-                <Tag v-if="currentConfig.externalContactSecret" color="success" class="ml-auto">已配置</Tag>
+                <Tag
+                  v-if="currentConfig.externalContactSecret"
+                  color="success"
+                  class="ml-auto"
+                  >已配置</Tag
+                >
               </div>
               <div class="section-content">
                 <InputPassword
                   v-model:value="formState.externalContactSecret"
-                  :placeholder="currentConfig.externalContactSecret ? '已配置，留空则保持不变' : '请输入客户联系 Secret'"
+                  :placeholder="
+                    currentConfig.externalContactSecret
+                      ? '已配置，留空则保持不变'
+                      : '请输入客户联系 Secret'
+                  "
                   size="large"
                   class="config-input"
                 >
@@ -214,12 +265,21 @@
                 <FormItem>
                   <template #label>
                     <span>回调 Token</span>
-                    <Tag v-if="currentConfig.callbackToken" color="success" class="ml-2">已配置</Tag>
+                    <Tag
+                      v-if="currentConfig.callbackToken"
+                      color="success"
+                      class="ml-2"
+                      >已配置</Tag
+                    >
                   </template>
                   <InputGroup compact class="input-with-btn">
                     <Input
                       v-model:value="formState.callbackToken"
-                      :placeholder="currentConfig.callbackToken ? '已配置，留空则保持不变' : '点击生成或手动输入'"
+                      :placeholder="
+                        currentConfig.callbackToken
+                          ? '已配置，留空则保持不变'
+                          : '点击生成或手动输入'
+                      "
                       size="large"
                     />
                     <Button size="large" @click="generateToken">
@@ -233,12 +293,21 @@
                 <FormItem>
                   <template #label>
                     <span>回调 AES Key (43位)</span>
-                    <Tag v-if="currentConfig.callbackAesKey" color="success" class="ml-2">已配置</Tag>
+                    <Tag
+                      v-if="currentConfig.callbackAesKey"
+                      color="success"
+                      class="ml-2"
+                      >已配置</Tag
+                    >
                   </template>
                   <InputGroup compact class="input-with-btn">
                     <Input
                       v-model:value="formState.callbackAesKey"
-                      :placeholder="currentConfig.callbackAesKey ? '已配置，留空则保持不变' : '点击生成或手动输入'"
+                      :placeholder="
+                        currentConfig.callbackAesKey
+                          ? '已配置，留空则保持不变'
+                          : '点击生成或手动输入'
+                      "
                       size="large"
                     />
                     <Button size="large" @click="generateAesKey">
@@ -266,7 +335,8 @@
               </InputGroup>
               <div class="input-hint mt-2">
                 <InfoCircleOutlined />
-                配置完 Token 和 AES Key 后，点击顶部"保存配置"，然后将此 URL、Token、AES Key 一起填入企微后台「接收事件服务器」配置中
+                配置完 Token 和 AES Key 后，点击顶部"保存配置"，然后将此
+                URL、Token、AES Key 一起填入企微后台「接收事件服务器」配置中
               </div>
             </FormItem>
           </Form>
@@ -291,29 +361,47 @@
                 <div class="step-title">获取企业ID</div>
                 <div class="step-desc">
                   登录
-                  <a href="https://work.weixin.qq.com" target="_blank">企微管理后台</a>
+                  <a href="https://work.weixin.qq.com" target="_blank"
+                    >企微管理后台</a
+                  >
                   → 我的企业 → 企业信息
                 </div>
               </div>
               <CheckOutlined v-if="formState.corpId" class="step-check" />
             </div>
 
-            <div class="step-item" :class="{ completed: currentConfig.agentId && currentConfig.agentSecret }">
+            <div
+              class="step-item"
+              :class="{
+                completed: currentConfig.agentId && currentConfig.agentSecret,
+              }"
+            >
               <div class="step-number">2</div>
               <div class="step-content">
                 <div class="step-title">配置自建应用（推荐）</div>
-                <div class="step-desc">应用管理 → 自建 → 获取 AgentId 和 Secret</div>
+                <div class="step-desc">
+                  应用管理 → 自建 → 获取 AgentId 和 Secret
+                </div>
               </div>
-              <CheckOutlined v-if="currentConfig.agentId && currentConfig.agentSecret" class="step-check" />
+              <CheckOutlined
+                v-if="currentConfig.agentId && currentConfig.agentSecret"
+                class="step-check"
+              />
             </div>
 
-            <div class="step-item" :class="{ completed: currentConfig.externalContactSecret }">
+            <div
+              class="step-item"
+              :class="{ completed: currentConfig.externalContactSecret }"
+            >
               <div class="step-number">3</div>
               <div class="step-content">
                 <div class="step-title">获取客户联系 Secret（可选）</div>
                 <div class="step-desc">客户联系 → 客户 → API</div>
               </div>
-              <CheckOutlined v-if="currentConfig.externalContactSecret" class="step-check" />
+              <CheckOutlined
+                v-if="currentConfig.externalContactSecret"
+                class="step-check"
+              />
             </div>
 
             <div class="step-item">
@@ -342,7 +430,9 @@
             </div>
             <div class="notice-item">
               <InfoCircleOutlined class="notice-icon" />
-              <span>通讯录 Secret 和客户联系 Secret 是<b>两个不同</b>的密钥</span>
+              <span
+                >通讯录 Secret 和客户联系 Secret 是<b>两个不同</b>的密钥</span
+              >
             </div>
             <div class="notice-item">
               <EditOutlined class="notice-icon" />
@@ -465,13 +555,15 @@ const generateRandomString = (length: number, charset: string): string => {
 };
 
 const generateToken = () => {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charset =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   formState.callbackToken = generateRandomString(32, charset);
   message.success('Token 已生成');
 };
 
 const generateAesKey = () => {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charset =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   formState.callbackAesKey = generateRandomString(43, charset);
   message.success('AES Key 已生成');
 };
@@ -515,9 +607,11 @@ const handleSave = async () => {
     if (formState.contactSecret) data.contactSecret = formState.contactSecret;
     if (formState.agentId) data.agentId = formState.agentId;
     if (formState.agentSecret) data.agentSecret = formState.agentSecret;
-    if (formState.externalContactSecret) data.externalContactSecret = formState.externalContactSecret;
+    if (formState.externalContactSecret)
+      data.externalContactSecret = formState.externalContactSecret;
     if (formState.callbackToken) data.callbackToken = formState.callbackToken;
-    if (formState.callbackAesKey) data.callbackAesKey = formState.callbackAesKey;
+    if (formState.callbackAesKey)
+      data.callbackAesKey = formState.callbackAesKey;
     data.isEnabled = formState.isEnabled;
 
     await requestClient.put('/wecom/config', data);
@@ -535,7 +629,7 @@ const handleTestConnection = async () => {
   testing.value = true;
   try {
     const res = await requestClient.post<{ success: boolean; message: string }>(
-      '/wecom/test-connection'
+      '/wecom/test-connection',
     );
     if (res.success) {
       message.success(res.message || '连接成功');
@@ -571,21 +665,21 @@ onMounted(() => {
 <style scoped>
 /* 顶部操作栏 */
 .action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
   background: var(--component-background, #fff);
   border: 1px solid var(--border-color, #f0f0f0);
   border-radius: 8px;
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
 }
 
 .action-bar .status-info {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .action-bar .status-icon {
@@ -604,8 +698,8 @@ onMounted(() => {
 }
 
 .config-card :deep(.ant-card-head) {
-  border-bottom: 1px solid var(--border-color, #f0f0f0);
   padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
 }
 
 .config-card :deep(.ant-card-body) {
@@ -636,30 +730,30 @@ onMounted(() => {
 
 .section-header {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
+  align-items: flex-start;
   margin-bottom: 12px;
 }
 
 .section-number {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-  color: #fff;
-  border-radius: 50%;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
   font-size: 14px;
   font-weight: 600;
-  flex-shrink: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border-radius: 50%;
 }
 
 .section-title .title {
+  margin-bottom: 2px;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-color, #333);
-  margin-bottom: 2px;
 }
 
 .section-title .desc {
@@ -681,8 +775,8 @@ onMounted(() => {
 
 .input-hint {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
   margin-top: 8px;
   font-size: 12px;
   color: var(--text-color-secondary, #999);
@@ -705,8 +799,8 @@ onMounted(() => {
 }
 
 .readonly-input :deep(.ant-input) {
-  background: var(--component-background-light, #fafafa);
   color: var(--text-color-secondary, #666);
+  background: var(--component-background-light, #fafafa);
 }
 
 /* 帮助卡片 */
@@ -715,9 +809,9 @@ onMounted(() => {
 }
 
 .help-card :deep(.ant-card-head) {
-  border-bottom: 1px solid var(--border-color, #f0f0f0);
-  padding: 12px 20px;
   min-height: auto;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
 }
 
 .help-card :deep(.ant-card-body) {
@@ -740,11 +834,11 @@ onMounted(() => {
 
 .step-item {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
+  align-items: flex-start;
   padding: 12px;
-  border-radius: 8px;
   background: var(--component-background-light, #fafafa);
+  border-radius: 8px;
   transition: all 0.3s;
 }
 
@@ -753,22 +847,22 @@ onMounted(() => {
 }
 
 .step-number {
-  width: 24px;
-  height: 24px;
-  background: var(--border-color, #e8e8e8);
-  color: var(--text-color-secondary, #999);
-  border-radius: 50%;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
   font-size: 12px;
   font-weight: 600;
-  flex-shrink: 0;
+  color: var(--text-color-secondary, #999);
+  background: var(--border-color, #e8e8e8);
+  border-radius: 50%;
 }
 
 .step-item.completed .step-number {
-  background: #52c41a;
   color: #fff;
+  background: #52c41a;
 }
 
 .step-content {
@@ -776,10 +870,10 @@ onMounted(() => {
 }
 
 .step-title {
+  margin-bottom: 2px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-color, #333);
-  margin-bottom: 2px;
 }
 
 .step-desc {
@@ -792,8 +886,8 @@ onMounted(() => {
 }
 
 .step-check {
-  color: #52c41a;
   font-size: 16px;
+  color: #52c41a;
 }
 
 /* 注意事项 */
@@ -805,17 +899,17 @@ onMounted(() => {
 
 .notice-item {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
+  align-items: flex-start;
   font-size: 13px;
-  color: var(--text-color, #333);
   line-height: 1.5;
+  color: var(--text-color, #333);
 }
 
 .notice-icon {
-  color: var(--text-color-secondary, #999);
-  margin-top: 3px;
   flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--text-color-secondary, #999);
 }
 
 /* 暗色模式适配 */

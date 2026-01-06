@@ -1,6 +1,18 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Form, Input, message, Card, Tag, Row, Col, Statistic, Button, Space } from 'ant-design-vue';
+import {
+  Table,
+  Form,
+  Input,
+  message,
+  Card,
+  Tag,
+  Row,
+  Col,
+  Statistic,
+  Button,
+  Space,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface PermissionItem {
@@ -54,7 +66,7 @@ const columns = [
     width: 150,
     customRender: ({ record }: { record: PermissionItem }) => {
       return record.appModule.name;
-    }
+    },
   },
   {
     title: '分类',
@@ -62,10 +74,19 @@ const columns = [
     key: 'category',
     width: 120,
     customRender: ({ text }: { text: string }) => {
-      const colors = ['blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'red', 'volcano'];
+      const colors = [
+        'blue',
+        'green',
+        'orange',
+        'purple',
+        'cyan',
+        'magenta',
+        'red',
+        'volcano',
+      ];
       const color = colors[text.charCodeAt(0) % colors.length];
       return h(Tag, { color }, () => text);
-    }
+    },
   },
   {
     title: '描述',
@@ -79,8 +100,10 @@ const columns = [
     key: 'isActive',
     width: 80,
     customRender: ({ text }: { text: boolean }) => {
-      return h(Tag, { color: text ? 'green' : 'red' }, () => text ? '启用' : '禁用');
-    }
+      return h(Tag, { color: text ? 'green' : 'red' }, () =>
+        text ? '启用' : '禁用',
+      );
+    },
   },
 ];
 
@@ -127,7 +150,7 @@ function calculateStats(data: PermissionItem[]) {
   const byModule: Record<string, number> = {};
   const byCategory: Record<string, number> = {};
 
-  data.forEach(item => {
+  data.forEach((item) => {
     const moduleName = item.appModule.name;
     byModule[moduleName] = (byModule[moduleName] || 0) + 1;
     byCategory[item.category] = (byCategory[item.category] || 0) + 1;
@@ -166,7 +189,7 @@ onMounted(() => {
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-bold mb-4">权限管理</h2>
+      <h2 class="mb-4 text-xl font-bold">权限管理</h2>
 
       <!-- Statistics Cards -->
       <Row :gutter="16" class="mb-4">
@@ -195,7 +218,7 @@ onMounted(() => {
           <Card>
             <Statistic
               title="启用权限"
-              :value="dataSource.filter(p => p.isActive).length"
+              :value="dataSource.filter((p) => p.isActive).length"
               :value-style="{ color: '#3f8600' }"
             />
           </Card>

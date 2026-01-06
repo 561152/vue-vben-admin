@@ -29,7 +29,11 @@ import {
   recognizeFormula,
   getOcrCacheStats,
 } from '#/api/ai';
-import type { RecognizeQuestionResponse, FormulaOcrResponse, OcrCacheStats } from '#/api/ai';
+import type {
+  RecognizeQuestionResponse,
+  FormulaOcrResponse,
+  OcrCacheStats,
+} from '#/api/ai';
 import MathRenderer from '../chat/components/MathRenderer.vue';
 
 // 状态
@@ -44,11 +48,18 @@ const cacheStats = ref<OcrCacheStats | null>(null);
 
 // 是否为题目识别结果
 const isQuestionResult = computed(() => {
-  return recognizeType.value === 'question' && result.value && 'solution' in result.value;
+  return (
+    recognizeType.value === 'question' &&
+    result.value &&
+    'solution' in result.value
+  );
 });
 
 // 处理文件选择
-const handleFileChange = (info: { file: UploadFile; fileList: UploadFile[] }) => {
+const handleFileChange = (info: {
+  file: UploadFile;
+  fileList: UploadFile[];
+}) => {
   fileList.value = info.fileList.slice(-1); // 只保留最后一个文件
 
   if (info.file.originFileObj) {
@@ -185,7 +196,12 @@ loadCacheStats();
         </Card>
 
         <!-- 缓存统计 -->
-        <Card v-if="cacheStats" title="缓存统计" :bordered="false" class="stats-card">
+        <Card
+          v-if="cacheStats"
+          title="缓存统计"
+          :bordered="false"
+          class="stats-card"
+        >
           <Descriptions :column="2" size="small">
             <DescriptionsItem label="缓存总数">
               <Tag color="blue">{{ cacheStats.totalCount }}</Tag>
@@ -230,7 +246,10 @@ loadCacheStats();
               <div class="result-block">
                 <h4>LaTeX 公式</h4>
                 <div class="latex-display">
-                  <MathRenderer :content="`$$${(result as FormulaOcrResponse).latex}$$`" :display-mode="true" />
+                  <MathRenderer
+                    :content="`$$${(result as FormulaOcrResponse).latex}$$`"
+                    :display-mode="true"
+                  />
                 </div>
                 <div class="latex-code">
                   <code>{{ (result as FormulaOcrResponse).latex }}</code>
@@ -245,13 +264,22 @@ loadCacheStats();
                 <div class="text-content">
                   {{ (result as RecognizeQuestionResponse).text }}
                 </div>
-                <div v-if="(result as RecognizeQuestionResponse).latex" class="latex-display">
-                  <MathRenderer :content="`$$${(result as RecognizeQuestionResponse).latex}$$`" :display-mode="true" />
+                <div
+                  v-if="(result as RecognizeQuestionResponse).latex"
+                  class="latex-display"
+                >
+                  <MathRenderer
+                    :content="`$$${(result as RecognizeQuestionResponse).latex}$$`"
+                    :display-mode="true"
+                  />
                 </div>
               </div>
 
               <!-- 题库匹配结果 -->
-              <div v-if="(result as RecognizeQuestionResponse).libraryMatch" class="result-block library-match">
+              <div
+                v-if="(result as RecognizeQuestionResponse).libraryMatch"
+                class="result-block library-match"
+              >
                 <h4>
                   <CheckCircleOutlined style="color: #52c41a" />
                   题库匹配成功
@@ -259,29 +287,47 @@ loadCacheStats();
                 <Descriptions :column="1" size="small" bordered>
                   <DescriptionsItem label="相似度">
                     <Progress
-                      :percent="((result as RecognizeQuestionResponse).libraryMatch!.similarity * 100)"
+                      :percent="
+                        (result as RecognizeQuestionResponse).libraryMatch!
+                          .similarity * 100
+                      "
                       :stroke-color="{ '0%': '#108ee9', '100%': '#87d068' }"
                       size="small"
                     />
                   </DescriptionsItem>
                   <DescriptionsItem label="标准答案">
-                    {{ (result as RecognizeQuestionResponse).libraryMatch!.answer }}
+                    {{
+                      (result as RecognizeQuestionResponse).libraryMatch!.answer
+                    }}
                   </DescriptionsItem>
                 </Descriptions>
               </div>
 
               <!-- AI解答 -->
-              <div v-if="(result as RecognizeQuestionResponse).solution" class="result-block solution">
+              <div
+                v-if="(result as RecognizeQuestionResponse).solution"
+                class="result-block solution"
+              >
                 <h4>AI 解答</h4>
                 <div class="answer-box">
                   <strong>答案：</strong>
                   {{ (result as RecognizeQuestionResponse).solution!.answer }}
                 </div>
 
-                <div v-if="(result as RecognizeQuestionResponse).solution!.steps?.length" class="steps-list">
+                <div
+                  v-if="
+                    (result as RecognizeQuestionResponse).solution!.steps
+                      ?.length
+                  "
+                  class="steps-list"
+                >
                   <h5>解题步骤：</h5>
                   <ol>
-                    <li v-for="step in (result as RecognizeQuestionResponse).solution!.steps" :key="step.step">
+                    <li
+                      v-for="step in (result as RecognizeQuestionResponse)
+                        .solution!.steps"
+                      :key="step.step"
+                    >
                       <span>{{ step.description }}</span>
                       <div v-if="step.latex" class="step-latex">
                         <MathRenderer :content="`$${step.latex}$`" />
@@ -290,9 +336,19 @@ loadCacheStats();
                   </ol>
                 </div>
 
-                <div v-if="(result as RecognizeQuestionResponse).solution!.explanation" class="explanation">
+                <div
+                  v-if="
+                    (result as RecognizeQuestionResponse).solution!.explanation
+                  "
+                  class="explanation"
+                >
                   <h5>解析：</h5>
-                  <p>{{ (result as RecognizeQuestionResponse).solution!.explanation }}</p>
+                  <p>
+                    {{
+                      (result as RecognizeQuestionResponse).solution!
+                        .explanation
+                    }}
+                  </p>
                 </div>
               </div>
             </template>
@@ -313,7 +369,7 @@ loadCacheStats();
 }
 
 .page-header h2 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 24px;
 }
 
@@ -347,16 +403,16 @@ loadCacheStats();
 .options-section {
   display: flex;
   gap: 24px;
-  margin-bottom: 16px;
   padding: 12px;
+  margin-bottom: 16px;
   background: #fafafa;
   border-radius: 8px;
 }
 
 .option-item {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .upload-area {
@@ -402,8 +458,8 @@ loadCacheStats();
 }
 
 .empty-icon {
-  font-size: 64px;
   margin-bottom: 16px;
+  font-size: 64px;
 }
 
 .result-meta {
@@ -417,61 +473,61 @@ loadCacheStats();
 }
 
 .result-block h4 {
-  margin: 0 0 12px 0;
+  margin: 0 0 12px;
   font-size: 16px;
   color: #333;
 }
 
 .result-block h5 {
-  margin: 12px 0 8px 0;
+  margin: 12px 0 8px;
   font-size: 14px;
   color: #666;
 }
 
 .text-content {
   padding: 16px;
+  line-height: 1.8;
   background: #f5f5f5;
   border-radius: 8px;
-  line-height: 1.8;
 }
 
 .latex-display {
   padding: 16px;
-  background: #f6ffed;
-  border-radius: 8px;
   margin-top: 12px;
   text-align: center;
+  background: #f6ffed;
+  border-radius: 8px;
 }
 
 .latex-code {
-  margin-top: 8px;
   padding: 8px 12px;
-  background: #f0f0f0;
-  border-radius: 4px;
+  margin-top: 8px;
+  overflow-x: auto;
   font-family: monospace;
   font-size: 12px;
-  overflow-x: auto;
+  background: #f0f0f0;
+  border-radius: 4px;
 }
 
 .library-match {
   padding: 16px;
   background: #f6ffed;
-  border-radius: 8px;
   border: 1px solid #b7eb8f;
+  border-radius: 8px;
 }
 
 .solution {
   padding: 16px;
   background: #e6f7ff;
-  border-radius: 8px;
   border: 1px solid #91d5ff;
+  border-radius: 8px;
 }
 
 .answer-box {
   padding: 12px;
+  font-size: 16px;
   background: white;
   border-radius: 4px;
-  font-size: 16px;
 }
 
 .steps-list ol {
@@ -485,8 +541,8 @@ loadCacheStats();
 }
 
 .step-latex {
-  margin-top: 4px;
   padding: 8px;
+  margin-top: 4px;
   background: white;
   border-radius: 4px;
 }

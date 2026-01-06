@@ -10,10 +10,7 @@ import {
   Space,
   message,
 } from 'ant-design-vue';
-import {
-  HistoryOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons-vue';
+import { HistoryOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
 import { getGradingHistory } from '#/api/ai';
 import type { GradingHistoryItem } from '#/api/ai';
@@ -136,9 +133,7 @@ onMounted(() => {
       <!-- 工具栏 -->
       <div class="toolbar">
         <Space>
-          <Button :icon="ReloadOutlined" @click="handleRefresh">
-            刷新
-          </Button>
+          <Button :icon="ReloadOutlined" @click="handleRefresh"> 刷新 </Button>
         </Space>
       </div>
 
@@ -201,7 +196,7 @@ onMounted(() => {
 }
 
 .page-header h2 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 24px;
 }
 
@@ -234,7 +229,7 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  font-size: 48px;
 }
 </style>

@@ -27,7 +27,9 @@ import MathRenderer from '../chat/components/MathRenderer.vue';
 
 // 状态
 const expression = ref('');
-const calcType = ref<'equation' | 'simplify' | 'factor' | 'expand' | 'derivative' | 'integral'>('equation');
+const calcType = ref<
+  'equation' | 'simplify' | 'factor' | 'expand' | 'derivative' | 'integral'
+>('equation');
 const variable = ref('x');
 const isLoading = ref(false);
 const result = ref<MathCalculateResult | null>(null);
@@ -35,17 +37,40 @@ const engineStatus = ref<{ algebrite: boolean; sympy: boolean } | null>(null);
 
 // 计算类型选项
 const calcTypeOptions = [
-  { value: 'equation', label: '方程求解', placeholder: 'x^2-4=0', example: 'x² - 4 = 0' },
-  { value: 'simplify', label: '化简', placeholder: '(x+1)*(x-1)', example: '(x+1)(x-1)' },
-  { value: 'factor', label: '因式分解', placeholder: 'x^2-9', example: 'x² - 9' },
+  {
+    value: 'equation',
+    label: '方程求解',
+    placeholder: 'x^2-4=0',
+    example: 'x² - 4 = 0',
+  },
+  {
+    value: 'simplify',
+    label: '化简',
+    placeholder: '(x+1)*(x-1)',
+    example: '(x+1)(x-1)',
+  },
+  {
+    value: 'factor',
+    label: '因式分解',
+    placeholder: 'x^2-9',
+    example: 'x² - 9',
+  },
   { value: 'expand', label: '展开', placeholder: '(x+1)^2', example: '(x+1)²' },
-  { value: 'derivative', label: '求导', placeholder: 'x^3+2*x', example: 'x³ + 2x' },
+  {
+    value: 'derivative',
+    label: '求导',
+    placeholder: 'x^3+2*x',
+    example: 'x³ + 2x',
+  },
   { value: 'integral', label: '积分', placeholder: 'x^2', example: 'x²' },
 ];
 
 // 当前选中的类型配置
 const currentTypeConfig = computed(() => {
-  return calcTypeOptions.find(opt => opt.value === calcType.value) ?? calcTypeOptions[0]!;
+  return (
+    calcTypeOptions.find((opt) => opt.value === calcType.value) ??
+    calcTypeOptions[0]!
+  );
 });
 
 // 快捷输入符号
@@ -130,7 +155,12 @@ fetchEngineStatus();
               <Tag v-if="engineStatus?.sympy" color="blue">
                 <CheckCircleOutlined /> SymPy
               </Tag>
-              <Tag v-if="engineStatus && !engineStatus.algebrite && !engineStatus.sympy" color="red">
+              <Tag
+                v-if="
+                  engineStatus && !engineStatus.algebrite && !engineStatus.sympy
+                "
+                color="red"
+              >
                 <CloseCircleOutlined /> 引擎离线
               </Tag>
             </div>
@@ -159,9 +189,7 @@ fetchEngineStatus();
               :placeholder="currentTypeConfig.placeholder"
               :auto-size="{ minRows: 2, maxRows: 4 }"
             />
-            <div class="input-hint">
-              示例：{{ currentTypeConfig.example }}
-            </div>
+            <div class="input-hint">示例：{{ currentTypeConfig.example }}</div>
           </div>
 
           <!-- 快捷符号 -->
@@ -177,7 +205,10 @@ fetchEngineStatus();
           </div>
 
           <!-- 变量设置（仅微积分） -->
-          <div v-if="['derivative', 'integral'].includes(calcType)" class="form-item">
+          <div
+            v-if="['derivative', 'integral'].includes(calcType)"
+            class="form-item"
+          >
             <label>变量</label>
             <Input v-model:value="variable" style="width: 80px" />
           </div>
@@ -203,8 +234,13 @@ fetchEngineStatus();
             <li><code>sqrt(x)</code> 表示 √x</li>
             <li><code>*</code> 表示乘法，<code>/</code> 表示除法</li>
             <li><code>pi</code> 表示 π，<code>e</code> 表示自然常数</li>
-            <li><code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code> 三角函数</li>
-            <li><code>log(x)</code> 自然对数，<code>log10(x)</code> 常用对数</li>
+            <li>
+              <code>sin(x)</code>, <code>cos(x)</code>,
+              <code>tan(x)</code> 三角函数
+            </li>
+            <li>
+              <code>log(x)</code> 自然对数，<code>log10(x)</code> 常用对数
+            </li>
           </ul>
         </Card>
       </Col>
@@ -233,7 +269,10 @@ fetchEngineStatus();
                 <div class="section-title">
                   <ThunderboltOutlined />
                   <span>结果</span>
-                  <Tag :color="result.engine === 'sympy' ? 'blue' : 'green'" size="small">
+                  <Tag
+                    :color="result.engine === 'sympy' ? 'blue' : 'green'"
+                    size="small"
+                  >
                     {{ result.engine }}
                   </Tag>
                 </div>
@@ -244,7 +283,11 @@ fetchEngineStatus();
                     :display-mode="true"
                   />
                   <template v-else-if="Array.isArray(result.result)">
-                    <div v-for="(r, i) in result.result" :key="i" class="result-item">
+                    <div
+                      v-for="(r, i) in result.result"
+                      :key="i"
+                      class="result-item"
+                    >
                       x<sub>{{ i + 1 }}</sub> = {{ r }}
                     </div>
                   </template>
@@ -257,7 +300,10 @@ fetchEngineStatus();
               <Divider />
 
               <!-- 解题步骤 -->
-              <div v-if="result.steps && result.steps.length > 0" class="steps-section">
+              <div
+                v-if="result.steps && result.steps.length > 0"
+                class="steps-section"
+              >
                 <div class="section-title">
                   <span>解题步骤</span>
                 </div>
@@ -309,8 +355,8 @@ fetchEngineStatus();
 
 .form-item label {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -344,16 +390,16 @@ fetchEngineStatus();
 }
 
 .tips-list {
-  margin: 0;
   padding-left: 20px;
+  margin: 0;
   line-height: 2;
 }
 
 .tips-list code {
-  background: #f5f5f5;
   padding: 2px 6px;
-  border-radius: 4px;
   font-family: monospace;
+  background: #f5f5f5;
+  border-radius: 4px;
 }
 
 .result-card {
@@ -371,8 +417,8 @@ fetchEngineStatus();
 }
 
 .empty-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  font-size: 48px;
 }
 
 .result-section {
@@ -381,8 +427,8 @@ fetchEngineStatus();
 
 .section-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   margin-bottom: 12px;
   font-weight: 500;
   color: #333;
@@ -390,9 +436,9 @@ fetchEngineStatus();
 
 .result-value {
   padding: 16px;
+  font-size: 18px;
   background: #f6ffed;
   border-radius: 8px;
-  font-size: 18px;
 }
 
 .result-item {

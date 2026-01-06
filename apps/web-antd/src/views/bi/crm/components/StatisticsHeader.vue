@@ -80,7 +80,7 @@ const timeRangeOptions = [
 </script>
 
 <template>
-  <div class="mb-5 flex justify-between items-center flex-wrap gap-3">
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <h2 class="text-2xl font-bold">数据统计分析</h2>
 
     <Space size="middle">

@@ -1,6 +1,16 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { Table, Button, Space, Modal, Form, Input, message, Tag, Popconfirm } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Tag,
+  Popconfirm,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 
 interface AppModuleItem {
@@ -46,8 +56,14 @@ const columns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: AppModuleItem[]; total: number }>('/platform/app-modules', {
-      params: { page: pagination.value.current, pageSize: pagination.value.pageSize }
+    const res = await requestClient.get<{
+      items: AppModuleItem[];
+      total: number;
+    }>('/platform/app-modules', {
+      params: {
+        page: pagination.value.current,
+        pageSize: pagination.value.pageSize,
+      },
     });
     console.log('API Response:', res);
     if (res && res.items) {
@@ -104,7 +120,10 @@ async function handleDelete(id: string) {
 async function handleSubmit() {
   try {
     if (editingId.value) {
-      await requestClient.put(`/platform/app-modules/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/platform/app-modules/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       await requestClient.post('/platform/app-modules', formState.value);
@@ -130,7 +149,7 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex justify-between items-center">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">应用模块管理</h2>
       <Button type="primary" @click="handleAdd">新增模块</Button>
     </div>
@@ -146,7 +165,9 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)">编辑</Button>
+            <Button type="link" size="small" @click="handleEdit(record)"
+              >编辑</Button
+            >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
@@ -158,19 +179,33 @@ onMounted(() => {
     <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit">
       <Form layout="vertical" class="mt-4">
         <Form.Item label="模块代码" required>
-          <Input v-model:value="formState.code" placeholder="请输入模块代码（如：CRM）" :disabled="!!editingId" />
+          <Input
+            v-model:value="formState.code"
+            placeholder="请输入模块代码（如：CRM）"
+            :disabled="!!editingId"
+          />
         </Form.Item>
         <Form.Item label="模块名称" required>
           <Input v-model:value="formState.name" placeholder="请输入模块名称" />
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+          />
         </Form.Item>
         <Form.Item label="图标">
-          <Input v-model:value="formState.icon" placeholder="如：ant-design:appstore-outlined" />
+          <Input
+            v-model:value="formState.icon"
+            placeholder="如：ant-design:appstore-outlined"
+          />
         </Form.Item>
         <Form.Item label="排序">
-          <Input v-model:value="formState.sort" type="number" placeholder="数字越小越靠前" />
+          <Input
+            v-model:value="formState.sort"
+            type="number"
+            placeholder="数字越小越靠前"
+          />
         </Form.Item>
       </Form>
     </Modal>

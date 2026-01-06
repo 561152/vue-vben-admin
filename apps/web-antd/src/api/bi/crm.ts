@@ -7,71 +7,77 @@ import { useAccessStore } from '@vben/stores';
 
 export namespace BiCrmApi {
   // 时间范围类型
-  export type TimeRange = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+  export type TimeRange =
+    | 'today'
+    | 'week'
+    | 'month'
+    | 'quarter'
+    | 'year'
+    | 'custom';
 
   // 请求参数接口
   export interface TimeRangeParams {
     timeRange: TimeRange;
     startDate?: string; // 自定义范围开始日期 (YYYY-MM-DD)
-    endDate?: string;   // 自定义范围结束日期 (YYYY-MM-DD)
+    endDate?: string; // 自定义范围结束日期 (YYYY-MM-DD)
   }
 
   // 客户概览统计接口
   export interface OverviewStats {
-    totalCustomers: number;              // 总客户数
-    newCustomers: number;                // 新增客户数
-    activeCustomers: number;             // 活跃客户数
-    conversionRate: number;              // 转化率
-    totalFollowUps: number;              // 总跟进次数
-    averageFollowUpPerCustomer: number;  // 平均每客户跟进次数
-    taggedCustomers: number;             // 有标签的客户数
-    groupedCustomers: number;            // 在分组中的客户数
+    totalCustomers: number; // 总客户数
+    newCustomers: number; // 新增客户数
+    activeCustomers: number; // 活跃客户数
+    conversionRate: number; // 转化率
+    totalFollowUps: number; // 总跟进次数
+    averageFollowUpPerCustomer: number; // 平均每客户跟进次数
+    taggedCustomers: number; // 有标签的客户数
+    groupedCustomers: number; // 在分组中的客户数
   }
 
   // 客户趋势数据项接口
   export interface CustomerTrendItem {
-    date: string;   // 日期 (YYYY-MM-DD)
-    total: number;  // 累计总数
-    new: number;    // 当日新增
+    date: string; // 日期 (YYYY-MM-DD)
+    total: number; // 累计总数
+    new: number; // 当日新增
     active: number; // 当日活跃
   }
 
   // 跟进类型统计项接口
   export interface FollowUpTypeItem {
-    type: string;       // 跟进类型
-    count: number;      // 数量
+    type: string; // 跟进类型
+    count: number; // 数量
     percentage: number; // 百分比
   }
 
   // 跟进用户统计项接口
   export interface FollowUpUserItem {
-    userId: string;   // 用户ID
+    userId: string; // 用户ID
     userName: string; // 用户名称
-    count: number;    // 跟进数量
+    count: number; // 跟进数量
   }
 
   // 跟进统计数据接口
   export interface FollowUpStats {
-    totalFollowUps: number;                               // 总跟进数
-    byType: FollowUpTypeItem[];                           // 按类型分布
-    byUser: FollowUpUserItem[];                           // 按用户分布
-    averagePerCustomer: number;                           // 平均每客户跟进数
+    totalFollowUps: number; // 总跟进数
+    byType: FollowUpTypeItem[]; // 按类型分布
+    byUser: FollowUpUserItem[]; // 按用户分布
+    averagePerCustomer: number; // 平均每客户跟进数
     recentActivity: Array<{ date: string; count: number }>; // 最近活动趋势
   }
 
   // 漏斗阶段数据项接口
   export interface FunnelStageItem {
-    stage: string;           // 阶段名称
-    count: number;           // 数量
-    percentage: number;      // 百分比
+    stage: string; // 阶段名称
+    count: number; // 数量
+    percentage: number; // 百分比
     conversionRate?: number; // 转化率（可选，第一阶段无转化率）
   }
 
   // 销售漏斗数据接口
   export interface SalesFunnel {
-    stages: FunnelStageItem[];    // 各阶段数据
-    totalLeads: number;           // 总线索数
-    totalCustomers: number;       // 总客户数
+    stages: FunnelStageItem[]; // 各阶段数据
+    totalLeads: number; // 总线索数
+    totalCustomers: number; // 总客户数
     overallConversionRate: number; // 总体转化率
   }
 }
