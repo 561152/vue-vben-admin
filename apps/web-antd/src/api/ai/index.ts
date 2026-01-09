@@ -649,3 +649,97 @@ export async function importQuestions(formData: FormData) {
     },
   );
 }
+
+// ==================== AI 智能批改 API (correct_edu) ====================
+
+/**
+ * correct_edu 题目类型
+ * 1: 数学计算题
+ * 2: 数学应用题
+ * 3: 数学填空题
+ * 4: 古诗文/作文默写
+ */
+export type CorrectEduQuestionType = 1 | 2 | 3 | 4;
+
+/**
+ * AI 批改请求参数
+ */
+export interface AIGradingRequest {
+  useCorrectEdu?: boolean;
+  questionType?: CorrectEduQuestionType;
+  standardAnswer?: string;
+}
+
+/**
+ * AI 批改题目结果
+ */
+export interface AIQuestionResult {
+  index: number;
+  questionContent: string;
+  studentAnswer: string;
+  isCorrect: boolean;
+  score: number;
+  maxScore: number;
+  reason?: string;
+  errorAnalysis?: string;
+  correction?: string;
+  aiGraded?: boolean;
+}
+
+/**
+ * AI 批改响应
+ */
+export interface AIGradingResponse {
+  summary: {
+    totalQuestions: number;
+    correctCount: number;
+    score: number;
+    maxScore: number;
+    accuracy: number;
+  };
+  questions: AIQuestionResult[];
+  weakPoints?: WeakPoint[];
+  processingMs: number;
+  recordId?: string;
+  useCorrectEdu?: boolean;
+}
+
+/**
+ * AI 智能批改作业 (支持 correct_edu)
+ */
+export async function gradeWithAI(
+  formData: FormData,
+  options?: AIGradingRequest,
+) {
+  if (options?.useCorrectEdu) {
+    formData.append('useCorrectEdu', 'true');
+  }
+  if (options?.questionType) {
+    formData.append('questionType', String(options.questionType));
+  }
+  if (options?.standardAnswer) {
+    formData.append('standardAnswer', options.standardAnswer);
+  }
+
+  return requestClient.post<AIGradingResponse>(
+    '/education/paper/grade',
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000, // AI 批改需要更长时间
+    },
+  );
+}
+
+/**
+ * 获取题目类型名称
+ */
+export function getQuestionTypeName(type: CorrectEduQuestionType): string {
+  const names: Record<CorrectEduQuestionType, string> = {
+    1: '数学计算题',
+    2: '数学应用题',
+    3: '数学填空题',
+    4: '古诗文默写',
+  };
+  return names[type] || '未知类型';
+}

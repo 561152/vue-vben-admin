@@ -13,6 +13,11 @@ import {
   Progress,
   Table,
   Badge,
+  Switch,
+  Select,
+  SelectOption,
+  Input,
+  Tooltip,
   message,
 } from 'ant-design-vue';
 import {
@@ -21,19 +26,43 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   FileImageOutlined,
+  RobotOutlined,
+  QuestionCircleOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons-vue';
 import type { UploadFile, TableColumnsType } from 'ant-design-vue';
-import { gradeHomework } from '#/api/ai';
-import type { HomeworkGradingResponse, QuestionGradingResult } from '#/api/ai';
+import {
+  gradeHomework,
+  gradeWithAI,
+  getQuestionTypeName,
+} from '#/api/ai';
+import type {
+  HomeworkGradingResponse,
+  AIGradingResponse,
+  CorrectEduQuestionType,
+} from '#/api/ai';
 
 // 状态
 const isLoading = ref(false);
 const fileList = ref<UploadFile[]>([]);
 const previewUrl = ref<string>('');
-const result = ref<HomeworkGradingResponse | null>(null);
+const result = ref<HomeworkGradingResponse | AIGradingResponse | null>(null);
+
+// AI 批改选项
+const useAIGrading = ref(false);
+const questionType = ref<CorrectEduQuestionType>(1);
+const standardAnswer = ref('');
+
+// 题目类型选项
+const questionTypeOptions = [
+  { value: 1, label: '数学计算题', desc: '加减乘除、方程求解等' },
+  { value: 2, label: '数学应用题', desc: '文字题、实际问题' },
+  { value: 3, label: '数学填空题', desc: '填写数字或表达式' },
+  { value: 4, label: '古诗文默写', desc: '诗词、文言文填写' },
+];
 
 // 表格列配置
-const columns: TableColumnsType = [
+const columns = computed<TableColumnsType>(() => [
   {
     title: '题号',
     dataIndex: 'index',
@@ -62,12 +91,22 @@ const columns: TableColumnsType = [
     width: 80,
     align: 'center',
   },
+  ...(useAIGrading.value
+    ? [
+        {
+          title: 'AI 分析',
+          dataIndex: 'reason',
+          ellipsis: true,
+          width: 200,
+        },
+      ]
+    : []),
   {
     title: '错误分析',
     dataIndex: 'errorAnalysis',
     ellipsis: true,
   },
-];
+]);
 
 // 计算正确率颜色
 const getAccuracyColor = (accuracy: number) => {
@@ -108,8 +147,19 @@ const handleGrade = async () => {
     const formData = new FormData();
     formData.append('image', fileList.value[0].originFileObj);
 
-    result.value = await gradeHomework(formData);
-    message.success('批改完成');
+    if (useAIGrading.value) {
+      // 使用 AI 批改 (correct_edu)
+      result.value = await gradeWithAI(formData, {
+        useCorrectEdu: true,
+        questionType: questionType.value,
+        standardAnswer: standardAnswer.value || undefined,
+      });
+      message.success('AI 批改完成');
+    } else {
+      // 使用传统批改
+      result.value = await gradeHomework(formData);
+      message.success('批改完成');
+    }
   } catch (error: any) {
     message.error(error.message || '批改失败');
   } finally {
@@ -122,6 +172,7 @@ const handleClear = () => {
   fileList.value = [];
   previewUrl.value = '';
   result.value = null;
+  standardAnswer.value = '';
 };
 </script>
 
@@ -158,16 +209,71 @@ const handleClear = () => {
             </Upload.Dragger>
           </div>
 
+          <!-- AI 批改选项 -->
+          <div class="ai-options">
+            <Divider orientation="left">
+              <RobotOutlined /> 批改选项
+            </Divider>
+
+            <div class="option-row">
+              <span class="option-label">
+                <ThunderboltOutlined /> AI 智能批改
+                <Tooltip title="使用百度 correct_edu API 进行智能批改，提供更准确的判断和详细分析">
+                  <QuestionCircleOutlined class="help-icon" />
+                </Tooltip>
+              </span>
+              <Switch v-model:checked="useAIGrading" />
+            </div>
+
+            <template v-if="useAIGrading">
+              <div class="option-row">
+                <span class="option-label">题目类型</span>
+                <Select
+                  v-model:value="questionType"
+                  style="width: 180px"
+                  placeholder="选择题目类型"
+                >
+                  <SelectOption
+                    v-for="opt in questionTypeOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    <div>{{ opt.label }}</div>
+                    <div class="option-desc">{{ opt.desc }}</div>
+                  </SelectOption>
+                </Select>
+              </div>
+
+              <div class="option-row vertical">
+                <span class="option-label">
+                  标准答案（可选）
+                  <Tooltip title="提供标准答案可以提高批改准确性">
+                    <QuestionCircleOutlined class="help-icon" />
+                  </Tooltip>
+                </span>
+                <Input.TextArea
+                  v-model:value="standardAnswer"
+                  placeholder="输入标准答案，用于更精准的批改..."
+                  :rows="3"
+                  style="margin-top: 8px"
+                />
+              </div>
+            </template>
+          </div>
+
           <!-- 操作按钮 -->
           <div class="action-buttons">
             <Button @click="handleClear">清空</Button>
             <Button
               type="primary"
-              :icon="EditOutlined"
               :loading="isLoading"
               @click="handleGrade"
             >
-              开始批改
+              <template #icon>
+                <RobotOutlined v-if="useAIGrading" />
+                <EditOutlined v-else />
+              </template>
+              {{ useAIGrading ? 'AI 批改' : '开始批改' }}
             </Button>
           </div>
         </Card>
@@ -178,7 +284,10 @@ const handleClear = () => {
             <li>请确保作业图片清晰、光线充足</li>
             <li>建议正面平拍，避免倾斜</li>
             <li>支持手写和打印体识别</li>
-            <li>单次最多批改一张作业图片</li>
+            <li v-if="useAIGrading" class="ai-tip">
+              <Tag color="blue">AI 模式</Tag>
+              使用百度教育 OCR 进行智能批改
+            </li>
           </ul>
         </Card>
       </div>
@@ -189,7 +298,8 @@ const handleClear = () => {
           <!-- 加载中 -->
           <div v-if="isLoading" class="loading-state">
             <Spin size="large" />
-            <p>正在批改中，请稍候...</p>
+            <p>{{ useAIGrading ? 'AI 正在分析批改中...' : '正在批改中，请稍候...' }}</p>
+            <p v-if="useAIGrading" class="loading-hint">AI 批改可能需要较长时间，请耐心等待</p>
           </div>
 
           <!-- 无结果 -->
@@ -200,6 +310,21 @@ const handleClear = () => {
 
           <!-- 显示结果 -->
           <template v-else>
+            <!-- AI 标识 -->
+            <Alert
+              v-if="(result as AIGradingResponse).useCorrectEdu"
+              type="info"
+              show-icon
+              class="ai-badge"
+            >
+              <template #message>
+                <span><RobotOutlined /> 本次批改使用了 AI 智能分析</span>
+              </template>
+              <template #description>
+                题目类型: {{ getQuestionTypeName(questionType) }}
+              </template>
+            </Alert>
+
             <!-- 总体统计 -->
             <div class="summary-section">
               <div class="summary-header">
@@ -291,6 +416,14 @@ const handleClear = () => {
                       {{ record.score }}/{{ record.maxScore }}
                     </span>
                   </template>
+                  <template v-if="column.dataIndex === 'reason'">
+                    <Tooltip v-if="record.reason" :title="record.reason">
+                      <Tag color="purple">
+                        <RobotOutlined /> AI 分析
+                      </Tag>
+                    </Tooltip>
+                    <span v-else class="no-data">-</span>
+                  </template>
                   <template v-if="column.dataIndex === 'errorAnalysis'">
                     <div v-if="record.errorAnalysis">
                       <div>{{ record.errorAnalysis }}</div>
@@ -331,7 +464,7 @@ const handleClear = () => {
 
 .content-wrapper {
   display: grid;
-  grid-template-columns: 400px 1fr;
+  grid-template-columns: 420px 1fr;
   gap: 24px;
 }
 
@@ -359,6 +492,39 @@ const handleClear = () => {
   padding: 40px 0;
 }
 
+.ai-options {
+  margin-bottom: 16px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.option-row.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+}
+
+.help-icon {
+  color: #999;
+  cursor: help;
+}
+
+.option-desc {
+  font-size: 11px;
+  color: #999;
+}
+
 .action-buttons {
   display: flex;
   gap: 12px;
@@ -379,6 +545,12 @@ const handleClear = () => {
   margin-bottom: 8px;
 }
 
+.ai-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .result-card {
   min-height: 600px;
 }
@@ -393,9 +565,19 @@ const handleClear = () => {
   color: #999;
 }
 
+.loading-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #bbb;
+}
+
 .empty-icon {
   margin-bottom: 16px;
   font-size: 64px;
+}
+
+.ai-badge {
+  margin-bottom: 16px;
 }
 
 .summary-section {
@@ -485,7 +667,8 @@ const handleClear = () => {
   color: #52c41a;
 }
 
-.no-error {
+.no-error,
+.no-data {
   color: #999;
 }
 </style>
