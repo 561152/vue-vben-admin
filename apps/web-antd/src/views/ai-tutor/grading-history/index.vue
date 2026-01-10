@@ -6,14 +6,14 @@ import {
   Tag,
   Progress,
   Button,
-  DatePicker,
   Space,
   message,
 } from 'ant-design-vue';
-import { HistoryOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import { HistoryOutlined, PrinterOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
 import { getGradingHistory } from '#/api/ai';
 import type { GradingHistoryItem } from '#/api/ai';
+import { generatePdf } from '#/api/print';
 
 // 状态
 const loading = ref(false);
@@ -62,6 +62,13 @@ const columns: TableColumnsType = [
     dataIndex: 'processingMs',
     width: 100,
     align: 'center',
+  },
+  {
+    title: '操作',
+    dataIndex: 'action',
+    width: 100,
+    align: 'center',
+    fixed: 'right',
   },
 ];
 
@@ -114,6 +121,43 @@ const handleTableChange = (pag: TablePaginationConfig) => {
 const handleRefresh = () => {
   pagination.value.current = 1;
   loadData();
+};
+
+// 打印记录状态
+const printingId = ref<string | null>(null);
+
+// 打印批改报告
+const handlePrint = async (record: GradingHistoryItem | Record<string, any>) => {
+  printingId.value = record.id;
+  try {
+    const printData = {
+      studentName: '学生', // 实际应从学生信息获取
+      gradingDate: formatTime(record.createdAt),
+      totalScore: record.totalScore,
+      maxScore: record.maxScore,
+      accuracy: record.accuracy,
+      correctCount: record.correctCount,
+      totalQuestions: record.questionCount,
+      processingTime: record.processingMs,
+      overallComment: `本次作业共 ${record.questionCount} 题，正确 ${record.correctCount} 题，正确率 ${(record.accuracy * 100).toFixed(1)}%`,
+      strengthPoints: record.accuracy >= 0.8 ? ['整体表现优秀', '答题准确率高'] : [],
+      improvementPoints: record.accuracy < 0.6 ? ['建议加强基础知识', '多做练习巩固'] : [],
+      studySuggestions: ['继续保持良好的学习习惯', '针对错题进行专项练习'],
+    };
+
+    await generatePdf({
+      templateCode: 'PAPER_GRADING_REPORT',
+      data: printData,
+      fileName: `批改报告-${formatTime(record.createdAt).replace(/[\/\s:]/g, '-')}`,
+    });
+
+    message.success('PDF报告生成成功！');
+  } catch (error: any) {
+    message.error(`生成PDF失败: ${error.message || '未知错误'}`);
+    console.error('Print error:', error);
+  } finally {
+    printingId.value = null;
+  }
 };
 
 // 初始化
@@ -171,6 +215,17 @@ onMounted(() => {
           </template>
           <template v-if="column.dataIndex === 'processingMs'">
             <span class="time-text">{{ record.processingMs }}ms</span>
+          </template>
+          <template v-if="column.dataIndex === 'action'">
+            <Button
+              type="link"
+              size="small"
+              :loading="printingId === record.id"
+              @click="handlePrint(record)"
+            >
+              <template #icon><PrinterOutlined /></template>
+              打印
+            </Button>
           </template>
         </template>
 

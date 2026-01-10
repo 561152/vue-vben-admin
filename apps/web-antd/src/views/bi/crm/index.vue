@@ -56,6 +56,9 @@ onMounted(() => {
       v-model:timeRange="timeRange"
       v-model:customDateRange="customDateRange"
       :loading="loading"
+      :overview-data="overviewData"
+      :follow-up-data="followUpData"
+      :funnel-data="funnelData"
       @refresh="loadAllData"
     />
 

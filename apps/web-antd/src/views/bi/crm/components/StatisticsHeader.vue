@@ -3,9 +3,14 @@ import { h, ref } from 'vue';
 
 import { Button, DatePicker, message, Select, Space } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
-import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import {
+  DownloadOutlined,
+  PrinterOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons-vue';
 
 import { exportToExcel, type BiCrmApi } from '#/api/bi/crm';
+import { generatePdf } from '#/api/print';
 
 // ===================================
 // Props 定义
@@ -15,12 +20,19 @@ interface Props {
   timeRange: BiCrmApi.TimeRange;
   customDateRange: [Dayjs, Dayjs] | null;
   loading: boolean;
+  // 报表数据（用于打印）
+  overviewData?: BiCrmApi.OverviewStats | null;
+  followUpData?: BiCrmApi.FollowUpStats | null;
+  funnelData?: BiCrmApi.SalesFunnel | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   timeRange: 'month',
   customDateRange: null,
   loading: false,
+  overviewData: null,
+  followUpData: null,
+  funnelData: null,
 });
 
 // ===================================
@@ -61,6 +73,69 @@ async function handleExport() {
     console.error('Export error:', error);
   } finally {
     exporting.value = false;
+  }
+}
+
+// ===================================
+// 打印PDF功能
+// ===================================
+
+const printing = ref(false);
+
+async function handlePrint() {
+  printing.value = true;
+  try {
+    // 构建报表数据
+    const timeRangeMap: Record<BiCrmApi.TimeRange, string> = {
+      today: '今日',
+      week: '本周',
+      month: '本月',
+      quarter: '本季度',
+      year: '本年',
+      custom: '自定义',
+    };
+
+    const reportPeriod = timeRangeMap[props.timeRange] || '本月';
+    const generatedAt = new Date().toLocaleString('zh-CN');
+
+    // 准备打印数据
+    const printData = {
+      reportTitle: 'CRM分析报告',
+      reportPeriod,
+      generatedAt,
+      overview: props.overviewData
+        ? {
+            totalCustomers: props.overviewData.totalCustomers,
+            newCustomers: props.overviewData.newCustomers,
+            activeCustomers: props.overviewData.activeCustomers,
+            conversionRate: props.overviewData.conversionRate,
+          }
+        : null,
+      customerSources: [], // 可以从其他数据源获取
+      salesFunnel: props.funnelData?.stages?.map((stage) => ({
+        stage: stage.stage,
+        count: stage.count,
+        percentage: stage.percentage,
+      })),
+      performanceRanking: props.followUpData?.byUser?.slice(0, 5).map((user) => ({
+        name: user.userName,
+        deals: user.count,
+        revenue: 0, // 如有收入数据可补充
+      })),
+    };
+
+    await generatePdf({
+      templateCode: 'BI_CRM_REPORT',
+      data: printData,
+      fileName: `CRM分析报告-${reportPeriod}-${new Date().toISOString().split('T')[0]}`,
+    });
+
+    message.success('PDF报告生成成功！');
+  } catch (error: any) {
+    message.error(`生成PDF失败: ${error.message || '未知错误'}`);
+    console.error('Print error:', error);
+  } finally {
+    printing.value = false;
   }
 }
 
@@ -107,6 +182,14 @@ const timeRangeOptions = [
         @click="handleExport"
       >
         导出 Excel
+      </Button>
+
+      <Button
+        :icon="h(PrinterOutlined)"
+        :loading="printing"
+        @click="handlePrint"
+      >
+        打印 PDF
       </Button>
 
       <Button
