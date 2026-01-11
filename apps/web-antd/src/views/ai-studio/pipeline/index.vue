@@ -28,12 +28,14 @@ import dayjs from 'dayjs';
 
 interface PipelineItem {
   id: number;
+  key: string;
   name: string;
   description: string | null;
-  status: string;
+  triggerType: string;
+  steps: any[];
+  isActive: boolean;
   version: number;
-  nodeCount: number;
-  lastExecutedAt: string | null;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,8 +45,9 @@ const dataSource = ref<PipelineItem[]>([]);
 const pagination = ref({ current: 1, pageSize: 20, total: 0 });
 const modalVisible = ref(false);
 const modalTitle = ref('新建流程');
-const editingId = ref<number | null>(null);
+const editingKey = ref<string | null>(null);
 const formState = ref({
+  key: '',
   name: '',
   description: '',
 });
@@ -66,6 +69,12 @@ const columns = [
     width: 80,
   },
   {
+    title: '流程标识',
+    dataIndex: 'key',
+    key: 'key',
+    width: 180,
+  },
+  {
     title: '流程名称',
     dataIndex: 'name',
     key: 'name',
@@ -75,13 +84,13 @@ const columns = [
     title: '描述',
     dataIndex: 'description',
     key: 'description',
-    width: 250,
+    width: 200,
     ellipsis: true,
   },
   {
     title: '状态',
-    dataIndex: 'status',
-    key: 'status',
+    dataIndex: 'isActive',
+    key: 'isActive',
     width: 100,
   },
   {
@@ -91,15 +100,18 @@ const columns = [
     width: 80,
   },
   {
-    title: '节点数',
-    dataIndex: 'nodeCount',
-    key: 'nodeCount',
+    title: '步骤数',
+    dataIndex: 'steps',
+    key: 'steps',
     width: 80,
+    customRender: ({ record }: { record: PipelineItem }) => {
+      return record.steps?.length || 0;
+    },
   },
   {
-    title: '最后执行',
-    dataIndex: 'lastExecutedAt',
-    key: 'lastExecutedAt',
+    title: '发布时间',
+    dataIndex: 'publishedAt',
+    key: 'publishedAt',
     width: 180,
     customRender: ({ text }: { text: string }) => {
       return text ? dayjs(text).format('YYYY-MM-DD HH:mm:ss') : '-';
@@ -132,49 +144,17 @@ const fetchData = async () => {
       },
     });
 
-    if (response.list) {
-      dataSource.value = response.list;
+    // API returns { data: [...], total, page, pageSize }
+    if (response.data) {
+      dataSource.value = response.data;
       pagination.value.total = response.total || 0;
+    } else if (Array.isArray(response)) {
+      dataSource.value = response;
+      pagination.value.total = response.length;
     }
   } catch (error) {
     console.error('Failed to fetch pipelines:', error);
-    // Mock data for demo
-    dataSource.value = [
-      {
-        id: 1,
-        name: '客户智能分析流程',
-        description: '基于客户行为数据进行智能分析和标签生成',
-        status: 'PUBLISHED',
-        version: 3,
-        nodeCount: 8,
-        lastExecutedAt: '2024-01-10T10:30:00Z',
-        createdAt: '2024-01-01T08:00:00Z',
-        updatedAt: '2024-01-10T10:30:00Z',
-      },
-      {
-        id: 2,
-        name: '自动回复生成流程',
-        description: '根据客户消息自动生成智能回复',
-        status: 'PUBLISHED',
-        version: 2,
-        nodeCount: 5,
-        lastExecutedAt: '2024-01-09T15:20:00Z',
-        createdAt: '2024-01-02T09:00:00Z',
-        updatedAt: '2024-01-09T15:20:00Z',
-      },
-      {
-        id: 3,
-        name: '营销内容生成流程',
-        description: '基于产品信息自动生成营销文案',
-        status: 'DRAFT',
-        version: 1,
-        nodeCount: 6,
-        lastExecutedAt: null,
-        createdAt: '2024-01-08T14:00:00Z',
-        updatedAt: '2024-01-08T14:00:00Z',
-      },
-    ];
-    pagination.value.total = 3;
+    message.error('获取流程列表失败');
   } finally {
     loading.value = false;
   }
@@ -188,8 +168,9 @@ const handleTableChange = (pag: any) => {
 
 const showCreate = () => {
   modalTitle.value = '新建流程';
-  editingId.value = null;
+  editingKey.value = null;
   formState.value = {
+    key: '',
     name: '',
     description: '',
   };
@@ -198,8 +179,9 @@ const showCreate = () => {
 
 const showEdit = (record: PipelineItem) => {
   modalTitle.value = '编辑流程';
-  editingId.value = record.id;
+  editingKey.value = record.key;
   formState.value = {
+    key: record.key,
     name: record.name,
     description: record.description || '',
   };
@@ -213,27 +195,47 @@ const showDetail = (record: PipelineItem) => {
 
 const handleOk = async () => {
   try {
-    if (editingId.value) {
-      await requestClient.put(
-        `/ai-studio/pipelines/${editingId.value}`,
-        formState.value,
-      );
+    if (editingKey.value) {
+      // Update existing pipeline
+      await requestClient.put(`/ai-studio/pipelines/${editingKey.value}`, {
+        name: formState.value.name,
+        description: formState.value.description,
+      });
       message.success('更新成功');
     } else {
-      await requestClient.post('/ai-studio/pipelines', formState.value);
+      // Create new pipeline with default step
+      await requestClient.post('/ai-studio/pipelines', {
+        key: formState.value.key,
+        name: formState.value.name,
+        description: formState.value.description,
+        steps: [
+          {
+            stepKey: 'default_step',
+            name: '默认步骤',
+            type: 'llm',
+            componentRef: {
+              type: 'MODEL',
+              key: 'qwen-vl-plus',
+            },
+          },
+        ],
+      });
       message.success('创建成功');
     }
     modalVisible.value = false;
     fetchData();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to save pipeline:', error);
-    message.error('保存失败');
+    const errorMsg = error?.response?.data?.message || '保存失败';
+    message.error(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);
   }
 };
 
 const handleExecute = async (record: PipelineItem) => {
   try {
-    await requestClient.post(`/ai-studio/pipelines/${record.id}/execute`);
+    await requestClient.post(`/ai-studio/pipelines/${record.key}/execute`, {
+      inputData: {},
+    });
     message.success('流程已开始执行');
     fetchData();
   } catch (error) {
@@ -244,7 +246,11 @@ const handleExecute = async (record: PipelineItem) => {
 
 const handleDuplicate = async (record: PipelineItem) => {
   try {
-    await requestClient.post(`/ai-studio/pipelines/${record.id}/duplicate`);
+    const newKey = `${record.key}-copy-${Date.now()}`;
+    await requestClient.post(`/ai-studio/pipelines/${record.key}/duplicate`, {
+      newKey,
+      newName: `${record.name} (副本)`,
+    });
     message.success('复制成功');
     fetchData();
   } catch (error) {
@@ -253,9 +259,9 @@ const handleDuplicate = async (record: PipelineItem) => {
   }
 };
 
-const handleDelete = async (id: number) => {
+const handleDelete = async (key: string) => {
   try {
-    await requestClient.delete(`/ai-studio/pipelines/${id}`);
+    await requestClient.delete(`/ai-studio/pipelines/${key}`);
     message.success('删除成功');
     fetchData();
   } catch (error) {
@@ -289,16 +295,9 @@ onMounted(() => {
         row-key="id"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <Tag
-              :color="
-                statusOptions.find((opt) => opt.value === record.status)?.color
-              "
-            >
-              {{
-                statusOptions.find((opt) => opt.value === record.status)
-                  ?.label || record.status
-              }}
+          <template v-if="column.key === 'isActive'">
+            <Tag :color="record.isActive ? 'green' : 'default'">
+              {{ record.isActive ? '已启用' : '已禁用' }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'action'">
@@ -313,7 +312,7 @@ onMounted(() => {
                   type="link"
                   size="small"
                   @click="handleExecute(record)"
-                  :disabled="record.status !== 'PUBLISHED'"
+                  :disabled="!record.publishedAt"
                 >
                   <template #icon><PlayCircleOutlined /></template>
                 </Button>
@@ -334,7 +333,7 @@ onMounted(() => {
               </Tooltip>
               <Popconfirm
                 title="确定要删除这个流程吗？"
-                @confirm="handleDelete(record.id)"
+                @confirm="handleDelete(record.key)"
                 ok-text="确定"
                 cancel-text="取消"
               >
@@ -358,6 +357,15 @@ onMounted(() => {
       width="600px"
     >
       <Form :model="formState" layout="vertical">
+        <Form.Item label="流程标识" required v-if="!editingKey">
+          <Input
+            v-model:value="formState.key"
+            placeholder="请输入流程标识（英文、数字、下划线、中划线）"
+            :disabled="!!editingKey"
+          />
+          <div class="form-hint">流程标识创建后不可修改，建议使用小写字母和中划线</div>
+        </Form.Item>
+
         <Form.Item label="流程名称" required>
           <Input v-model:value="formState.name" placeholder="请输入流程名称" />
         </Form.Item>
@@ -385,22 +393,18 @@ onMounted(() => {
           <span>{{ detailPipeline.id }}</span>
         </div>
         <div class="detail-item">
+          <label>流程标识：</label>
+          <span>{{ detailPipeline.key }}</span>
+        </div>
+        <div class="detail-item">
           <label>流程名称：</label>
           <span>{{ detailPipeline.name }}</span>
         </div>
         <div class="detail-item">
           <label>状态：</label>
           <span>
-            <Tag
-              :color="
-                statusOptions.find((opt) => opt.value === detailPipeline.status)
-                  ?.color
-              "
-            >
-              {{
-                statusOptions.find((opt) => opt.value === detailPipeline.status)
-                  ?.label
-              }}
+            <Tag :color="detailPipeline.isActive ? 'green' : 'default'">
+              {{ detailPipeline.isActive ? '已启用' : '已禁用' }}
             </Tag>
           </span>
         </div>
@@ -409,20 +413,18 @@ onMounted(() => {
           <span>v{{ detailPipeline.version }}</span>
         </div>
         <div class="detail-item">
-          <label>节点数：</label>
-          <span>{{ detailPipeline.nodeCount }}</span>
+          <label>步骤数：</label>
+          <span>{{ detailPipeline.steps?.length || 0 }}</span>
         </div>
         <div class="detail-item">
           <label>描述：</label>
           <span>{{ detailPipeline.description || '-' }}</span>
         </div>
         <div class="detail-item">
-          <label>最后执行：</label>
+          <label>发布时间：</label>
           <span>{{
-            detailPipeline.lastExecutedAt
-              ? dayjs(detailPipeline.lastExecutedAt).format(
-                  'YYYY-MM-DD HH:mm:ss',
-                )
+            detailPipeline.publishedAt
+              ? dayjs(detailPipeline.publishedAt).format('YYYY-MM-DD HH:mm:ss')
               : '-'
           }}</span>
         </div>
@@ -440,6 +442,12 @@ onMounted(() => {
 <style scoped>
 .pipeline-list {
   padding: 20px;
+}
+
+.form-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgb(0 0 0 / 45%);
 }
 
 .pipeline-detail {

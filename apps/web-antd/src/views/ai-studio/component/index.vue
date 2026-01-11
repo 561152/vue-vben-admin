@@ -146,64 +146,17 @@ const fetchData = async () => {
       },
     });
 
-    if (response.list) {
-      dataSource.value = response.list;
-      pagination.value.total = response.total || 0;
+    // API returns array directly or { data: [...] }
+    if (Array.isArray(response)) {
+      dataSource.value = response;
+      pagination.value.total = response.length;
+    } else if (response.data) {
+      dataSource.value = response.data;
+      pagination.value.total = response.total || response.data.length;
     }
   } catch (error) {
     console.error('Failed to fetch components:', error);
-    // Mock data for demo
-    dataSource.value = [
-      {
-        id: 1,
-        name: 'GPT-4 对话',
-        code: 'gpt4_chat',
-        description: '调用 GPT-4 模型进行对话生成',
-        type: 'LLM',
-        category: 'AI',
-        version: '1.2.0',
-        usageCount: 1520,
-        createdAt: '2024-01-01T08:00:00Z',
-        updatedAt: '2024-01-10T10:30:00Z',
-      },
-      {
-        id: 2,
-        name: '客户分析提示词',
-        code: 'customer_analysis_prompt',
-        description: '用于分析客户行为和偏好的提示词模板',
-        type: 'PROMPT',
-        category: 'AI',
-        version: '2.0.0',
-        usageCount: 890,
-        createdAt: '2024-01-02T09:00:00Z',
-        updatedAt: '2024-01-09T15:20:00Z',
-      },
-      {
-        id: 3,
-        name: 'JSON 格式化',
-        code: 'json_formatter',
-        description: '将输入数据转换为标准 JSON 格式',
-        type: 'TRANSFORM',
-        category: 'DATA',
-        version: '1.0.0',
-        usageCount: 2100,
-        createdAt: '2024-01-03T10:00:00Z',
-        updatedAt: '2024-01-08T14:00:00Z',
-      },
-      {
-        id: 4,
-        name: 'CRM API 调用',
-        code: 'crm_api_call',
-        description: '调用 CRM 系统 API 获取客户数据',
-        type: 'HTTP',
-        category: 'INTEGRATION',
-        version: '1.1.0',
-        usageCount: 560,
-        createdAt: '2024-01-04T11:00:00Z',
-        updatedAt: '2024-01-07T16:00:00Z',
-      },
-    ];
-    pagination.value.total = 4;
+    message.error('获取组件列表失败');
   } finally {
     loading.value = false;
   }

@@ -349,7 +349,9 @@ onUnmounted(() => {
             :precision="1"
             suffix="%"
             :prefix="h(CheckCircleOutlined)"
-            :value-style="{ color: overview.successRate >= 90 ? '#3f8600' : '#cf1322' }"
+            :value-style="{
+              color: overview.successRate >= 90 ? '#3f8600' : '#cf1322',
+            }"
           >
             <template #suffix>
               <span class="suffix-text">%</span>
@@ -491,8 +493,8 @@ export default {
 }
 
 .trend {
-  font-size: 12px;
   margin-left: 8px;
+  font-size: 12px;
 }
 
 .trend-up {

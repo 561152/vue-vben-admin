@@ -154,80 +154,17 @@ const fetchData = async () => {
       },
     });
 
-    if (response.list) {
-      dataSource.value = response.list;
+    // API returns { data: [...], total } or array directly
+    if (response.data) {
+      dataSource.value = response.data;
       pagination.value.total = response.total || 0;
+    } else if (Array.isArray(response)) {
+      dataSource.value = response;
+      pagination.value.total = response.length;
     }
   } catch (error) {
     console.error('Failed to fetch executions:', error);
-    // Mock data for demo
-    dataSource.value = [
-      {
-        id: 101,
-        pipelineId: 1,
-        pipelineName: '客户智能分析流程',
-        status: 'COMPLETED',
-        progress: 100,
-        totalSteps: 8,
-        completedSteps: 8,
-        input: '{"customerId": 12345}',
-        output: '{"tags": ["高价值", "活跃用户"]}',
-        error: null,
-        duration: 3520,
-        startedAt: '2024-01-11T10:30:00Z',
-        completedAt: '2024-01-11T10:30:03Z',
-        createdBy: '管理员',
-      },
-      {
-        id: 100,
-        pipelineId: 2,
-        pipelineName: '自动回复生成流程',
-        status: 'RUNNING',
-        progress: 60,
-        totalSteps: 5,
-        completedSteps: 3,
-        input: '{"message": "你好，请问产品价格是多少？"}',
-        output: null,
-        error: null,
-        duration: null,
-        startedAt: '2024-01-11T10:32:00Z',
-        completedAt: null,
-        createdBy: '销售员',
-      },
-      {
-        id: 99,
-        pipelineId: 1,
-        pipelineName: '客户智能分析流程',
-        status: 'FAILED',
-        progress: 50,
-        totalSteps: 8,
-        completedSteps: 4,
-        input: '{"customerId": 12346}',
-        output: null,
-        error: '调用 LLM 服务超时',
-        duration: 30000,
-        startedAt: '2024-01-11T09:15:00Z',
-        completedAt: '2024-01-11T09:15:30Z',
-        createdBy: '管理员',
-      },
-      {
-        id: 98,
-        pipelineId: 2,
-        pipelineName: '自动回复生成流程',
-        status: 'COMPLETED',
-        progress: 100,
-        totalSteps: 5,
-        completedSteps: 5,
-        input: '{"message": "我想了解更多产品信息"}',
-        output: '{"reply": "您好！感谢您的关注..."}',
-        error: null,
-        duration: 2150,
-        startedAt: '2024-01-11T08:45:00Z',
-        completedAt: '2024-01-11T08:45:02Z',
-        createdBy: '销售员',
-      },
-    ];
-    pagination.value.total = 4;
+    message.error('获取执行记录失败');
   } finally {
     loading.value = false;
   }
@@ -556,13 +493,13 @@ onMounted(() => {
 
 .execution-detail {
   .json-view {
-    background: #f5f5f5;
-    padding: 8px;
-    border-radius: 4px;
-    margin: 0;
-    font-size: 12px;
     max-height: 150px;
+    padding: 8px;
+    margin: 0;
     overflow: auto;
+    font-size: 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
   }
 
   .step-timeline {
@@ -576,8 +513,8 @@ onMounted(() => {
     .step-item {
       .step-header {
         display: flex;
-        align-items: center;
         gap: 8px;
+        align-items: center;
 
         .step-name {
           font-weight: 500;
