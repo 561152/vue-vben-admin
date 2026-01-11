@@ -239,3 +239,281 @@ export async function markFollowUpCompleted(id: number) {
 export async function deleteFollowUp(id: number) {
   return requestClient.delete(`/follow-ups/${id}`);
 }
+
+// ==================== Direct Message Types ====================
+
+export interface DirectMessageAttachment {
+  type: 'image' | 'link' | 'miniprogram' | 'video' | 'file';
+  mediaId?: number;
+  imageUrl?: string;
+  link?: {
+    title: string;
+    desc?: string;
+    url: string;
+    picurl?: string;
+  };
+  miniprogram?: {
+    title: string;
+    appid: string;
+    page: string;
+    picMediaId: number;
+  };
+}
+
+export interface DirectMessage {
+  id: number;
+  customerId: number;
+  customerName?: string;
+  externalUserid: string;
+  wecomUserId: string;
+  senderId: number;
+  messageType: string;
+  status: 'PENDING' | 'SENDING' | 'SENT' | 'DELIVERED' | 'FAILED';
+  wecomMsgid?: string;
+  content: {
+    text?: string;
+    attachments?: DirectMessageAttachment[];
+  };
+  failReason?: string;
+  sentAt?: string;
+  deliveredAt?: string;
+  createdAt: string;
+}
+
+export interface SendDirectMessageDto {
+  customerId: number;
+  textContent?: string;
+  attachments?: DirectMessageAttachment[];
+  templateId?: number;
+}
+
+export interface SendBatchDirectMessageDto {
+  customerIds: number[];
+  textContent?: string;
+  attachments?: DirectMessageAttachment[];
+  templateId?: number;
+}
+
+export interface BatchSendResult {
+  success: boolean;
+  totalCount: number;
+  successCount: number;
+  failedCount: number;
+  messageIds: number[];
+}
+
+// ==================== Direct Message API ====================
+
+export async function getDirectMessages(params?: Record<string, unknown>) {
+  return requestClient.get<PaginatedResponse<DirectMessage>>(
+    '/crm/direct-messages',
+    { params },
+  );
+}
+
+export async function getDirectMessage(id: number) {
+  return requestClient.get<DirectMessage>(`/crm/direct-messages/${id}`);
+}
+
+export async function getCustomerMessages(
+  customerId: number,
+  params?: { page?: number; pageSize?: number },
+) {
+  return requestClient.get<PaginatedResponse<DirectMessage>>(
+    `/crm/customers/${customerId}/messages`,
+    { params },
+  );
+}
+
+export async function sendDirectMessage(data: SendDirectMessageDto) {
+  return requestClient.post<DirectMessage>('/crm/direct-messages/send', data);
+}
+
+export async function sendBatchDirectMessages(data: SendBatchDirectMessageDto) {
+  return requestClient.post<BatchSendResult>('/crm/direct-messages/batch', data);
+}
+
+// ==================== Message Template Types ====================
+
+export interface MessageTemplateContent {
+  text?: string;
+  attachments?: DirectMessageAttachment[];
+}
+
+export interface MessageTemplate {
+  id: number;
+  name: string;
+  category?: string;
+  content: MessageTemplateContent;
+  isActive: boolean;
+  usageCount: number;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMessageTemplateDto {
+  name: string;
+  category?: string;
+  content: MessageTemplateContent;
+}
+
+export interface UpdateMessageTemplateDto {
+  name?: string;
+  category?: string;
+  content?: MessageTemplateContent;
+  isActive?: boolean;
+}
+
+// ==================== Message Template API ====================
+
+export async function getMessageTemplates(params?: Record<string, unknown>) {
+  return requestClient.get<PaginatedResponse<MessageTemplate>>(
+    '/crm/message-templates',
+    { params },
+  );
+}
+
+export async function getMessageTemplate(id: number) {
+  return requestClient.get<MessageTemplate>(`/crm/message-templates/${id}`);
+}
+
+export async function createMessageTemplate(data: CreateMessageTemplateDto) {
+  return requestClient.post<MessageTemplate>('/crm/message-templates', data);
+}
+
+export async function updateMessageTemplate(
+  id: number,
+  data: UpdateMessageTemplateDto,
+) {
+  return requestClient.put<MessageTemplate>(`/crm/message-templates/${id}`, data);
+}
+
+export async function deleteMessageTemplate(id: number) {
+  return requestClient.delete(`/crm/message-templates/${id}`);
+}
+
+// ==================== Media Types ====================
+
+export interface WecomMedia {
+  id: number;
+  type: 'IMAGE' | 'VIDEO' | 'FILE' | 'MINIPROGRAM_COVER';
+  name: string;
+  ossUrl?: string;
+  fileSize: number;
+  contentType?: string;
+  wecomMediaId?: string;
+  wecomExpiresAt?: string;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UploadMediaDto {
+  type?: 'IMAGE' | 'VIDEO' | 'FILE';
+  name?: string;
+}
+
+export interface PresignedUrlResponse {
+  signedUrl: string;
+  key: string;
+  expiresIn: number;
+}
+
+// ==================== Media API ====================
+
+export async function getMediaList(params?: Record<string, unknown>) {
+  return requestClient.get<PaginatedResponse<WecomMedia>>('/crm/media', {
+    params,
+  });
+}
+
+export async function getMedia(id: number) {
+  return requestClient.get<WecomMedia>(`/crm/media/${id}`);
+}
+
+export async function uploadMedia(file: File, data?: UploadMediaDto) {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (data?.type) formData.append('type', data.type);
+  if (data?.name) formData.append('name', data.name);
+
+  return requestClient.post<WecomMedia>('/crm/media/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+}
+
+export async function deleteMedia(id: number) {
+  return requestClient.delete(`/crm/media/${id}`);
+}
+
+export async function getPresignedUrl(filename: string, contentType: string) {
+  return requestClient.post<PresignedUrlResponse>('/crm/media/presigned-url', {
+    filename,
+    contentType,
+  });
+}
+
+export async function refreshWecomMediaId(id: number) {
+  return requestClient.post<{ mediaId: number; wecomMediaId: string; expiresAt: string }>(
+    `/crm/media/${id}/refresh`,
+  );
+}
+
+// ==================== Mass Message Types ====================
+
+export interface QuickSendDto {
+  name?: string;
+  customerIds?: number[];
+  tagIds?: number[];
+  ownerId?: number;
+  status?: string;
+  lifecycleStage?: string;
+  textContent?: string;
+}
+
+export interface QuickSendResponse {
+  success: boolean;
+  campaignId: number;
+  audienceId: number;
+  totalTarget: number;
+  message: string;
+}
+
+export interface PreviewMassMessageDto {
+  tagIds?: number[];
+  ownerId?: number;
+  status?: string;
+  lifecycleStage?: string;
+}
+
+export interface PreviewMassMessageResponse {
+  totalCount: number;
+  sampleCustomers: {
+    id: number;
+    name: string;
+    wecomExternalUserid?: string;
+    ownerName?: string;
+  }[];
+  byOwner: {
+    ownerId?: number;
+    ownerName?: string;
+    count: number;
+  }[];
+}
+
+// ==================== Mass Message API ====================
+
+export async function quickSendMassMessage(data: QuickSendDto) {
+  return requestClient.post<QuickSendResponse>(
+    '/crm/mass-messages/quick-send',
+    data,
+  );
+}
+
+export async function previewMassMessage(data: PreviewMassMessageDto) {
+  return requestClient.post<PreviewMassMessageResponse>(
+    '/crm/mass-messages/preview',
+    data,
+  );
+}

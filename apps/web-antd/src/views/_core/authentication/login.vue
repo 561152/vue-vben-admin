@@ -13,6 +13,9 @@ defineOptions({ name: 'Login' });
 
 const authStore = useAuthStore();
 
+// 检查是否禁用验证码（用于自动化测试）
+const isCaptchaEnabled = import.meta.env.VITE_ENABLE_CAPTCHA !== 'false';
+
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
     label: 'Super',
@@ -29,7 +32,7 @@ const MOCK_USER_OPTIONS: BasicOption[] = [
 ];
 
 const formSchema = computed((): VbenFormSchema[] => {
-  return [
+  const schemas: VbenFormSchema[] = [
     {
       component: 'VbenSelect',
       componentProps: {
@@ -78,14 +81,20 @@ const formSchema = computed((): VbenFormSchema[] => {
       label: $t('authentication.password'),
       rules: z.string().min(1, { message: $t('authentication.passwordTip') }),
     },
-    {
+  ];
+
+  // 只在启用验证码时添加验证码组件
+  if (isCaptchaEnabled) {
+    schemas.push({
       component: markRaw(SliderCaptcha),
       fieldName: 'captcha',
       rules: z.boolean().refine((value) => value, {
         message: $t('authentication.verifyRequiredTip'),
       }),
-    },
-  ];
+    });
+  }
+
+  return schemas;
 });
 </script>
 

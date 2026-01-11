@@ -668,6 +668,7 @@ export interface AIGradingRequest {
   useCorrectEdu?: boolean;
   questionType?: CorrectEduQuestionType;
   standardAnswer?: string;
+  subject?: string;
 }
 
 /**
@@ -711,6 +712,9 @@ export async function gradeWithAI(
   formData: FormData,
   options?: AIGradingRequest,
 ) {
+  // subject 是必填字段，默认为 MATH
+  formData.append('subject', options?.subject || 'MATH');
+
   if (options?.useCorrectEdu) {
     formData.append('useCorrectEdu', 'true');
   }
@@ -721,7 +725,20 @@ export async function gradeWithAI(
     formData.append('standardAnswer', options.standardAnswer);
   }
 
-  return requestClient.post<AIGradingResponse>(
+  const response = await requestClient.post<{
+    gradingMode: string;
+    result: {
+      recordId: string;
+      totalQuestions: number;
+      correctCount: number;
+      totalScore: number;
+      maxScore: number;
+      accuracy: number;
+      processingMs: number;
+      questions: AIQuestionResult[];
+    };
+    message: string;
+  }>(
     '/education/paper/grade',
     formData,
     {
@@ -729,6 +746,34 @@ export async function gradeWithAI(
       timeout: 120000, // AI 批改需要更长时间
     },
   );
+
+  // 转换响应格式以匹配前端期望的结构
+  const result = response.result;
+  return {
+    summary: {
+      totalQuestions: result.totalQuestions,
+      correctCount: result.correctCount,
+      score: result.totalScore,
+      maxScore: result.maxScore,
+      accuracy: result.accuracy,
+    },
+    questions: result.questions.map((q, idx) => ({
+      index: idx + 1,
+      questionContent: q.questionContent || '',
+      studentAnswer: q.studentAnswer || '',
+      isCorrect: q.isCorrect,
+      score: q.score,
+      maxScore: q.maxScore,
+      reason: q.reason,
+      errorAnalysis: q.errorAnalysis,
+      correction: q.correction,
+      aiGraded: q.aiGraded,
+    })),
+    weakPoints: [],
+    processingMs: result.processingMs,
+    recordId: result.recordId,
+    useCorrectEdu: options?.useCorrectEdu,
+  } as AIGradingResponse;
 }
 
 /**

@@ -27,6 +27,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'CampaignList',
+        path: 'campaign',
+        component: () => import('#/views/crm/campaign/index.vue'),
+        meta: {
+          icon: 'ant-design:notification-outlined',
+          title: '营销活动',
+          appModule: 'CRM',
+          permissions: ['CRM:CAMPAIGN:LIST'],
+        },
+      },
+      {
         name: 'CustomerTag',
         path: 'tag',
         component: () => import('#/views/crm/tag/index.vue'),
@@ -57,6 +68,50 @@ const routes: RouteRecordRaw[] = [
           title: '客户分组',
           appModule: 'CRM',
           permissions: ['CRM:GROUP:LIST'],
+        },
+      },
+      {
+        name: 'DirectMessage',
+        path: 'direct-message',
+        component: () => import('#/views/crm/direct-message/index.vue'),
+        meta: {
+          icon: 'ant-design:message-outlined',
+          title: '消息推送',
+          appModule: 'CRM',
+          permissions: ['CRM:DIRECT_MESSAGE:LIST'],
+        },
+      },
+      {
+        name: 'MessageTemplate',
+        path: 'message-template',
+        component: () => import('#/views/crm/message-template/index.vue'),
+        meta: {
+          icon: 'ant-design:file-text-outlined',
+          title: '消息模板',
+          appModule: 'CRM',
+          permissions: ['CRM:MESSAGE_TEMPLATE:LIST'],
+        },
+      },
+      {
+        name: 'MediaLibrary',
+        path: 'media',
+        component: () => import('#/views/crm/media/index.vue'),
+        meta: {
+          icon: 'ant-design:picture-outlined',
+          title: '素材库',
+          appModule: 'CRM',
+          permissions: ['CRM:MEDIA:LIST'],
+        },
+      },
+      {
+        name: 'MassMessage',
+        path: 'mass-message',
+        component: () => import('#/views/crm/mass-message/index.vue'),
+        meta: {
+          icon: 'ant-design:send-outlined',
+          title: '群发消息',
+          appModule: 'CRM',
+          permissions: ['CRM:MASS_MESSAGE:SEND'],
         },
       },
       {

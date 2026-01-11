@@ -31,11 +31,7 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons-vue';
 import type { UploadFile, TableColumnsType } from 'ant-design-vue';
-import {
-  gradeHomework,
-  gradeWithAI,
-  getQuestionTypeName,
-} from '#/api/ai';
+import { gradeHomework, gradeWithAI, getQuestionTypeName } from '#/api/ai';
 import type {
   HomeworkGradingResponse,
   AIGradingResponse,
@@ -145,7 +141,9 @@ const handleGrade = async () => {
 
   try {
     const formData = new FormData();
-    formData.append('image', fileList.value[0].originFileObj);
+    // 后端期望 files 字段用于 AI 批改，image 字段用于传统批改
+    const fieldName = useAIGrading.value ? 'files' : 'image';
+    formData.append(fieldName, fileList.value[0].originFileObj);
 
     if (useAIGrading.value) {
       // 使用 AI 批改 (correct_edu)
@@ -211,14 +209,14 @@ const handleClear = () => {
 
           <!-- AI 批改选项 -->
           <div class="ai-options">
-            <Divider orientation="left">
-              <RobotOutlined /> 批改选项
-            </Divider>
+            <Divider orientation="left"> <RobotOutlined /> 批改选项 </Divider>
 
             <div class="option-row">
               <span class="option-label">
                 <ThunderboltOutlined /> AI 智能批改
-                <Tooltip title="使用百度 correct_edu API 进行智能批改，提供更准确的判断和详细分析">
+                <Tooltip
+                  title="使用百度 correct_edu API 进行智能批改，提供更准确的判断和详细分析"
+                >
                   <QuestionCircleOutlined class="help-icon" />
                 </Tooltip>
               </span>
@@ -264,11 +262,7 @@ const handleClear = () => {
           <!-- 操作按钮 -->
           <div class="action-buttons">
             <Button @click="handleClear">清空</Button>
-            <Button
-              type="primary"
-              :loading="isLoading"
-              @click="handleGrade"
-            >
+            <Button type="primary" :loading="isLoading" @click="handleGrade">
               <template #icon>
                 <RobotOutlined v-if="useAIGrading" />
                 <EditOutlined v-else />
@@ -298,8 +292,14 @@ const handleClear = () => {
           <!-- 加载中 -->
           <div v-if="isLoading" class="loading-state">
             <Spin size="large" />
-            <p>{{ useAIGrading ? 'AI 正在分析批改中...' : '正在批改中，请稍候...' }}</p>
-            <p v-if="useAIGrading" class="loading-hint">AI 批改可能需要较长时间，请耐心等待</p>
+            <p>
+              {{
+                useAIGrading ? 'AI 正在分析批改中...' : '正在批改中，请稍候...'
+              }}
+            </p>
+            <p v-if="useAIGrading" class="loading-hint">
+              AI 批改可能需要较长时间，请耐心等待
+            </p>
           </div>
 
           <!-- 无结果 -->
@@ -418,9 +418,7 @@ const handleClear = () => {
                   </template>
                   <template v-if="column.dataIndex === 'reason'">
                     <Tooltip v-if="record.reason" :title="record.reason">
-                      <Tag color="purple">
-                        <RobotOutlined /> AI 分析
-                      </Tag>
+                      <Tag color="purple"> <RobotOutlined /> AI 分析 </Tag>
                     </Tooltip>
                     <span v-else class="no-data">-</span>
                   </template>
@@ -510,8 +508,8 @@ const handleClear = () => {
 
 .option-label {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   color: #333;
 }
 
@@ -547,8 +545,8 @@ const handleClear = () => {
 
 .ai-tip {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .result-card {
