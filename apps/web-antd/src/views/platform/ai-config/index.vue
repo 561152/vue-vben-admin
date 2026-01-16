@@ -789,7 +789,7 @@ const handleTestConnection = async (record: DefaultConfig) => {
       {
         baseUrl: record.apiBaseUrl,
         model: record.modelName,
-        apiKey: 'test', // 使用存储的 key
+        // apiKey 不传，后端会使用数据库中存储的 key
       },
     );
     if (res.success) {
@@ -817,7 +817,7 @@ const handleTestAllConnections = async () => {
         {
           baseUrl: config.apiBaseUrl,
           model: config.modelName,
-          apiKey: 'test',
+          // apiKey 不传，后端会使用数据库中存储的 key
         },
       );
       if (res.success) {
@@ -844,12 +844,14 @@ const handleTestFormConnection = async () => {
   connectionTestResult.value = null;
 
   try {
+    // 如果 apiKey 是掩码格式 (如 sk-***xxxx) 或为空，不传，让后端使用存储的 key
+    const shouldSendApiKey = defaultForm.apiKey && !defaultForm.apiKey.includes('***');
     const res = await requestClient.post<ConnectionTestResult>(
       '/platform/ai-config/test-connection',
       {
         baseUrl: defaultForm.apiBaseUrl,
         model: defaultForm.modelName,
-        apiKey: defaultForm.apiKey || 'test',
+        ...(shouldSendApiKey ? { apiKey: defaultForm.apiKey } : {}),
       },
     );
     connectionTestResult.value = res;
