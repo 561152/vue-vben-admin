@@ -125,6 +125,90 @@ const routes: RouteRecordRaw[] = [
           permissions: ['CRM:RETAIL:VIEW'],
         },
       },
+      // 群发工具
+      {
+        name: 'MassMessageTools',
+        path: 'mass-message/tools',
+        component: () => import('#/views/crm/mass-message/tools.vue'),
+        meta: {
+          icon: 'ant-design:send-outlined',
+          title: '群发工具',
+          appModule: 'CRM',
+          permissions: ['CRM:MASS_MESSAGE:SEND'],
+        },
+      },
+      {
+        name: 'MassMessageCreate',
+        path: 'mass-message/create',
+        component: () => import('#/views/crm/mass-message/create.vue'),
+        meta: {
+          icon: 'ant-design:send-outlined',
+          title: '新建群发',
+          appModule: 'CRM',
+          permissions: ['CRM:MASS_MESSAGE:SEND'],
+          hideInMenu: true,
+        },
+      },
+      // 防骚扰
+      {
+        name: 'AntiHarassment',
+        path: 'anti-harassment',
+        component: () => import('#/views/crm/anti-harassment/index.vue'),
+        meta: {
+          icon: 'ant-design:safety-outlined',
+          title: '安全管控',
+          appModule: 'CRM',
+          permissions: ['CRM:ANTI_HARASSMENT:VIEW'],
+        },
+      },
+      {
+        name: 'AntiHarassmentWhitelist',
+        path: 'anti-harassment/whitelist',
+        component: () => import('#/views/crm/anti-harassment/whitelist.vue'),
+        meta: {
+          icon: 'ant-design:safety-outlined',
+          title: '白名单管理',
+          appModule: 'CRM',
+          permissions: ['CRM:ANTI_HARASSMENT:VIEW'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'AntiHarassmentBlacklist',
+        path: 'anti-harassment/blacklist',
+        component: () => import('#/views/crm/anti-harassment/blacklist.vue'),
+        meta: {
+          icon: 'ant-design:stop-outlined',
+          title: '黑名单管理',
+          appModule: 'CRM',
+          permissions: ['CRM:ANTI_HARASSMENT:VIEW'],
+          hideInMenu: true,
+        },
+      },
+      // 朋友圈
+      {
+        name: 'Moments',
+        path: 'moments',
+        component: () => import('#/views/crm/moments/index.vue'),
+        meta: {
+          icon: 'ant-design:share-alt-outlined',
+          title: '客户朋友圈',
+          appModule: 'CRM',
+          permissions: ['CRM:MOMENTS:VIEW'],
+        },
+      },
+      // 素材库
+      {
+        name: 'MaterialLibrary',
+        path: 'material-library',
+        component: () => import('#/views/crm/material-library/index.vue'),
+        meta: {
+          icon: 'ant-design:folder-outlined',
+          title: '营销素材库',
+          appModule: 'CRM',
+          permissions: ['CRM:MEDIA:LIST'],
+        },
+      },
     ],
   },
 ];
