@@ -123,7 +123,11 @@
                       title="已使用"
                       :value="selectedTenantQuota.usedTokens"
                       suffix="tokens"
-                      :value-style="{ color: getQuotaColor(selectedTenantQuota.quotaUsagePercent) }"
+                      :value-style="{
+                        color: getQuotaColor(
+                          selectedTenantQuota.quotaUsagePercent,
+                        ),
+                      }"
                     />
                   </Col>
                   <Col :span="8">
@@ -132,7 +136,9 @@
                         type="circle"
                         :percent="selectedTenantQuota.quotaUsagePercent"
                         :size="60"
-                        :stroke-color="getQuotaColor(selectedTenantQuota.quotaUsagePercent)"
+                        :stroke-color="
+                          getQuotaColor(selectedTenantQuota.quotaUsagePercent)
+                        "
                       />
                       <Button
                         size="small"
@@ -262,7 +268,8 @@
                 />
               </template>
               <template v-else-if="column.key === 'tokens'">
-                {{ formatNumber(record.usedTokens) }} / {{ formatNumber(record.monthlyTokenQuota) }}
+                {{ formatNumber(record.usedTokens) }} /
+                {{ formatNumber(record.monthlyTokenQuota) }}
               </template>
             </template>
           </Table>
@@ -337,7 +344,9 @@
           />
           <div class="form-hint">
             <InfoCircleOutlined />
-            <span v-if="editingDefault?.apiKey">当前已配置 API Key，留空将保持不变</span>
+            <span v-if="editingDefault?.apiKey"
+              >当前已配置 API Key，留空将保持不变</span
+            >
             <span v-else>首次配置需要输入有效的 API Key</span>
           </div>
         </FormItem>
@@ -607,7 +616,9 @@ const selectedTenantQuota = computed(() => {
   const tenant = tenantSummaries.value.find(
     (t) => t.tenantId === selectedTenantId.value,
   );
-  return tenant || { monthlyTokenQuota: 0, usedTokens: 0, quotaUsagePercent: 0 };
+  return (
+    tenant || { monthlyTokenQuota: 0, usedTokens: 0, quotaUsagePercent: 0 }
+  );
 });
 
 const sortedTenantSummaries = computed(() => {
@@ -793,7 +804,9 @@ const handleTestConnection = async (record: DefaultConfig) => {
       },
     );
     if (res.success) {
-      message.success(`${getScenarioName(record.scenario)}: 连接成功 (${res.latency}ms)`);
+      message.success(
+        `${getScenarioName(record.scenario)}: 连接成功 (${res.latency}ms)`,
+      );
     } else {
       message.error(`${getScenarioName(record.scenario)}: ${res.message}`);
     }
@@ -845,7 +858,8 @@ const handleTestFormConnection = async () => {
 
   try {
     // 如果 apiKey 是掩码格式 (如 sk-***xxxx) 或为空，不传，让后端使用存储的 key
-    const shouldSendApiKey = defaultForm.apiKey && !defaultForm.apiKey.includes('***');
+    const shouldSendApiKey =
+      defaultForm.apiKey && !defaultForm.apiKey.includes('***');
     const res = await requestClient.post<ConnectionTestResult>(
       '/platform/ai-config/test-connection',
       {
@@ -1071,8 +1085,8 @@ onMounted(() => {
 
 .tenant-option {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .quota-card {
@@ -1082,28 +1096,28 @@ onMounted(() => {
 .quota-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .form-hint {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   margin-top: 4px;
-  color: #999;
   font-size: 12px;
+  color: #999;
 }
 
 .connection-result {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .connection-result .latency {
-  color: #52c41a;
   font-weight: 500;
+  color: #52c41a;
 }
 
 .mb-4 {

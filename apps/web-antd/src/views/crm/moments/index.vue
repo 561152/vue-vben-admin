@@ -209,7 +209,8 @@ async function fetchMoments() {
       params.endDate = filters.value.dateRange[1];
     }
     if (filters.value.minLikes) params.minLikes = filters.value.minLikes;
-    if (filters.value.minComments) params.minComments = filters.value.minComments;
+    if (filters.value.minComments)
+      params.minComments = filters.value.minComments;
     if (filters.value.minViews) params.minViews = filters.value.minViews;
 
     const res = await requestClient.get<{ items: MomentTask[]; total: number }>(
@@ -228,15 +229,15 @@ async function fetchMoments() {
 async function fetchMaterials() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: MaterialItem[]; total: number }>(
-      '/moments/materials',
-      {
-        params: {
-          page: currentPage.value,
-          pageSize: pageSize.value,
-        },
+    const res = await requestClient.get<{
+      items: MaterialItem[];
+      total: number;
+    }>('/moments/materials', {
+      params: {
+        page: currentPage.value,
+        pageSize: pageSize.value,
       },
-    );
+    });
     materials.value = res.items || [];
     total.value = res.total || 0;
   } catch (e) {
@@ -338,7 +339,9 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-bold">企业发表到客户的朋友圈</h2>
-      <p class="text-gray-500">管理员或负责人编辑内容，选择可见的客户，成员确认后发表到客户的朋友圈</p>
+      <p class="text-gray-500">
+        管理员或负责人编辑内容，选择可见的客户，成员确认后发表到客户的朋友圈
+      </p>
     </div>
 
     <Card>
@@ -382,17 +385,21 @@ onMounted(() => {
                     <Button
                       v-for="type in attachmentTypes"
                       :key="type.key"
-                      class="flex flex-col items-center justify-center h-16 w-16"
+                      class="flex h-16 w-16 flex-col items-center justify-center"
                     >
                       <component :is="type.icon" class="text-lg" />
-                      <span class="text-xs mt-1">{{ type.label }}</span>
+                      <span class="mt-1 text-xs">{{ type.label }}</span>
                     </Button>
                   </div>
                 </div>
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" :loading="loading" @click="handlePublish">
+                <Button
+                  type="primary"
+                  :loading="loading"
+                  @click="handlePublish"
+                >
                   通知成员发表
                 </Button>
               </Form.Item>
@@ -462,9 +469,7 @@ onMounted(() => {
 
             <Button type="primary" @click="fetchMoments">查询</Button>
 
-            <Button class="ml-auto">
-              <ExportOutlined /> 导出
-            </Button>
+            <Button class="ml-auto"> <ExportOutlined /> 导出 </Button>
           </div>
 
           <!-- Actions -->
@@ -531,23 +536,30 @@ onMounted(() => {
                 <Tag :color="statusMap[record.status]?.color || 'default'">
                   {{ statusMap[record.status]?.label || record.status }}
                 </Tag>
-                <div v-if="record.publishedAt" class="text-xs text-gray-400 mt-1">
-                  {{ record.senderList?.length || 0 }}名成员已发表到{{ record.viewCount || 0 }}位客户的...
+                <div
+                  v-if="record.publishedAt"
+                  class="mt-1 text-xs text-gray-400"
+                >
+                  {{ record.senderList?.length || 0 }}名成员已发表到{{
+                    record.viewCount || 0
+                  }}位客户的...
                 </div>
               </template>
 
               <template v-if="column.key === 'actions'">
                 <Space>
-                  <Button type="link" size="small" @click="handleRemind(record.id)">
+                  <Button
+                    type="link"
+                    size="small"
+                    @click="handleRemind(record.id)"
+                  >
                     提醒
                   </Button>
                   <Popconfirm
                     title="确定要删除吗？"
                     @confirm="handleDelete(record.id)"
                   >
-                    <Button type="link" size="small" danger>
-                      删除
-                    </Button>
+                    <Button type="link" size="small" danger> 删除 </Button>
                   </Popconfirm>
                 </Space>
               </template>
@@ -571,9 +583,7 @@ onMounted(() => {
 
           <!-- Add button -->
           <div class="mb-4">
-            <Button type="primary">
-              <PlusOutlined /> 添加素材
-            </Button>
+            <Button type="primary"> <PlusOutlined /> 添加素材 </Button>
           </div>
 
           <Table

@@ -184,7 +184,10 @@ const handleOk = async () => {
   try {
     if (editingId.value) {
       // Update
-      await requestClient.put(`/crm/campaigns/${editingId.value}`, formState.value);
+      await requestClient.put(
+        `/crm/campaigns/${editingId.value}`,
+        formState.value,
+      );
       message.success('更新成功');
     } else {
       // Create
@@ -233,19 +236,37 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'type'">
-            <Tag :color="typeOptions.find(opt => opt.value === record.type)?.color">
-              {{ typeOptions.find(opt => opt.value === record.type)?.label || record.type }}
+            <Tag
+              :color="
+                typeOptions.find((opt) => opt.value === record.type)?.color
+              "
+            >
+              {{
+                typeOptions.find((opt) => opt.value === record.type)?.label ||
+                record.type
+              }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'status'">
-            <Tag :color="statusOptions.find(opt => opt.value === record.status)?.color">
-              {{ statusOptions.find(opt => opt.value === record.status)?.label || record.status }}
+            <Tag
+              :color="
+                statusOptions.find((opt) => opt.value === record.status)?.color
+              "
+            >
+              {{
+                statusOptions.find((opt) => opt.value === record.status)
+                  ?.label || record.status
+              }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button type="link" size="small" @click="showDetail(record)">详情</Button>
-              <Button type="link" size="small" @click="showEdit(record)">编辑</Button>
+              <Button type="link" size="small" @click="showDetail(record)"
+                >详情</Button
+              >
+              <Button type="link" size="small" @click="showEdit(record)"
+                >编辑</Button
+              >
               <Popconfirm
                 title="确定要删除这个营销活动吗？"
                 @confirm="handleDelete(record.id)"
@@ -305,16 +326,32 @@ onMounted(() => {
         <div class="detail-item">
           <label>活动类型：</label>
           <span>
-            <Tag :color="typeOptions.find(opt => opt.value === detailCampaign.type)?.color">
-              {{ typeOptions.find(opt => opt.value === detailCampaign.type)?.label }}
+            <Tag
+              :color="
+                typeOptions.find((opt) => opt.value === detailCampaign.type)
+                  ?.color
+              "
+            >
+              {{
+                typeOptions.find((opt) => opt.value === detailCampaign.type)
+                  ?.label
+              }}
             </Tag>
           </span>
         </div>
         <div class="detail-item">
           <label>活动状态：</label>
           <span>
-            <Tag :color="statusOptions.find(opt => opt.value === detailCampaign.status)?.color">
-              {{ statusOptions.find(opt => opt.value === detailCampaign.status)?.label }}
+            <Tag
+              :color="
+                statusOptions.find((opt) => opt.value === detailCampaign.status)
+                  ?.color
+              "
+            >
+              {{
+                statusOptions.find((opt) => opt.value === detailCampaign.status)
+                  ?.label
+              }}
             </Tag>
           </span>
         </div>
@@ -336,7 +373,9 @@ onMounted(() => {
         </div>
         <div class="detail-item">
           <label>创建时间：</label>
-          <span>{{ dayjs(detailCampaign.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</span>
+          <span>{{
+            dayjs(detailCampaign.createdAt).format('YYYY-MM-DD HH:mm:ss')
+          }}</span>
         </div>
       </div>
     </Drawer>
@@ -350,19 +389,19 @@ onMounted(() => {
 
 .campaign-detail {
   .detail-item {
-    margin-bottom: 16px;
     display: flex;
     align-items: flex-start;
+    margin-bottom: 16px;
 
     label {
-      font-weight: 500;
       min-width: 100px;
-      color: rgba(0, 0, 0, 0.65);
+      font-weight: 500;
+      color: rgb(0 0 0 / 65%);
     }
 
     span {
       flex: 1;
-      color: rgba(0, 0, 0, 0.85);
+      color: rgb(0 0 0 / 85%);
     }
   }
 }

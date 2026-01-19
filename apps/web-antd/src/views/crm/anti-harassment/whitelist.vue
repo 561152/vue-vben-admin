@@ -80,16 +80,16 @@ const columns = [
 async function fetchWhitelist() {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ items: WhitelistItem[]; total: number }>(
-      '/anti-harassment/whitelist',
-      {
-        params: {
-          page: currentPage.value,
-          pageSize: pageSize.value,
-          keyword: searchKeyword.value || undefined,
-        },
+    const res = await requestClient.get<{
+      items: WhitelistItem[];
+      total: number;
+    }>('/anti-harassment/whitelist', {
+      params: {
+        page: currentPage.value,
+        pageSize: pageSize.value,
+        keyword: searchKeyword.value || undefined,
       },
-    );
+    });
     whitelist.value = res.items || [];
     total.value = res.total || 0;
   } catch (e) {
@@ -200,9 +200,14 @@ onMounted(() => {
         此名单中的客户将不会触发防骚扰规则。可通过标记客户进入此名单，企业还可以设置成员之间共享使用此名单。
       </div>
 
-      <div class="mt-4 flex items-center justify-between rounded bg-gray-50 p-4">
+      <div
+        class="mt-4 flex items-center justify-between rounded bg-gray-50 p-4"
+      >
         <div class="flex items-center">
-          <Switch v-model:checked="shareConfigEnabled" @change="handleToggleShare" />
+          <Switch
+            v-model:checked="shareConfigEnabled"
+            @change="handleToggleShare"
+          />
           <span class="ml-2">开启</span>
           <span class="ml-4 text-gray-500">
             开启后，成员之间共享使用此名单，企业可以管理共享的名单。
@@ -225,11 +230,7 @@ onMounted(() => {
               <SearchOutlined />
             </template>
           </Input>
-          <Select
-            placeholder="共享人"
-            style="width: 120px"
-            allow-clear
-          >
+          <Select placeholder="共享人" style="width: 120px" allow-clear>
             <Select.Option value="">请选择</Select.Option>
           </Select>
         </Space>
@@ -274,16 +275,12 @@ onMounted(() => {
         <template #emptyText>
           <div class="py-8 text-center text-gray-400">
             <div class="mb-2">0位客户</div>
-            <div class="text-xs">
-              客户名称 | 共享人 | 共享时间
-            </div>
+            <div class="text-xs">客户名称 | 共享人 | 共享时间</div>
           </div>
         </template>
       </Table>
 
-      <div class="mt-2 text-xs text-gray-400">
-        填加后可看到共享的信息
-      </div>
+      <div class="mt-2 text-xs text-gray-400">填加后可看到共享的信息</div>
     </Card>
 
     <!-- Add Modal -->
@@ -311,9 +308,7 @@ onMounted(() => {
               {{ customer.name }}
             </Select.Option>
           </Select>
-          <div class="mt-1 text-xs text-gray-400">
-            选择客户支持搜索
-          </div>
+          <div class="mt-1 text-xs text-gray-400">选择客户支持搜索</div>
         </Form.Item>
 
         <Form.Item label="共享人">

@@ -64,16 +64,16 @@ async function fetchBlacklist() {
   loading.value = true;
   try {
     const scope = activeTab.value === 'org' ? 'ORGANIZATION' : 'INTER_ORG';
-    const res = await requestClient.get<{ items: BlacklistItem[]; total: number }>(
-      '/anti-harassment/blacklist',
-      {
-        params: {
-          page: currentPage.value,
-          pageSize: pageSize.value,
-          scope,
-        },
+    const res = await requestClient.get<{
+      items: BlacklistItem[];
+      total: number;
+    }>('/anti-harassment/blacklist', {
+      params: {
+        page: currentPage.value,
+        pageSize: pageSize.value,
+        scope,
       },
-    );
+    });
     blacklist.value = res.items || [];
     total.value = res.total || 0;
   } catch (e) {
@@ -156,7 +156,9 @@ onMounted(() => {
     <Tabs v-model:activeKey="activeTab" @change="handleTabChange">
       <TabPane key="org" tab="本企业黑名单">
         <Card>
-          <div class="mb-4 flex items-center justify-between rounded bg-gray-50 p-4">
+          <div
+            class="mb-4 flex items-center justify-between rounded bg-gray-50 p-4"
+          >
             <div class="flex items-center">
               <span class="font-medium">成员共享使用群聊黑名单</span>
               <Switch
@@ -209,7 +211,9 @@ onMounted(() => {
 
       <TabPane key="inter-org" tab="企业间黑名单">
         <Card>
-          <div class="mb-4 flex items-center justify-between rounded bg-gray-50 p-4">
+          <div
+            class="mb-4 flex items-center justify-between rounded bg-gray-50 p-4"
+          >
             <div class="flex items-center">
               <span class="font-medium">企业间共享使用群聊黑名单</span>
               <Switch
@@ -217,7 +221,9 @@ onMounted(() => {
                 class="ml-4"
                 @change="handleToggleInterOrgShare"
               />
-              <span class="ml-2">{{ interOrgShareEnabled ? '开启' : '关闭' }}</span>
+              <span class="ml-2">{{
+                interOrgShareEnabled ? '开启' : '关闭'
+              }}</span>
             </div>
             <div class="text-gray-500">
               开启后，将使用企业间共享黑名单，对恶意用户进行拦截入群、踢出群等处置。

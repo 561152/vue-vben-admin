@@ -56,7 +56,9 @@ const currentStep = ref(0);
 const loading = ref(false);
 const previewLoading = ref(false);
 const sendSuccess = ref(false);
-const sendResult = ref<{ campaignId: number; totalTarget: number } | null>(null);
+const sendResult = ref<{ campaignId: number; totalTarget: number } | null>(
+  null,
+);
 
 const tags = ref<TagItem[]>([]);
 const users = ref<UserItem[]>([]);
@@ -100,9 +102,12 @@ const previewColumns = [
 
 async function fetchTags() {
   try {
-    const res = await requestClient.get<{ items: TagItem[] }>('/customer-tags', {
-      params: { pageSize: 100 },
-    });
+    const res = await requestClient.get<{ items: TagItem[] }>(
+      '/customer-tags',
+      {
+        params: { pageSize: 100 },
+      },
+    );
     tags.value = res.items || [];
   } catch (e) {
     console.error(e);
@@ -133,7 +138,9 @@ async function handlePreview() {
   previewLoading.value = true;
   try {
     const res = await previewMassMessage({
-      tagIds: formState.value.tagIds.length ? formState.value.tagIds : undefined,
+      tagIds: formState.value.tagIds.length
+        ? formState.value.tagIds
+        : undefined,
       ownerId: formState.value.ownerId,
       status: formState.value.status,
       lifecycleStage: formState.value.lifecycleStage,
@@ -181,7 +188,9 @@ async function handleSend() {
   try {
     const res = await quickSendMassMessage({
       name: formState.value.name || undefined,
-      tagIds: formState.value.tagIds.length ? formState.value.tagIds : undefined,
+      tagIds: formState.value.tagIds.length
+        ? formState.value.tagIds
+        : undefined,
       ownerId: formState.value.ownerId,
       status: formState.value.status,
       lifecycleStage: formState.value.lifecycleStage,
@@ -288,7 +297,12 @@ onMounted(() => {
               <Select
                 v-model:value="formState.ownerId"
                 placeholder="选择归属人"
-                :options="users.map((u) => ({ value: u.id, label: u.realName || u.username }))"
+                :options="
+                  users.map((u) => ({
+                    value: u.id,
+                    label: u.realName || u.username,
+                  }))
+                "
                 allow-clear
               />
             </Form.Item>
@@ -340,7 +354,9 @@ onMounted(() => {
                 v-model:value="formState.templateId"
                 placeholder="选择消息模板（可选）"
                 allow-clear
-                :options="templates.map((t) => ({ value: t.id, label: t.name }))"
+                :options="
+                  templates.map((t) => ({ value: t.id, label: t.name }))
+                "
                 @change="handleTemplateChange"
               />
             </Form.Item>
@@ -392,7 +408,7 @@ onMounted(() => {
                   </div>
                 </div>
               </template>
-              <div v-else class="text-center text-gray-400 py-8">
+              <div v-else class="py-8 text-center text-gray-400">
                 请先选择筛选条件
               </div>
             </Spin>
@@ -401,9 +417,7 @@ onMounted(() => {
       </Row>
 
       <div class="mt-4 flex justify-between">
-        <Button @click="handlePrev">
-          <ArrowLeftOutlined /> 上一步
-        </Button>
+        <Button @click="handlePrev"> <ArrowLeftOutlined /> 上一步 </Button>
         <Button type="primary" @click="handleNext">
           下一步 <ArrowRightOutlined />
         </Button>
@@ -425,7 +439,9 @@ onMounted(() => {
             <div class="space-y-2">
               <div class="flex justify-between">
                 <span class="text-gray-500">预计发送人数</span>
-                <span class="font-bold text-blue-500">{{ preview?.totalCount || 0 }} 人</span>
+                <span class="font-bold text-blue-500"
+                  >{{ preview?.totalCount || 0 }} 人</span
+                >
               </div>
               <div v-if="formState.tagIds.length" class="flex justify-between">
                 <span class="text-gray-500">标签筛选</span>
@@ -437,18 +453,22 @@ onMounted(() => {
               </div>
               <div v-if="formState.ownerId" class="flex justify-between">
                 <span class="text-gray-500">归属人</span>
-                <span>{{ users.find((u) => u.id === formState.ownerId)?.realName }}</span>
+                <span>{{
+                  users.find((u) => u.id === formState.ownerId)?.realName
+                }}</span>
               </div>
               <div v-if="formState.status" class="flex justify-between">
                 <span class="text-gray-500">客户状态</span>
-                <span>{{ statusOptions.find((o) => o.value === formState.status)?.label }}</span>
+                <span>{{
+                  statusOptions.find((o) => o.value === formState.status)?.label
+                }}</span>
               </div>
             </div>
           </Card>
         </Col>
         <Col :span="12">
           <Card title="消息内容" size="small">
-            <div class="bg-gray-50 p-3 rounded whitespace-pre-wrap">
+            <div class="whitespace-pre-wrap rounded bg-gray-50 p-3">
               {{ formState.textContent || '(无内容)' }}
             </div>
           </Card>
@@ -456,9 +476,7 @@ onMounted(() => {
       </Row>
 
       <div class="mt-4 flex justify-between">
-        <Button @click="handlePrev">
-          <ArrowLeftOutlined /> 上一步
-        </Button>
+        <Button @click="handlePrev"> <ArrowLeftOutlined /> 上一步 </Button>
         <Button type="primary" :loading="loading" @click="handleSend">
           <SendOutlined /> 确认发送
         </Button>
@@ -478,9 +496,7 @@ onMounted(() => {
       >
         <template #extra>
           <Space>
-            <Button type="primary" @click="handleReset">
-              继续发送
-            </Button>
+            <Button type="primary" @click="handleReset"> 继续发送 </Button>
           </Space>
         </template>
       </Result>

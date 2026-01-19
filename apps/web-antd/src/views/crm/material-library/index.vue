@@ -168,10 +168,10 @@ async function fetchMaterials() {
     if (filters.value.createdBy) params.createdBy = filters.value.createdBy;
     if (filters.value.tags.length) params.tags = filters.value.tags.join(',');
 
-    const res = await requestClient.get<{ items: MaterialItem[]; total: number }>(
-      '/materials',
-      { params },
-    );
+    const res = await requestClient.get<{
+      items: MaterialItem[];
+      total: number;
+    }>('/materials', { params });
     materials.value = res.items || [];
     total.value = res.total || 0;
   } catch (e) {
@@ -202,7 +202,10 @@ async function handleCreate() {
     };
 
     if (editingMaterial.value) {
-      await requestClient.put(`/materials/${editingMaterial.value.id}`, payload);
+      await requestClient.put(
+        `/materials/${editingMaterial.value.id}`,
+        payload,
+      );
       message.success('素材更新成功');
     } else {
       await requestClient.post('/materials', payload);
@@ -276,12 +279,16 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-bold">素材库</h2>
-      <p class="text-gray-500">可添加产品、活动、节日问候等内容，便于成员群发消息时使用，提升营销效率</p>
+      <p class="text-gray-500">
+        可添加产品、活动、节日问候等内容，便于成员群发消息时使用，提升营销效率
+      </p>
     </div>
 
     <Card>
       <!-- Filters -->
-      <div class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4">
+      <div
+        class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4"
+      >
         <div class="flex items-center gap-2">
           <span class="font-medium">筛选条件:</span>
           <Input
@@ -292,11 +299,23 @@ onMounted(() => {
           />
         </div>
 
-        <Input placeholder="创建人【在之中】" style="width: 160px" allow-clear />
+        <Input
+          placeholder="创建人【在之中】"
+          style="width: 160px"
+          allow-clear
+        />
 
-        <Input placeholder="创建时间【大于等于】" style="width: 180px" allow-clear />
+        <Input
+          placeholder="创建时间【大于等于】"
+          style="width: 180px"
+          allow-clear
+        />
 
-        <Input placeholder="创建时间【小于】" style="width: 160px" allow-clear />
+        <Input
+          placeholder="创建时间【小于】"
+          style="width: 160px"
+          allow-clear
+        />
 
         <Button type="primary" @click="fetchMaterials">筛选</Button>
       </div>
@@ -361,13 +380,19 @@ onMounted(() => {
                 :src="record.thumbnail"
                 :width="60"
                 :height="60"
-                class="rounded flex-shrink-0"
+                class="flex-shrink-0 rounded"
               />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium line-clamp-1">{{ record.title }}</div>
-                <div class="text-gray-500 text-sm line-clamp-2">{{ record.content }}</div>
+              <div class="min-w-0 flex-1">
+                <div class="line-clamp-1 font-medium">{{ record.title }}</div>
+                <div class="line-clamp-2 text-sm text-gray-500">
+                  {{ record.content }}
+                </div>
                 <div v-if="record.tags?.length" class="mt-1">
-                  <Tag v-for="tag in record.tags.slice(0, 3)" :key="tag" size="small">
+                  <Tag
+                    v-for="tag in record.tags.slice(0, 3)"
+                    :key="tag"
+                    size="small"
+                  >
                     {{ tag }}
                   </Tag>
                 </div>
@@ -454,12 +479,12 @@ onMounted(() => {
               <Button
                 v-for="type in materialTypes"
                 :key="type.key"
-                class="flex flex-col items-center justify-center h-16 w-16"
+                class="flex h-16 w-16 flex-col items-center justify-center"
                 :type="formState.type === type.key ? 'primary' : 'default'"
                 @click="formState.type = type.key"
               >
                 <component :is="type.icon" class="text-lg" />
-                <span class="text-xs mt-1">{{ type.label }}</span>
+                <span class="mt-1 text-xs">{{ type.label }}</span>
               </Button>
             </div>
             <div class="mt-4">
@@ -485,7 +510,11 @@ onMounted(() => {
             placeholder="添加标签，便于分类管理"
             :token-separators="[',', '，']"
           >
-            <Select.Option v-for="tag in tagPresets" :key="tag.value" :value="tag.value">
+            <Select.Option
+              v-for="tag in tagPresets"
+              :key="tag.value"
+              :value="tag.value"
+            >
               {{ tag.label }}
             </Select.Option>
           </Select>

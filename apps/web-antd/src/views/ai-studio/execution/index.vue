@@ -28,6 +28,7 @@ import {
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import dayjs from 'dayjs';
+import ExecutionFlowView from './components/ExecutionFlowView.vue';
 
 interface ExecutionItem {
   id: number;
@@ -71,6 +72,8 @@ const filters = ref({
 const detailVisible = ref(false);
 const detailExecution = ref<ExecutionItem | null>(null);
 const stepLogs = ref<StepLog[]>([]);
+const pipelineSteps = ref<any[]>([]);
+const stepExecutions = ref<any[]>([]);
 
 const statusOptions = [
   { value: 'PENDING', label: '等待中', color: 'default' },
@@ -195,39 +198,45 @@ const showDetail = async (record: ExecutionItem) => {
   detailExecution.value = record;
   detailVisible.value = true;
 
+  // Fetch pipeline steps
+  try {
+    const pipelineResponse = await requestClient.get(
+      `/ai-studio/pipelines/${record.pipelineId}`,
+    );
+    pipelineSteps.value = pipelineResponse.data?.steps || pipelineResponse.steps || [];
+  } catch (error) {
+    console.error('Failed to fetch pipeline steps:', error);
+    pipelineSteps.value = [];
+  }
+
+  // Mock step execution statuses
+  stepExecutions.value = pipelineSteps.value.map((step, index) => ({
+    stepKey: step.stepKey,
+    name: step.name,
+    status:
+      index < record.completedSteps
+        ? 'COMPLETED'
+        : index === record.completedSteps && record.status === 'RUNNING'
+          ? 'RUNNING'
+          : index === record.completedSteps && record.status === 'FAILED'
+            ? 'FAILED'
+            : 'PENDING',
+    startedAt: record.startedAt,
+    completedAt: index < record.completedSteps ? record.startedAt : null,
+    duration: index < record.completedSteps ? 50 + index * 20 : null,
+  }));
+
   // Mock step logs
-  stepLogs.value = [
-    {
-      step: 1,
-      name: '参数解析',
-      status: 'COMPLETED',
-      startedAt: record.startedAt,
-      completedAt: record.startedAt,
-      duration: 50,
-      output: '{"parsed": true}',
-      error: null,
-    },
-    {
-      step: 2,
-      name: '数据查询',
-      status: 'COMPLETED',
-      startedAt: record.startedAt,
-      completedAt: record.startedAt,
-      duration: 120,
-      output: '{"records": 5}',
-      error: null,
-    },
-    {
-      step: 3,
-      name: 'LLM 分析',
-      status: record.status === 'FAILED' ? 'FAILED' : 'COMPLETED',
-      startedAt: record.startedAt,
-      completedAt: record.completedAt,
-      duration: record.status === 'FAILED' ? 30000 : 2500,
-      output: record.status === 'FAILED' ? null : '{"analysis": "..."}',
-      error: record.status === 'FAILED' ? record.error : null,
-    },
-  ];
+  stepLogs.value = stepExecutions.value.map((exec, index) => ({
+    step: index + 1,
+    name: exec.name,
+    status: exec.status,
+    startedAt: exec.startedAt,
+    completedAt: exec.completedAt,
+    duration: exec.duration,
+    output: exec.status === 'COMPLETED' ? '{"result": "..."}' : null,
+    error: exec.status === 'FAILED' ? record.error : null,
+  }));
 };
 
 const handleCancel = async (id: number) => {
@@ -432,6 +441,15 @@ onMounted(() => {
           </Descriptions.Item>
         </Descriptions>
 
+        <div class="flow-visualization">
+          <h4>流程可视化</h4>
+          <ExecutionFlowView
+            v-if="pipelineSteps.length > 0"
+            :pipeline-steps="pipelineSteps"
+            :step-executions="stepExecutions"
+          />
+        </div>
+
         <div class="step-timeline">
           <h4>执行步骤</h4>
           <Timeline>
@@ -500,6 +518,15 @@ onMounted(() => {
     font-size: 12px;
     background: #f5f5f5;
     border-radius: 4px;
+  }
+
+  .flow-visualization {
+    margin-top: 24px;
+
+    h4 {
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
   }
 
   .step-timeline {

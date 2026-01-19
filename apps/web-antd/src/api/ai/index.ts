@@ -738,14 +738,10 @@ export async function gradeWithAI(
       questions: AIQuestionResult[];
     };
     message: string;
-  }>(
-    '/education/paper/grade',
-    formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 120000, // AI 批改需要更长时间
-    },
-  );
+  }>('/education/paper/grade', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000, // AI 批改需要更长时间
+  });
 
   // 转换响应格式以匹配前端期望的结构
   const result = response.result;

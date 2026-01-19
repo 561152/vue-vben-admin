@@ -346,14 +346,18 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-bold">安全管控</h2>
-      <p class="text-gray-500">配置防骚扰规则，群客户发送的消息命中规则时，该成员将会被踢出群聊或收到警告消息</p>
+      <p class="text-gray-500">
+        配置防骚扰规则，群客户发送的消息命中规则时，该成员将会被踢出群聊或收到警告消息
+      </p>
     </div>
 
     <!-- Quick Actions -->
     <div class="mb-4 grid grid-cols-3 gap-4">
       <Card hoverable @click="handleCreateRule">
         <div class="flex items-center">
-          <div class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <div
+            class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100"
+          >
             <SettingOutlined class="text-xl text-blue-500" />
           </div>
           <div>
@@ -365,7 +369,9 @@ onMounted(() => {
 
       <Card hoverable @click="goToWhitelist">
         <div class="flex items-center">
-          <div class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <div
+            class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100"
+          >
             <SafetyOutlined class="text-xl text-green-500" />
           </div>
           <div>
@@ -377,7 +383,9 @@ onMounted(() => {
 
       <Card hoverable @click="goToBlacklist">
         <div class="flex items-center">
-          <div class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+          <div
+            class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100"
+          >
             <StopOutlined class="text-xl text-red-500" />
           </div>
           <div>
@@ -409,11 +417,18 @@ onMounted(() => {
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'isActive'">
-                <Badge :status="record.isActive ? 'success' : 'default'" :text="record.isActive ? '已启用' : '已禁用'" />
+                <Badge
+                  :status="record.isActive ? 'success' : 'default'"
+                  :text="record.isActive ? '已启用' : '已禁用'"
+                />
               </template>
               <template v-if="column.key === 'actions'">
                 <Space>
-                  <Button type="link" size="small" @click="handleEditRule(record)">
+                  <Button
+                    type="link"
+                    size="small"
+                    @click="handleEditRule(record)"
+                  >
                     <EditOutlined /> 编辑
                   </Button>
                   <Popconfirm
@@ -432,9 +447,7 @@ onMounted(() => {
 
         <TabPane key="words" tab="敏感词库">
           <div class="mb-4">
-            <Button type="primary">
-              <PlusOutlined /> 添加敏感词
-            </Button>
+            <Button type="primary"> <PlusOutlined /> 添加敏感词 </Button>
           </div>
 
           <Table
@@ -448,14 +461,21 @@ onMounted(() => {
               <Table.Column title="分类" dataIndex="category" />
               <Table.Column title="级别" dataIndex="level">
                 <template #default="{ text }">
-                  <Tag :color="text === 1 ? 'orange' : text === 2 ? 'red' : 'default'">
+                  <Tag
+                    :color="
+                      text === 1 ? 'orange' : text === 2 ? 'red' : 'default'
+                    "
+                  >
                     {{ text === 1 ? '一般' : text === 2 ? '严重' : '普通' }}
                   </Tag>
                 </template>
               </Table.Column>
               <Table.Column title="状态" dataIndex="isActive">
                 <template #default="{ text }">
-                  <Badge :status="text ? 'success' : 'default'" :text="text ? '启用' : '禁用'" />
+                  <Badge
+                    :status="text ? 'success' : 'default'"
+                    :text="text ? '启用' : '禁用'"
+                  />
                 </template>
               </Table.Column>
             </template>
@@ -592,7 +612,11 @@ onMounted(() => {
 
         <template v-if="ruleForm.action === 'WARN_THEN_KICK'">
           <Form.Item label="警告次数">
-            <InputNumber v-model:value="ruleForm.warnCount" :min="1" :max="10" />
+            <InputNumber
+              v-model:value="ruleForm.warnCount"
+              :min="1"
+              :max="10"
+            />
             <span class="ml-2 text-gray-500">次后踢出群聊</span>
           </Form.Item>
         </template>

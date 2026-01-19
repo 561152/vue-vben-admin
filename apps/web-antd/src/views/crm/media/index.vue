@@ -212,7 +212,9 @@ onMounted(() => {
                   />
                 </template>
                 <template v-else-if="item.type === 'VIDEO'">
-                  <VideoCameraOutlined style="font-size: 48px; color: #8c8c8c" />
+                  <VideoCameraOutlined
+                    style="font-size: 48px; color: #8c8c8c"
+                  />
                 </template>
                 <template v-else>
                   <FileOutlined style="font-size: 48px; color: #8c8c8c" />
@@ -223,7 +225,9 @@ onMounted(() => {
               <div class="truncate text-sm font-medium" :title="item.name">
                 {{ item.name }}
               </div>
-              <div class="flex items-center justify-between text-xs text-gray-400">
+              <div
+                class="flex items-center justify-between text-xs text-gray-400"
+              >
                 <Tag :color="getTypeInfo(item.type).color" size="small">
                   {{ getTypeInfo(item.type).label }}
                 </Tag>
@@ -315,11 +319,13 @@ onMounted(() => {
 .media-card {
   transition: all 0.3s;
 }
+
 .media-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 }
+
 .media-preview {
-  cursor: pointer;
   overflow: hidden;
+  cursor: pointer;
 }
 </style>

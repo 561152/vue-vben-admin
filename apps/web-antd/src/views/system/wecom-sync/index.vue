@@ -152,6 +152,25 @@
         </div>
       </div>
 
+      <!-- 同步进度显示 -->
+      <div v-if="syncProgress" class="sync-progress mt-4">
+        <div class="progress-header">
+          <span class="progress-title">{{ syncProgress.title }}</span>
+          <span class="progress-percent">{{ syncProgress.percent }}%</span>
+        </div>
+        <Progress
+          :percent="syncProgress.percent"
+          :status="syncProgress.status === 'failed' ? 'exception' : syncProgress.status === 'completed' ? 'success' : 'active'"
+          :stroke-color="{ from: '#108ee9', to: '#87d068' }"
+        />
+        <div class="progress-info">
+          <span v-if="syncProgress.total">
+            已处理: {{ syncProgress.processed || 0 }} / {{ syncProgress.total }}
+          </span>
+          <span v-else>正在准备...</span>
+        </div>
+      </div>
+
       <Alert
         v-if="lastSyncResult"
         :type="lastSyncResult.success ? 'success' : 'error'"
@@ -204,6 +223,7 @@ import {
   Button,
   Alert,
   Divider,
+  Progress,
 } from 'ant-design-vue';
 import {
   UserOutlined,
@@ -243,6 +263,49 @@ interface SyncResult {
   message: string;
 }
 
+interface SyncProgress {
+  title: string;
+  percent: number;
+  status: 'active' | 'completed' | 'failed';
+  total?: number;
+  processed?: number;
+}
+
+interface AsyncSyncResponse {
+  async: boolean;
+  jobId?: string;
+  syncType?: string;
+  message?: string;
+  // 同步模式下的直接结果
+  success?: boolean;
+  total?: number;
+  totalUsers?: number;
+  totalCustomers?: number;
+  created?: number;
+  updated?: number;
+  failed?: number;
+  relationsCreated?: number;
+  errors?: string[];
+}
+
+interface JobStatusResponse {
+  status: string;
+  progress?: number;
+  total?: number;
+  processed?: number;
+  result?: {
+    success: boolean;
+    totalUsers?: number;
+    totalCustomers?: number;
+    created: number;
+    updated: number;
+    failed: number;
+    relationsCreated?: number;
+    errors?: string[];
+  };
+  error?: string;
+}
+
 const syncStats = ref<SyncStats>({
   users: { total: 0, synced: 0, lastSyncAt: null },
   customers: { total: 0, synced: 0, lastSyncAt: null, relations: 0 },
@@ -254,6 +317,8 @@ const syncingUsers = ref(false);
 const syncingCustomers = ref(false);
 const syncingAll = ref(false);
 const lastSyncResult = ref<SyncResult | null>(null);
+const syncProgress = ref<SyncProgress | null>(null);
+let pollingTimer: ReturnType<typeof setTimeout> | null = null;
 
 const formatTime = (time: string) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm');
@@ -268,30 +333,142 @@ const fetchSyncStats = async () => {
   }
 };
 
+// 轮询任务状态
+const pollJobStatus = async (
+  syncType: 'users' | 'customers',
+  jobId: string,
+  title: string,
+  onComplete: (result: JobStatusResponse['result']) => void,
+  onError: (error: string) => void,
+) => {
+  const statusUrl = `/wecom/sync/${syncType}/status/${jobId}`;
+
+  const poll = async () => {
+    try {
+      const status = await requestClient.get<JobStatusResponse>(statusUrl);
+
+      if (status.status === 'completed') {
+        // 完成
+        syncProgress.value = {
+          title,
+          percent: 100,
+          status: 'completed',
+          total: status.total || status.result?.totalUsers || status.result?.totalCustomers,
+          processed: status.processed || status.total,
+        };
+
+        // 延迟清除进度条，让用户看到100%
+        setTimeout(() => {
+          syncProgress.value = null;
+        }, 2000);
+
+        onComplete(status.result);
+        return;
+      } else if (status.status === 'failed') {
+        // 失败
+        syncProgress.value = {
+          title,
+          percent: syncProgress.value?.percent || 0,
+          status: 'failed',
+        };
+
+        setTimeout(() => {
+          syncProgress.value = null;
+        }, 2000);
+
+        onError(status.error || '同步失败');
+        return;
+      } else {
+        // 进行中，更新进度
+        syncProgress.value = {
+          title,
+          percent: status.progress || 0,
+          status: 'active',
+          total: status.total,
+          processed: status.processed,
+        };
+
+        // 继续轮询
+        pollingTimer = setTimeout(poll, 1000);
+      }
+    } catch (error: any) {
+      console.error('轮询任务状态失败', error);
+      // 网络错误时继续重试
+      pollingTimer = setTimeout(poll, 2000);
+    }
+  };
+
+  // 开始轮询
+  poll();
+};
+
+// 停止轮询
+const stopPolling = () => {
+  if (pollingTimer) {
+    clearTimeout(pollingTimer);
+    pollingTimer = null;
+  }
+};
+
 const handleSyncUsers = async () => {
   syncingUsers.value = true;
   lastSyncResult.value = null;
-  try {
-    // 增加超时时间到 5 分钟
-    const res = await requestClient.post<{
-      success: boolean;
-      totalUsers: number;
-      created: number;
-      updated: number;
-      failed: number;
-    }>('/wecom/sync/users', {}, { timeout: 300000 });
+  stopPolling();
 
-    lastSyncResult.value = {
-      success: res.success,
-      message: `员工同步完成：新增 ${res.created} 人，更新 ${res.updated} 人${res.failed > 0 ? `，失败 ${res.failed} 人` : ''}`,
-    };
-    await fetchSyncStats();
+  try {
+    const res = await requestClient.post<AsyncSyncResponse>('/wecom/sync/users', {});
+
+    if (res.async && res.jobId) {
+      // 异步模式：显示初始进度并开始轮询
+      syncProgress.value = {
+        title: '正在同步员工数据...',
+        percent: 0,
+        status: 'active',
+      };
+
+      pollJobStatus(
+        'users',
+        res.jobId,
+        '正在同步员工数据...',
+        (result) => {
+          // 完成回调
+          syncingUsers.value = false;
+          if (result) {
+            lastSyncResult.value = {
+              success: result.success ?? true,
+              message: `员工同步完成：新增 ${result.created ?? 0} 人，更新 ${result.updated ?? 0} 人${(result.failed ?? 0) > 0 ? `，失败 ${result.failed} 人` : ''}`,
+            };
+          } else {
+            lastSyncResult.value = {
+              success: true,
+              message: '员工同步完成',
+            };
+          }
+          fetchSyncStats();
+        },
+        (error) => {
+          // 错误回调
+          syncingUsers.value = false;
+          lastSyncResult.value = {
+            success: false,
+            message: error,
+          };
+        },
+      );
+    } else {
+      // 同步模式：直接处理结果
+      lastSyncResult.value = {
+        success: res.success ?? true,
+        message: `员工同步完成：新增 ${res.created ?? 0} 人，更新 ${res.updated ?? 0} 人${(res.failed ?? 0) > 0 ? `，失败 ${res.failed} 人` : ''}`,
+      };
+      await fetchSyncStats();
+      syncingUsers.value = false;
+    }
   } catch (error: any) {
     lastSyncResult.value = {
       success: false,
       message: error.message || '员工同步失败',
     };
-  } finally {
     syncingUsers.value = false;
   }
 };
@@ -299,28 +476,62 @@ const handleSyncUsers = async () => {
 const handleSyncCustomers = async () => {
   syncingCustomers.value = true;
   lastSyncResult.value = null;
-  try {
-    // 增加超时时间到 5 分钟
-    const res = await requestClient.post<{
-      success: boolean;
-      totalCustomers: number;
-      created: number;
-      updated: number;
-      failed: number;
-      relationsCreated: number;
-    }>('/wecom/sync/customers', {}, { timeout: 300000 });
+  stopPolling();
 
-    lastSyncResult.value = {
-      success: res.success,
-      message: `客户同步完成：新增 ${res.created} 人，更新 ${res.updated} 人，关系 ${res.relationsCreated} 条${res.failed > 0 ? `，失败 ${res.failed} 人` : ''}`,
-    };
-    await fetchSyncStats();
+  try {
+    const res = await requestClient.post<AsyncSyncResponse>('/wecom/sync/customers', {});
+
+    if (res.async && res.jobId) {
+      // 异步模式：显示初始进度并开始轮询
+      syncProgress.value = {
+        title: '正在同步客户数据...',
+        percent: 0,
+        status: 'active',
+      };
+
+      pollJobStatus(
+        'customers',
+        res.jobId,
+        '正在同步客户数据...',
+        (result) => {
+          // 完成回调
+          syncingCustomers.value = false;
+          if (result) {
+            lastSyncResult.value = {
+              success: result.success ?? true,
+              message: `客户同步完成：新增 ${result.created ?? 0} 人，更新 ${result.updated ?? 0} 人，关系 ${result.relationsCreated ?? 0} 条${(result.failed ?? 0) > 0 ? `，失败 ${result.failed} 人` : ''}`,
+            };
+          } else {
+            lastSyncResult.value = {
+              success: true,
+              message: '客户同步完成',
+            };
+          }
+          fetchSyncStats();
+        },
+        (error) => {
+          // 错误回调
+          syncingCustomers.value = false;
+          lastSyncResult.value = {
+            success: false,
+            message: error,
+          };
+        },
+      );
+    } else {
+      // 同步模式：直接处理结果
+      lastSyncResult.value = {
+        success: res.success ?? true,
+        message: `客户同步完成：新增 ${res.created ?? 0} 人，更新 ${res.updated ?? 0} 人，关系 ${res.relationsCreated ?? 0} 条${(res.failed ?? 0) > 0 ? `，失败 ${res.failed} 人` : ''}`,
+      };
+      await fetchSyncStats();
+      syncingCustomers.value = false;
+    }
   } catch (error: any) {
     lastSyncResult.value = {
       success: false,
       message: error.message || '客户同步失败',
     };
-  } finally {
     syncingCustomers.value = false;
   }
 };
@@ -536,6 +747,39 @@ onMounted(() => {
 .notice-icon {
   flex-shrink: 0;
   margin-top: 3px;
+  color: var(--text-color-secondary, #999);
+}
+
+/* 同步进度 */
+.sync-progress {
+  padding: 16px;
+  background: var(--component-background-light, #fafafa);
+  border: 1px solid var(--border-color, #f0f0f0);
+  border-radius: 8px;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progress-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color, #333);
+}
+
+.progress-percent {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.progress-info {
+  margin-top: 8px;
+  font-size: 12px;
   color: var(--text-color-secondary, #999);
 }
 

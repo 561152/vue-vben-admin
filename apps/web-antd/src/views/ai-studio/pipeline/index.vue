@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -22,6 +23,8 @@ import {
   CopyOutlined,
   DeleteOutlined,
   EyeOutlined,
+  ApartmentOutlined,
+  CodeOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import dayjs from 'dayjs';
@@ -54,6 +57,8 @@ const formState = ref({
 
 const detailVisible = ref(false);
 const detailPipeline = ref<PipelineItem | null>(null);
+
+const router = useRouter();
 
 const statusOptions = [
   { value: 'DRAFT', label: '草稿', color: 'default' },
@@ -193,6 +198,37 @@ const showDetail = (record: PipelineItem) => {
   detailVisible.value = true;
 };
 
+const showDesign = (record: PipelineItem) => {
+  router.push(`/ai-studio/pipeline/edit/${record.key}`);
+};
+
+const exportAsCode = async (record: PipelineItem) => {
+  try {
+    const response = await requestClient.get(
+      `/ai-studio/pipelines/${record.key}/export`,
+      {
+        params: { format: 'yaml' },
+      },
+    );
+
+    // Create download
+    const blob = new Blob([response.data || response], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${record.key}.yaml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    message.success('已导出为 YAML 代码');
+  } catch (error) {
+    console.error('Failed to export pipeline:', error);
+    message.error('导出失败');
+  }
+};
+
 const handleOk = async () => {
   try {
     if (editingKey.value) {
@@ -307,6 +343,11 @@ onMounted(() => {
                   <template #icon><EyeOutlined /></template>
                 </Button>
               </Tooltip>
+              <Tooltip title="设计流程">
+                <Button type="link" size="small" @click="showDesign(record)">
+                  <template #icon><ApartmentOutlined /></template>
+                </Button>
+              </Tooltip>
               <Tooltip title="执行流程">
                 <Button
                   type="link"
@@ -329,6 +370,11 @@ onMounted(() => {
                   @click="handleDuplicate(record)"
                 >
                   <template #icon><CopyOutlined /></template>
+                </Button>
+              </Tooltip>
+              <Tooltip title="导出代码">
+                <Button type="link" size="small" @click="exportAsCode(record)">
+                  <template #icon><CodeOutlined /></template>
                 </Button>
               </Tooltip>
               <Popconfirm
@@ -363,7 +409,9 @@ onMounted(() => {
             placeholder="请输入流程标识（英文、数字、下划线、中划线）"
             :disabled="!!editingKey"
           />
-          <div class="form-hint">流程标识创建后不可修改，建议使用小写字母和中划线</div>
+          <div class="form-hint">
+            流程标识创建后不可修改，建议使用小写字母和中划线
+          </div>
         </Form.Item>
 
         <Form.Item label="流程名称" required>

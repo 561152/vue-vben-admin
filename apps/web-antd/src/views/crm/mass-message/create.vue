@@ -135,11 +135,15 @@ const targetDescription = computed(() => {
   const parts: string[] = [];
 
   if (formState.value.sendToDeptNames.length) {
-    parts.push(`发送给"${formState.value.sendToDeptNames.join(', ')}"等部门下成员添加的客户`);
+    parts.push(
+      `发送给"${formState.value.sendToDeptNames.join(', ')}"等部门下成员添加的客户`,
+    );
   }
 
   if (formState.value.excludeDeptNames.length) {
-    parts.push(`排除"${formState.value.excludeDeptNames.join(', ')}"等部门的客户`);
+    parts.push(
+      `排除"${formState.value.excludeDeptNames.join(', ')}"等部门的客户`,
+    );
   }
 
   if (formState.value.selectedTags.length) {
@@ -156,7 +160,9 @@ const targetDescription = computed(() => {
 // API calls
 async function fetchDepartments() {
   try {
-    const res = await requestClient.get<{ items: Department[] }>('/departments/tree');
+    const res = await requestClient.get<{ items: Department[] }>(
+      '/departments/tree',
+    );
     departments.value = res.items || [];
   } catch (e) {
     console.error(e);
@@ -165,9 +171,12 @@ async function fetchDepartments() {
 
 async function fetchTags() {
   try {
-    const res = await requestClient.get<{ items: TagItem[] }>('/customer-tags', {
-      params: { pageSize: 100 },
-    });
+    const res = await requestClient.get<{ items: TagItem[] }>(
+      '/customer-tags',
+      {
+        params: { pageSize: 100 },
+      },
+    );
     tags.value = res.items || [];
   } catch (e) {
     console.error(e);
@@ -177,16 +186,19 @@ async function fetchTags() {
 async function fetchPreviewCount() {
   previewLoading.value = true;
   try {
-    const res = await requestClient.post<{ count: number }>('/mass-message/preview-count', {
-      sendToDepts: formState.value.sendToDepts,
-      excludeDepts: formState.value.excludeDepts,
-      tags: formState.value.selectedTags,
-      filters: {
-        month: formState.value.filterByMonth,
-        region: formState.value.filterByRegion,
-        source: formState.value.filterBySource,
+    const res = await requestClient.post<{ count: number }>(
+      '/mass-message/preview-count',
+      {
+        sendToDepts: formState.value.sendToDepts,
+        excludeDepts: formState.value.excludeDepts,
+        tags: formState.value.selectedTags,
+        filters: {
+          month: formState.value.filterByMonth,
+          region: formState.value.filterByRegion,
+          source: formState.value.filterBySource,
+        },
       },
-    });
+    );
     previewCount.value = res.count || 0;
   } catch (e) {
     console.error(e);
@@ -223,10 +235,16 @@ function handleDeptSelectConfirm(type: 'send' | 'exclude') {
 
   if (type === 'send') {
     formState.value.sendToDepts = [...selectedDeptKeys.value];
-    formState.value.sendToDeptNames = getNames(selectedDeptKeys.value, departments.value);
+    formState.value.sendToDeptNames = getNames(
+      selectedDeptKeys.value,
+      departments.value,
+    );
   } else {
     formState.value.excludeDepts = [...selectedDeptKeys.value];
-    formState.value.excludeDeptNames = getNames(selectedDeptKeys.value, departments.value);
+    formState.value.excludeDeptNames = getNames(
+      selectedDeptKeys.value,
+      departments.value,
+    );
   }
 
   deptSelectVisible.value = false;
@@ -235,7 +253,10 @@ function handleDeptSelectConfirm(type: 'send' | 'exclude') {
 
 function handleNext() {
   if (currentStep.value === 0) {
-    if (formState.value.targetMode === 'FILTERED' && formState.value.sendToDepts.length === 0) {
+    if (
+      formState.value.targetMode === 'FILTERED' &&
+      formState.value.sendToDepts.length === 0
+    ) {
       message.warning('请选择发送范围');
       return;
     }
@@ -333,7 +354,9 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4">
       <h2 class="text-xl font-bold">新建消息</h2>
-      <p class="text-gray-500">选择发送给的客户，通知成员，给客户发送以下内容</p>
+      <p class="text-gray-500">
+        选择发送给的客户，通知成员，给客户发送以下内容
+      </p>
     </div>
 
     <!-- Steps -->
@@ -446,11 +469,16 @@ onMounted(() => {
             <Tag
               v-for="month in monthOptions"
               :key="month"
-              :color="formState.filterByMonth.includes(month) ? 'blue' : 'default'"
+              :color="
+                formState.filterByMonth.includes(month) ? 'blue' : 'default'
+              "
               class="cursor-pointer"
               @click="
                 formState.filterByMonth.includes(month)
-                  ? formState.filterByMonth.splice(formState.filterByMonth.indexOf(month), 1)
+                  ? formState.filterByMonth.splice(
+                      formState.filterByMonth.indexOf(month),
+                      1,
+                    )
                   : formState.filterByMonth.push(month)
               "
             >
@@ -464,11 +492,16 @@ onMounted(() => {
             <Tag
               v-for="region in regionOptions"
               :key="region"
-              :color="formState.filterByRegion.includes(region) ? 'blue' : 'default'"
+              :color="
+                formState.filterByRegion.includes(region) ? 'blue' : 'default'
+              "
               class="cursor-pointer"
               @click="
                 formState.filterByRegion.includes(region)
-                  ? formState.filterByRegion.splice(formState.filterByRegion.indexOf(region), 1)
+                  ? formState.filterByRegion.splice(
+                      formState.filterByRegion.indexOf(region),
+                      1,
+                    )
                   : formState.filterByRegion.push(region)
               "
             >
@@ -482,11 +515,16 @@ onMounted(() => {
             <Tag
               v-for="source in sourceOptions"
               :key="source"
-              :color="formState.filterBySource.includes(source) ? 'blue' : 'default'"
+              :color="
+                formState.filterBySource.includes(source) ? 'blue' : 'default'
+              "
               class="cursor-pointer"
               @click="
                 formState.filterBySource.includes(source)
-                  ? formState.filterBySource.splice(formState.filterBySource.indexOf(source), 1)
+                  ? formState.filterBySource.splice(
+                      formState.filterBySource.indexOf(source),
+                      1,
+                    )
                   : formState.filterBySource.push(source)
               "
             >
@@ -543,10 +581,10 @@ onMounted(() => {
                   <Button
                     v-for="type in attachmentTypes"
                     :key="type.key"
-                    class="flex flex-col items-center justify-center h-16 w-16"
+                    class="flex h-16 w-16 flex-col items-center justify-center"
                   >
                     <component :is="type.icon" class="text-lg" />
-                    <span class="text-xs mt-1">{{ type.label }}</span>
+                    <span class="mt-1 text-xs">{{ type.label }}</span>
                   </Button>
                 </div>
                 <div class="mt-2 text-xs text-gray-400">
@@ -574,18 +612,14 @@ onMounted(() => {
                 </div>
                 <div v-else class="text-gray-400">输入消息内容</div>
               </div>
-              <div class="mt-2 text-xs text-red-500">
-                支持展示消息版本效果
-              </div>
+              <div class="mt-2 text-xs text-red-500">支持展示消息版本效果</div>
             </div>
           </Card>
         </Col>
       </Row>
 
       <div class="mt-4 flex justify-between">
-        <Button @click="handlePrev">
-          <ArrowLeftOutlined /> 上一步
-        </Button>
+        <Button @click="handlePrev"> <ArrowLeftOutlined /> 上一步 </Button>
         <Button type="primary" @click="handleNext">
           下一步 <ArrowRightOutlined />
         </Button>
@@ -607,20 +641,36 @@ onMounted(() => {
             <div class="space-y-2">
               <div class="flex justify-between">
                 <span class="text-gray-500">预计发送人数</span>
-                <span class="font-bold text-blue-500">{{ previewCount }} 人</span>
+                <span class="font-bold text-blue-500"
+                  >{{ previewCount }} 人</span
+                >
               </div>
-              <div v-if="formState.sendToDeptNames.length" class="flex justify-between">
+              <div
+                v-if="formState.sendToDeptNames.length"
+                class="flex justify-between"
+              >
                 <span class="text-gray-500">发送给</span>
                 <span>
-                  <Tag v-for="name in formState.sendToDeptNames" :key="name" size="small">
+                  <Tag
+                    v-for="name in formState.sendToDeptNames"
+                    :key="name"
+                    size="small"
+                  >
                     {{ name }}
                   </Tag>
                 </span>
               </div>
-              <div v-if="formState.excludeDeptNames.length" class="flex justify-between">
+              <div
+                v-if="formState.excludeDeptNames.length"
+                class="flex justify-between"
+              >
                 <span class="text-gray-500">不发送给</span>
                 <span>
-                  <Tag v-for="name in formState.excludeDeptNames" :key="name" size="small">
+                  <Tag
+                    v-for="name in formState.excludeDeptNames"
+                    :key="name"
+                    size="small"
+                  >
                     {{ name }}
                   </Tag>
                 </span>
@@ -638,9 +688,7 @@ onMounted(() => {
       </Row>
 
       <div class="mt-4 flex justify-between">
-        <Button @click="handlePrev">
-          <ArrowLeftOutlined /> 上一步
-        </Button>
+        <Button @click="handlePrev"> <ArrowLeftOutlined /> 上一步 </Button>
         <Button type="primary" :loading="loading" @click="handleSend">
           <SendOutlined /> 通知成员发送
         </Button>

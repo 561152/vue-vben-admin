@@ -53,8 +53,16 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 // Vue Flow composable
-const { nodes, edges, addNodes, addEdges, onConnect, removeNodes, removeEdges, fitView } =
-  useVueFlow();
+const {
+  nodes,
+  edges,
+  addNodes,
+  addEdges,
+  onConnect,
+  removeNodes,
+  removeEdges,
+  fitView,
+} = useVueFlow();
 
 // Drawer state
 const drawerVisible = ref(false);
@@ -217,7 +225,9 @@ const saveNodeConfig = () => {
   if (!selectedNode.value) return;
 
   // Update node data
-  const nodeIndex = nodes.value.findIndex((n) => n.id === selectedNode.value.id);
+  const nodeIndex = nodes.value.findIndex(
+    (n) => n.id === selectedNode.value.id,
+  );
   if (nodeIndex !== -1) {
     nodes.value[nodeIndex].data = {
       ...nodes.value[nodeIndex].data,
@@ -247,7 +257,8 @@ const deleteSelectedNode = () => {
 
   // Remove connected edges
   const connectedEdges = edges.value.filter(
-    (e) => e.source === selectedNode.value.id || e.target === selectedNode.value.id,
+    (e) =>
+      e.source === selectedNode.value.id || e.target === selectedNode.value.id,
   );
   removeEdges(connectedEdges);
 
@@ -292,7 +303,11 @@ const handleConnect = (params: any) => {
 };
 
 // Find path between two nodes (for cycle detection)
-const findPath = (from: string, to: string, visited = new Set<string>()): boolean => {
+const findPath = (
+  from: string,
+  to: string,
+  visited = new Set<string>(),
+): boolean => {
   if (from === to) return true;
   if (visited.has(from)) return false;
 
@@ -434,9 +449,7 @@ onUnmounted(() => {
 
       <Panel position="top-center" class="controls-panel">
         <Space>
-          <Button @click="addNewNode" type="primary">
-            添加节点
-          </Button>
+          <Button @click="addNewNode" type="primary"> 添加节点 </Button>
           <Button @click="autoLayout">
             <template #icon><BorderOutlined /></template>
             自动整理
@@ -488,15 +501,8 @@ onUnmounted(() => {
           </Select>
         </Form.Item>
 
-        <Form.Item
-          v-if="nodeForm.type === 'llm'"
-          label="模型选择"
-          required
-        >
-          <Select
-            v-model:value="nodeForm.componentKey"
-            placeholder="选择模型"
-          >
+        <Form.Item v-if="nodeForm.type === 'llm'" label="模型选择" required>
+          <Select v-model:value="nodeForm.componentKey" placeholder="选择模型">
             <Select.Option
               v-for="comp in componentOptions"
               :key="comp.value"
@@ -507,10 +513,7 @@ onUnmounted(() => {
           </Select>
         </Form.Item>
 
-        <Form.Item
-          v-if="nodeForm.type === 'llm'"
-          label="Prompt 模板"
-        >
+        <Form.Item v-if="nodeForm.type === 'llm'" label="Prompt 模板">
           <Input.TextArea
             v-model:value="nodeForm.prompt"
             placeholder="输入 Prompt，可使用 {{ 变量名 }} 引用上游节点输出"
@@ -538,20 +541,20 @@ onUnmounted(() => {
 
 <style scoped>
 .pipeline-editor {
+  position: relative;
   width: 100%;
   height: calc(100vh - 200px);
   min-height: 600px;
-  position: relative;
+  background: #f5f5f5;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
-  background: #f5f5f5;
 }
 
 .controls-panel {
-  background: white;
   padding: 12px 16px;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
 }
 
 .form-hint {
@@ -561,9 +564,9 @@ onUnmounted(() => {
 }
 
 .form-hint code {
-  background: #f5f5f5;
   padding: 2px 6px;
-  border-radius: 3px;
   font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  border-radius: 3px;
 }
 </style>

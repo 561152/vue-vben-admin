@@ -330,7 +330,10 @@ export async function sendDirectMessage(data: SendDirectMessageDto) {
 }
 
 export async function sendBatchDirectMessages(data: SendBatchDirectMessageDto) {
-  return requestClient.post<BatchSendResult>('/crm/direct-messages/batch', data);
+  return requestClient.post<BatchSendResult>(
+    '/crm/direct-messages/batch',
+    data,
+  );
 }
 
 // ==================== Message Template Types ====================
@@ -386,7 +389,10 @@ export async function updateMessageTemplate(
   id: number,
   data: UpdateMessageTemplateDto,
 ) {
-  return requestClient.put<MessageTemplate>(`/crm/message-templates/${id}`, data);
+  return requestClient.put<MessageTemplate>(
+    `/crm/message-templates/${id}`,
+    data,
+  );
 }
 
 export async function deleteMessageTemplate(id: number) {
@@ -455,9 +461,11 @@ export async function getPresignedUrl(filename: string, contentType: string) {
 }
 
 export async function refreshWecomMediaId(id: number) {
-  return requestClient.post<{ mediaId: number; wecomMediaId: string; expiresAt: string }>(
-    `/crm/media/${id}/refresh`,
-  );
+  return requestClient.post<{
+    mediaId: number;
+    wecomMediaId: string;
+    expiresAt: string;
+  }>(`/crm/media/${id}/refresh`);
 }
 
 // ==================== Mass Message Types ====================
@@ -516,4 +524,86 @@ export async function previewMassMessage(data: PreviewMassMessageDto) {
     '/crm/mass-messages/preview',
     data,
   );
+}
+
+// ==================== Employee Message Types ====================
+
+export interface WecomEmployee {
+  id: string;
+  wecomUserId: string;
+  userName: string | null;
+  mobile: string;
+  headImageUrl: string | null;
+  department: unknown;
+  customerCount: number;
+}
+
+export interface EmployeeCustomer {
+  id: number;
+  name: string;
+  phone: string | null;
+  wecomExternalUserid: string | null;
+  addTime: string | null;
+}
+
+export interface SendToEmployeesDto {
+  wecomUserIds: string[];
+  textContent?: string;
+  attachments?: DirectMessageAttachment[];
+  templateId?: number;
+  allowSelect?: boolean;
+}
+
+export interface EmployeeSendResult {
+  wecomUserId: string;
+  wecomUserName: string | null;
+  customerCount: number;
+  status: 'PENDING' | 'SENT' | 'FAILED';
+  wecomMsgid?: string;
+  failReason?: string;
+}
+
+export interface SendToEmployeesResponse {
+  success: boolean;
+  totalEmployees: number;
+  totalCustomers: number;
+  results: EmployeeSendResult[];
+  messageIds: number[];
+}
+
+export interface SendTestMessageDto {
+  customerId: number;
+  textContent?: string;
+  attachments?: DirectMessageAttachment[];
+  templateId?: number;
+}
+
+// ==================== Employee Message API ====================
+
+export async function getEmployees(params?: Record<string, unknown>) {
+  return requestClient.get<PaginatedResponse<WecomEmployee>>(
+    '/crm/direct-messages/employees',
+    { params },
+  );
+}
+
+export async function getEmployeeCustomers(
+  wecomUserId: string,
+  params?: Record<string, unknown>,
+) {
+  return requestClient.get<PaginatedResponse<EmployeeCustomer>>(
+    `/crm/direct-messages/employees/${wecomUserId}/customers`,
+    { params },
+  );
+}
+
+export async function sendToEmployees(data: SendToEmployeesDto) {
+  return requestClient.post<SendToEmployeesResponse>(
+    '/crm/direct-messages/send-to-employees',
+    data,
+  );
+}
+
+export async function sendTestMessage(data: SendTestMessageDto) {
+  return requestClient.post<DirectMessage>('/crm/direct-messages/test', data);
 }
