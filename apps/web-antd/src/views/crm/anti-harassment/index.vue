@@ -150,13 +150,22 @@ const ruleColumns = [
 
 // ==================== 规则表格逻辑 ====================
 
-const { tableProps, dataSource: rules, fetchData } = useCrudTable<AntiHarassmentRule>({
+const {
+  tableProps,
+  dataSource: rules,
+  fetchData,
+} = useCrudTable<AntiHarassmentRule>({
   fetchApi: async (params) => {
-    const res = await requestClient.get<{ items: AntiHarassmentRule[]; total?: number }>(
-      '/anti-harassment/rules',
-      { params: { page: params.page, pageSize: params.pageSize } },
-    );
-    return { items: res.items || [], total: res.total || res.items?.length || 0 };
+    const res = await requestClient.get<{
+      items: AntiHarassmentRule[];
+      total?: number;
+    }>('/anti-harassment/rules', {
+      params: { page: params.page, pageSize: params.pageSize },
+    });
+    return {
+      items: res.items || [],
+      total: res.total || res.items?.length || 0,
+    };
   },
   deleteApi: async (id) => {
     await requestClient.delete(`/anti-harassment/rules/${id}`);

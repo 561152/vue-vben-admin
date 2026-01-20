@@ -107,11 +107,29 @@ const materialTypes = [
 
 const columns = [
   { title: '素材名称', dataIndex: 'name', key: 'name', width: 200 },
-  { title: '内容预览', dataIndex: 'content', key: 'content', width: 300, ellipsis: true },
+  {
+    title: '内容预览',
+    dataIndex: 'content',
+    key: 'content',
+    width: 300,
+    ellipsis: true,
+  },
   { title: '类型', dataIndex: 'type', key: 'type', width: 80 },
   { title: '分类', dataIndex: 'categoryName', key: 'categoryName', width: 100 },
-  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', width: 80, sorter: true },
-  { title: '使用次数', dataIndex: 'usageCount', key: 'usageCount', width: 100, sorter: true },
+  {
+    title: '浏览',
+    dataIndex: 'viewCount',
+    key: 'viewCount',
+    width: 80,
+    sorter: true,
+  },
+  {
+    title: '使用次数',
+    dataIndex: 'usageCount',
+    key: 'usageCount',
+    width: 100,
+    sorter: true,
+  },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
   { title: '操作', key: 'actions', width: 150, fixed: 'right' as const },
 ];
@@ -136,7 +154,10 @@ const typeLabels: Record<MaterialItem['type'], string> = {
 // ==================== 计算属性 ====================
 
 const categoryTreeData = computed(() => {
-  const buildTree = (items: CategoryItem[], parentId: number | null = null): any[] => {
+  const buildTree = (
+    items: CategoryItem[],
+    parentId: number | null = null,
+  ): any[] => {
     return items
       .filter((item) => item.parentId === parentId)
       .map((item) => ({
@@ -145,7 +166,9 @@ const categoryTreeData = computed(() => {
         children: buildTree(items, item.id),
       }));
   };
-  return [{ key: null, title: '全部分类', children: buildTree(categories.value) }];
+  return [
+    { key: null, title: '全部分类', children: buildTree(categories.value) },
+  ];
 });
 
 // ==================== 表格逻辑 ====================
@@ -162,12 +185,13 @@ const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
     if (params.keyword) apiParams.keyword = params.keyword;
     if (params.type) apiParams.type = params.type;
     if (params.status) apiParams.status = params.status;
-    if (selectedCategoryId.value) apiParams.categoryId = selectedCategoryId.value;
+    if (selectedCategoryId.value)
+      apiParams.categoryId = selectedCategoryId.value;
 
-    const res = await requestClient.get<{ data: MaterialItem[]; total: number }>(
-      '/crm/materials',
-      { params: apiParams },
-    );
+    const res = await requestClient.get<{
+      data: MaterialItem[];
+      total: number;
+    }>('/crm/materials', { params: apiParams });
     return { items: res.data || [], total: res.total || 0 };
   },
   deleteApi: async (id) => {
@@ -227,7 +251,9 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
 
 async function fetchCategories() {
   try {
-    const res = await requestClient.get<CategoryItem[]>('/crm/materials/categories/tree');
+    const res = await requestClient.get<CategoryItem[]>(
+      '/crm/materials/categories/tree',
+    );
     categories.value = flattenCategories(res);
   } catch (e) {
     console.error(e);
@@ -332,7 +358,9 @@ onMounted(() => {
       </template>
 
       <!-- Filters -->
-      <div class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4">
+      <div
+        class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4"
+      >
         <Input
           v-model:value="filters.keyword"
           placeholder="搜索素材名称/内容"
@@ -372,7 +400,11 @@ onMounted(() => {
           <template v-if="column.key === 'name'">
             <div class="font-medium">{{ record.name }}</div>
             <div v-if="record.tags?.length" class="mt-1">
-              <Tag v-for="tag in record.tags.slice(0, 3)" :key="tag" size="small">
+              <Tag
+                v-for="tag in record.tags.slice(0, 3)"
+                :key="tag"
+                size="small"
+              >
                 {{ tag }}
               </Tag>
               <span v-if="record.tags.length > 3" class="text-xs text-gray-400">
@@ -388,7 +420,15 @@ onMounted(() => {
           </template>
 
           <template v-if="column.key === 'type'">
-            <Tag :color="record.type === 'TEXT' ? 'blue' : record.type === 'IMAGE' ? 'green' : 'orange'">
+            <Tag
+              :color="
+                record.type === 'TEXT'
+                  ? 'blue'
+                  : record.type === 'IMAGE'
+                    ? 'green'
+                    : 'orange'
+              "
+            >
               {{ typeLabels[record.type] }}
             </Tag>
           </template>
@@ -472,7 +512,10 @@ onMounted(() => {
           </div>
         </Form.Item>
 
-        <Form.Item v-if="['TEXT', 'MIXED'].includes(formState.type)" label="文本内容">
+        <Form.Item
+          v-if="['TEXT', 'MIXED'].includes(formState.type)"
+          label="文本内容"
+        >
           <Input.TextArea
             v-model:value="formState.content"
             placeholder="输入素材文本内容..."
@@ -487,7 +530,10 @@ onMounted(() => {
         </Form.Item>
 
         <Form.Item v-if="formState.type === 'LINK'" label="链接标题">
-          <Input v-model:value="formState.linkTitle" placeholder="链接显示标题" />
+          <Input
+            v-model:value="formState.linkTitle"
+            placeholder="链接显示标题"
+          />
         </Form.Item>
 
         <Form.Item label="所属分类">
@@ -514,7 +560,11 @@ onMounted(() => {
             placeholder="添加标签，便于分类管理"
             :token-separators="[',', '，']"
           >
-            <Select.Option v-for="tag in tagPresets" :key="tag.value" :value="tag.value">
+            <Select.Option
+              v-for="tag in tagPresets"
+              :key="tag.value"
+              :value="tag.value"
+            >
               {{ tag.label }}
             </Select.Option>
           </Select>
@@ -530,7 +580,10 @@ onMounted(() => {
     >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="分类名称" required>
-          <Input v-model:value="categoryFormState.name" placeholder="输入分类名称" />
+          <Input
+            v-model:value="categoryFormState.name"
+            placeholder="输入分类名称"
+          />
         </Form.Item>
         <Form.Item label="上级分类">
           <Select
@@ -538,7 +591,11 @@ onMounted(() => {
             placeholder="选择上级分类（可选）"
             allow-clear
           >
-            <Select.Option v-for="cat in categories" :key="cat.id" :value="cat.id">
+            <Select.Option
+              v-for="cat in categories"
+              :key="cat.id"
+              :value="cat.id"
+            >
               {{ cat.name }}
             </Select.Option>
           </Select>
