@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, h, computed } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import {
   Table,
   Button,
@@ -37,12 +37,21 @@ import {
   CalendarOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useCrudTable } from '#/composables';
+import {
+  followUpStatusOptions,
+  followUpTypeOptions,
+  findOption,
+  withAllOption,
+} from '#/constants/crm-options';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
+
+// ==================== 类型定义 ====================
 
 interface FollowUpItem {
   id: number;
@@ -85,79 +94,47 @@ interface CustomerItem {
   name: string;
 }
 
-const loading = ref(false);
-const dataSource = ref<FollowUpItem[]>([]);
-const pagination = ref({ current: 1, pageSize: 20, total: 0 });
-const modalVisible = ref(false);
-const formState = ref({
-  customerId: undefined as number | undefined,
-  type: 'CALL',
-  content: '',
-  nextPlanAt: null as dayjs.Dayjs | null,
-});
-const customers = ref<CustomerItem[]>([]);
-const stats = ref<FollowUpStats | null>(null);
-const todayData = ref<TodayFollowUp | null>(null);
-const activeTab = ref('dashboard');
-const filterStatus = ref<string | undefined>(undefined);
-const filterType = ref<string | undefined>(undefined);
+interface FollowUpFilters {
+  status?: string;
+  type?: string;
+}
 
-const typeOptions = [
-  { value: 'CALL', label: '电话', color: 'blue', icon: PhoneOutlined },
-  { value: 'MESSAGE', label: '消息', color: 'green', icon: MessageOutlined },
-  { value: 'MEETING', label: '会议', color: 'orange', icon: TeamOutlined },
-  { value: 'EMAIL', label: '邮件', color: 'purple', icon: MailOutlined },
-  {
-    value: 'OTHER',
-    label: '其他',
-    color: 'default',
-    icon: ClockCircleOutlined,
-  },
-];
+// ==================== 类型图标映射 ====================
 
-const statusOptions = [
-  { value: 'PENDING', label: '待执行', color: 'blue' },
-  { value: 'OVERDUE', label: '已逾期', color: 'red' },
-  { value: 'COMPLETED', label: '已完成', color: 'default' },
-];
+const typeIconMap: Record<string, typeof PhoneOutlined> = {
+  PHONE: PhoneOutlined,
+  WECHAT: MessageOutlined,
+  VISIT: TeamOutlined,
+  EMAIL: MailOutlined,
+  OTHER: ClockCircleOutlined,
+};
+
+function getTypeIcon(type: string) {
+  return typeIconMap[type] || ClockCircleOutlined;
+}
+
+// ==================== 表格列定义 ====================
 
 const columns = [
-  {
-    title: '客户',
-    key: 'customer',
-    width: 180,
-  },
+  { title: '客户', key: 'customer', width: 180 },
   {
     title: '类型',
     dataIndex: 'type',
     key: 'type',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = typeOptions.find((o) => o.value === text);
-      return h(
-        Tag,
-        { color: opt?.color || 'default' },
-        () => opt?.label || text,
-      );
+      const opt = findOption(followUpTypeOptions, text);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
     },
   },
-  {
-    title: '内容',
-    dataIndex: 'content',
-    key: 'content',
-    ellipsis: true,
-  },
+  { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
   {
     title: '状态',
     key: 'status',
     width: 100,
     customRender: ({ record }: { record: FollowUpItem }) => {
-      if (record.status === 'OVERDUE') {
-        return h(Tag, { color: 'red' }, () => '已逾期');
-      } else if (record.status === 'PENDING') {
-        return h(Tag, { color: 'blue' }, () => '待执行');
-      }
-      return h(Tag, { color: 'default' }, () => '已完成');
+      const opt = findOption(followUpStatusOptions, record.status);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || record.status);
     },
   },
   {
@@ -165,60 +142,52 @@ const columns = [
     dataIndex: 'nextPlanAt',
     key: 'nextPlanAt',
     width: 160,
-    customRender: ({ text }: { text: string | null }) => {
-      if (!text) return '-';
-      return dayjs(text).format('MM-DD HH:mm');
-    },
+    customRender: ({ text }: { text: string | null }) =>
+      text ? dayjs(text).format('MM-DD HH:mm') : '-',
   },
-  {
-    title: '跟进人',
-    dataIndex: 'userName',
-    key: 'userName',
-    width: 100,
-  },
+  { title: '跟进人', dataIndex: 'userName', key: 'userName', width: 100 },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 140,
-    customRender: ({ text }: { text: string }) =>
-      dayjs(text).format('MM-DD HH:mm'),
+    customRender: ({ text }: { text: string }) => dayjs(text).format('MM-DD HH:mm'),
   },
-  {
-    title: '操作',
-    key: 'action',
-    width: 140,
-    fixed: 'right',
-  },
+  { title: '操作', key: 'action', width: 140, fixed: 'right' as const },
 ];
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const params: Record<string, unknown> = {
-      page: pagination.value.current,
-      pageSize: pagination.value.pageSize,
-    };
-    if (filterStatus.value) params.status = filterStatus.value;
-    if (filterType.value) params.type = filterType.value;
+// ==================== 表格逻辑 ====================
 
-    const res = await requestClient.get<{
-      items: FollowUpItem[];
-      total: number;
-    }>('/follow-ups', { params });
-    dataSource.value = res.items;
-    pagination.value.total = res.total;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}
+const {
+  tableProps,
+  filters,
+  search,
+  resetFilters,
+  fetchData,
+} = useCrudTable<FollowUpItem, FollowUpFilters>({
+  fetchApi: async (params) => {
+    const apiParams: Record<string, unknown> = {
+      page: params.page,
+      pageSize: params.pageSize,
+    };
+    if (params.status) apiParams.status = params.status;
+    if (params.type) apiParams.type = params.type;
+    return requestClient.get<{ items: FollowUpItem[]; total: number }>(
+      '/follow-ups',
+      { params: apiParams },
+    );
+  },
+});
+
+// ==================== 统计和今日数据 ====================
+
+const stats = ref<FollowUpStats | null>(null);
+const todayData = ref<TodayFollowUp | null>(null);
+const activeTab = ref('dashboard');
 
 async function fetchStats() {
   try {
-    const res = await requestClient.get<FollowUpStats>('/follow-ups/stats');
-    stats.value = res;
+    stats.value = await requestClient.get<FollowUpStats>('/follow-ups/stats');
   } catch (e) {
     console.error(e);
   }
@@ -226,21 +195,28 @@ async function fetchStats() {
 
 async function fetchTodayData() {
   try {
-    const res = await requestClient.get<TodayFollowUp>('/follow-ups/today');
-    todayData.value = res;
+    todayData.value = await requestClient.get<TodayFollowUp>('/follow-ups/today');
   } catch (e) {
     console.error(e);
   }
 }
 
+// ==================== 新增跟进 Modal ====================
+
+const modalVisible = ref(false);
+const customers = ref<CustomerItem[]>([]);
+const formState = ref({
+  customerId: undefined as number | undefined,
+  type: 'PHONE',
+  content: '',
+  nextPlanAt: undefined as dayjs.Dayjs | undefined,
+});
+
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>(
-      '/customers',
-      {
-        params: { pageSize: 100 },
-      },
-    );
+    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers', {
+      params: { pageSize: 100 },
+    });
     customers.value = res.items;
   } catch (e) {
     console.error(e);
@@ -250,9 +226,9 @@ async function fetchCustomers() {
 function handleAdd() {
   formState.value = {
     customerId: undefined,
-    type: 'CALL',
+    type: 'PHONE',
     content: '',
-    nextPlanAt: null,
+    nextPlanAt: undefined,
   };
   modalVisible.value = true;
 }
@@ -276,21 +252,20 @@ async function handleSubmit() {
     });
     message.success('添加成功');
     modalVisible.value = false;
-    fetchData();
-    fetchStats();
-    fetchTodayData();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
+    refreshAll();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '操作失败';
+    message.error(errorMessage);
   }
 }
+
+// ==================== 操作函数 ====================
 
 async function handleMarkCompleted(id: number) {
   try {
     await requestClient.put(`/follow-ups/${id}/complete`);
     message.success('已标记完成');
-    fetchData();
-    fetchStats();
-    fetchTodayData();
+    refreshAll();
   } catch (e) {
     message.error('操作失败');
   }
@@ -300,41 +275,31 @@ async function handleDelete(id: number) {
   try {
     await requestClient.delete(`/follow-ups/${id}`);
     message.success('删除成功');
-    fetchData();
-    fetchStats();
-    fetchTodayData();
+    refreshAll();
   } catch (e) {
     message.error('删除失败');
   }
 }
 
-function handleTableChange(pag: any) {
-  pagination.value.current = pag.current;
-  pagination.value.pageSize = pag.pageSize;
+function refreshAll() {
   fetchData();
+  fetchStats();
+  fetchTodayData();
 }
 
 function handleFilter() {
-  pagination.value.current = 1;
-  fetchData();
+  search();
 }
 
-function handleResetFilter() {
-  filterStatus.value = undefined;
-  filterType.value = undefined;
-  pagination.value.current = 1;
-  fetchData();
+function handleReset() {
+  resetFilters();
 }
 
 function formatRelativeTime(time: string | null) {
-  if (!time) return '-';
-  return dayjs(time).fromNow();
+  return time ? dayjs(time).fromNow() : '-';
 }
 
-function getTypeIcon(type: string) {
-  const opt = typeOptions.find((o) => o.value === type);
-  return opt?.icon || ClockCircleOutlined;
-}
+// ==================== 生命周期 ====================
 
 onMounted(() => {
   fetchData();
@@ -351,7 +316,7 @@ onMounted(() => {
       <Button type="primary" @click="handleAdd">新增跟进</Button>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- 统计卡片 -->
     <Row :gutter="16" class="mb-4">
       <Col :span="6">
         <Card>
@@ -360,9 +325,7 @@ onMounted(() => {
             :value="stats?.total || 0"
             :value-style="{ color: '#1890ff' }"
           >
-            <template #prefix>
-              <CalendarOutlined />
-            </template>
+            <template #prefix><CalendarOutlined /></template>
           </Statistic>
         </Card>
       </Col>
@@ -373,9 +336,7 @@ onMounted(() => {
             :value="stats?.pendingCount || 0"
             :value-style="{ color: '#1890ff' }"
           >
-            <template #prefix>
-              <ClockCircleOutlined />
-            </template>
+            <template #prefix><ClockCircleOutlined /></template>
           </Statistic>
         </Card>
       </Col>
@@ -386,9 +347,7 @@ onMounted(() => {
             :value="stats?.overdueCount || 0"
             :value-style="{ color: '#ff4d4f' }"
           >
-            <template #prefix>
-              <ExclamationCircleOutlined />
-            </template>
+            <template #prefix><ExclamationCircleOutlined /></template>
           </Statistic>
         </Card>
       </Col>
@@ -399,19 +358,17 @@ onMounted(() => {
             :value="stats?.todayCount || 0"
             :value-style="{ color: '#52c41a' }"
           >
-            <template #prefix>
-              <CheckCircleOutlined />
-            </template>
+            <template #prefix><CheckCircleOutlined /></template>
           </Statistic>
         </Card>
       </Col>
     </Row>
 
     <Tabs v-model:activeKey="activeTab">
-      <!-- Dashboard Tab -->
+      <!-- 工作台 Tab -->
       <TabPane key="dashboard" tab="工作台">
         <Row :gutter="16">
-          <!-- Overdue -->
+          <!-- 已逾期 -->
           <Col :span="8">
             <Card title="已逾期" size="small" class="h-96 overflow-auto">
               <template #extra>
@@ -429,13 +386,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar
-                          :style="{ backgroundColor: '#ff4d4f' }"
-                          :size="32"
-                        >
-                          <template #icon
-                            ><component :is="getTypeIcon(item.type)"
-                          /></template>
+                        <Avatar :style="{ backgroundColor: '#ff4d4f' }" :size="32">
+                          <template #icon>
+                            <component :is="getTypeIcon(item.type)" />
+                          </template>
                         </Avatar>
                       </template>
                       <template #title>
@@ -461,15 +415,11 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty
-                v-else
-                description="无逾期任务"
-                :image="Empty.PRESENTED_IMAGE_SIMPLE"
-              />
+              <Empty v-else description="无逾期任务" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
             </Card>
           </Col>
 
-          <!-- Today -->
+          <!-- 今日待办 -->
           <Col :span="8">
             <Card title="今日待办" size="small" class="h-96 overflow-auto">
               <template #extra>
@@ -487,13 +437,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar
-                          :style="{ backgroundColor: '#1890ff' }"
-                          :size="32"
-                        >
-                          <template #icon
-                            ><component :is="getTypeIcon(item.type)"
-                          /></template>
+                        <Avatar :style="{ backgroundColor: '#1890ff' }" :size="32">
+                          <template #icon>
+                            <component :is="getTypeIcon(item.type)" />
+                          </template>
                         </Avatar>
                       </template>
                       <template #title>
@@ -519,21 +466,13 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty
-                v-else
-                description="今日无待办"
-                :image="Empty.PRESENTED_IMAGE_SIMPLE"
-              />
+              <Empty v-else description="今日无待办" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
             </Card>
           </Col>
 
-          <!-- Upcoming -->
+          <!-- 即将到来 -->
           <Col :span="8">
-            <Card
-              title="即将到来 (3天内)"
-              size="small"
-              class="h-96 overflow-auto"
-            >
+            <Card title="即将到来 (3天内)" size="small" class="h-96 overflow-auto">
               <template #extra>
                 <Badge
                   :count="todayData?.stats.upcomingCount || 0"
@@ -549,13 +488,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar
-                          :style="{ backgroundColor: '#52c41a' }"
-                          :size="32"
-                        >
-                          <template #icon
-                            ><component :is="getTypeIcon(item.type)"
-                          /></template>
+                        <Avatar :style="{ backgroundColor: '#52c41a' }" :size="32">
+                          <template #icon>
+                            <component :is="getTypeIcon(item.type)" />
+                          </template>
                         </Avatar>
                       </template>
                       <template #title>{{ item.customerName }}</template>
@@ -579,41 +515,34 @@ onMounted(() => {
         </Row>
       </TabPane>
 
-      <!-- List Tab -->
+      <!-- 全部记录 Tab -->
       <TabPane key="list" tab="全部记录">
-        <!-- Filters -->
+        <!-- 筛选区 -->
         <Card class="mb-4" size="small">
           <Space wrap>
             <span class="text-gray-500">状态:</span>
             <Select
-              v-model:value="filterStatus"
-              :options="[{ value: '', label: '全部' }, ...statusOptions]"
+              v-model:value="filters.status"
+              :options="withAllOption(followUpStatusOptions)"
               placeholder="选择状态"
               style="width: 120px"
               allow-clear
             />
             <span class="ml-4 text-gray-500">类型:</span>
             <Select
-              v-model:value="filterType"
-              :options="[{ value: '', label: '全部' }, ...typeOptions]"
+              v-model:value="filters.type"
+              :options="withAllOption(followUpTypeOptions)"
               placeholder="选择类型"
               style="width: 120px"
               allow-clear
             />
             <Button type="primary" @click="handleFilter">筛选</Button>
-            <Button @click="handleResetFilter">重置</Button>
+            <Button @click="handleReset">重置</Button>
           </Space>
         </Card>
 
-        <Table
-          :columns="columns"
-          :data-source="dataSource"
-          :loading="loading"
-          :pagination="pagination"
-          :scroll="{ x: 1100 }"
-          row-key="id"
-          @change="handleTableChange"
-        >
+        <!-- 表格区 -->
+        <Table v-bind="tableProps" :columns="columns" :scroll="{ x: 1100 }">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'customer'">
               <div class="flex items-center gap-2">
@@ -622,10 +551,7 @@ onMounted(() => {
                 </Avatar>
                 <div>
                   <div class="font-medium">{{ record.customerName }}</div>
-                  <div
-                    v-if="record.customerPhone"
-                    class="text-xs text-gray-400"
-                  >
+                  <div v-if="record.customerPhone" class="text-xs text-gray-400">
                     {{ record.customerPhone }}
                   </div>
                 </div>
@@ -636,13 +562,13 @@ onMounted(() => {
                 <Popconfirm
                   v-if="record.status !== 'COMPLETED'"
                   title="标记为已完成?"
-                  @confirm="handleMarkCompleted(record.id)"
+                  @confirm="handleMarkCompleted((record as FollowUpItem).id)"
                 >
                   <Button type="link" size="small">完成</Button>
                 </Popconfirm>
                 <Popconfirm
                   title="确定删除吗？"
-                  @confirm="handleDelete(record.id)"
+                  @confirm="handleDelete((record as FollowUpItem).id)"
                 >
                   <Button type="link" size="small" danger>删除</Button>
                 </Popconfirm>
@@ -653,7 +579,7 @@ onMounted(() => {
       </TabPane>
     </Tabs>
 
-    <!-- Create Modal -->
+    <!-- 新增跟进 Modal -->
     <Modal v-model:open="modalVisible" title="新增跟进记录" @ok="handleSubmit">
       <Form layout="vertical" class="mt-4">
         <Form.Item label="客户" required>
@@ -669,7 +595,7 @@ onMounted(() => {
           />
         </Form.Item>
         <Form.Item label="跟进方式">
-          <Select v-model:value="formState.type" :options="typeOptions" />
+          <Select v-model:value="formState.type" :options="followUpTypeOptions" />
         </Form.Item>
         <Form.Item label="跟进内容" required>
           <Input.TextArea

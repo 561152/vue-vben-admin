@@ -7,12 +7,16 @@ import {
   Modal,
   Form,
   Input,
+  Select,
   message,
   Tag,
   Popconfirm,
   Drawer,
 } from 'ant-design-vue';
 import { requestClient } from '#/api/request';
+import { useCrudTable, useModalForm } from '#/composables';
+
+// ==================== 类型定义 ====================
 
 interface GroupItem {
   id: number;
@@ -40,25 +44,12 @@ interface CustomerItem {
   name: string;
 }
 
-const loading = ref(false);
-const dataSource = ref<GroupItem[]>([]);
-const pagination = ref({ current: 1, pageSize: 20, total: 0 });
-const modalVisible = ref(false);
-const modalTitle = ref('新建群');
-const editingId = ref<number | null>(null);
-const formState = ref({
-  name: '',
-  notice: '',
-});
+interface GroupFormState {
+  name: string;
+  notice: string;
+}
 
-// 群成员相关
-const memberDrawerVisible = ref(false);
-const currentGroup = ref<GroupItem | null>(null);
-const members = ref<MemberItem[]>([]);
-const membersLoading = ref(false);
-const addMemberModalVisible = ref(false);
-const customers = ref<CustomerItem[]>([]);
-const selectedCustomerId = ref<number | undefined>(undefined);
+// ==================== 状态映射 ====================
 
 const statusMap: Record<string, { label: string; color: string }> = {
   NORMAL: { label: '正常', color: 'green' },
@@ -67,14 +58,11 @@ const statusMap: Record<string, { label: string; color: string }> = {
   TRANSFERRED: { label: '已转让', color: 'default' },
 };
 
+// ==================== 表格列定义 ====================
+
 const columns = [
   { title: '群名称', dataIndex: 'name', key: 'name' },
-  {
-    title: '群成员数',
-    dataIndex: 'memberCount',
-    key: 'memberCount',
-    width: 100,
-  },
+  { title: '群成员数', dataIndex: 'memberCount', key: 'memberCount', width: 100 },
   {
     title: '状态',
     dataIndex: 'status',
@@ -86,11 +74,7 @@ const columns = [
     },
   },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
-  {
-    title: '操作',
-    key: 'action',
-    width: 220,
-  },
+  { title: '操作', key: 'action', width: 220 },
 ];
 
 const memberColumns = [
@@ -99,92 +83,78 @@ const memberColumns = [
     title: '类型',
     dataIndex: 'type',
     key: 'type',
-    customRender: ({ text }: { text: string }) => {
-      return h(Tag, { color: text === 'EMPLOYEE' ? 'blue' : 'green' }, () =>
+    customRender: ({ text }: { text: string }) =>
+      h(Tag, { color: text === 'EMPLOYEE' ? 'blue' : 'green' }, () =>
         text === 'EMPLOYEE' ? '员工' : '客户',
-      );
-    },
+      ),
   },
   { title: '加入时间', dataIndex: 'joinTime', key: 'joinTime' },
-  {
-    title: '操作',
-    key: 'action',
-    width: 100,
-  },
+  { title: '操作', key: 'action', width: 100 },
 ];
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const res = await requestClient.get<{ items: GroupItem[]; total: number }>(
-      '/groups',
-      {
-        params: {
-          page: pagination.value.current,
-          pageSize: pagination.value.pageSize,
-        },
-      },
-    );
-    dataSource.value = res.items;
-    pagination.value.total = res.total;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
+// ==================== 表格逻辑 ====================
+
+const { tableProps, fetchData, handleDelete } = useCrudTable<GroupItem>({
+  fetchApi: async (params) =>
+    requestClient.get<{ items: GroupItem[]; total: number }>('/groups', {
+      params: { page: params.page, pageSize: params.pageSize },
+    }),
+  deleteApi: async (id) => {
+    await requestClient.delete(`/groups/${id}`);
+  },
+});
+
+// ==================== Modal 逻辑 ====================
+
+const { visible, formState, isEditing, openCreate, openEdit, submit } =
+  useModalForm<GroupFormState>({
+    createApi: async (data) => {
+      await requestClient.post('/groups', data);
+    },
+    updateApi: async (id, data) => {
+      await requestClient.put(`/groups/${id}`, data);
+    },
+    initialValues: () => ({
+      name: '',
+      notice: '',
+    }),
+    afterSubmit: fetchData,
+  });
+
+function handleEdit(record: GroupItem) {
+  openEdit(record.id, {
+    name: record.name || '',
+    notice: record.notice || '',
+  });
 }
+
+// ==================== 群成员管理 ====================
+
+const memberDrawerVisible = ref(false);
+const currentGroup = ref<GroupItem | null>(null);
+const members = ref<MemberItem[]>([]);
+const membersLoading = ref(false);
+const addMemberModalVisible = ref(false);
+const customers = ref<CustomerItem[]>([]);
+const selectedCustomerId = ref<number | undefined>(undefined);
 
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>(
-      '/customers',
-    );
+    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers');
     customers.value = res.items;
   } catch (e) {
     console.error(e);
   }
 }
 
-function handleAdd() {
-  editingId.value = null;
-  modalTitle.value = '新建群';
-  formState.value = { name: '', notice: '' };
-  modalVisible.value = true;
-}
-
-async function handleEdit(record: GroupItem) {
-  editingId.value = record.id;
-  modalTitle.value = '编辑群';
-  formState.value = {
-    name: record.name || '',
-    notice: record.notice || '',
-  };
-  modalVisible.value = true;
-}
-
-async function handleDelete(id: number) {
+async function fetchMembers(groupId: number) {
+  membersLoading.value = true;
   try {
-    await requestClient.delete(`/groups/${id}`);
-    message.success('删除成功');
-    fetchData();
+    members.value = await requestClient.get<MemberItem[]>(`/groups/${groupId}/members`);
   } catch (e) {
-    message.error('删除失败');
-  }
-}
-
-async function handleSubmit() {
-  try {
-    if (editingId.value) {
-      await requestClient.put(`/groups/${editingId.value}`, formState.value);
-      message.success('更新成功');
-    } else {
-      await requestClient.post('/groups', formState.value);
-      message.success('创建成功');
-    }
-    modalVisible.value = false;
-    fetchData();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
+    console.error(e);
+  } finally {
+    membersLoading.value = false;
   }
 }
 
@@ -192,20 +162,6 @@ async function handleViewMembers(record: GroupItem) {
   currentGroup.value = record;
   memberDrawerVisible.value = true;
   await fetchMembers(record.id);
-}
-
-async function fetchMembers(groupId: number) {
-  membersLoading.value = true;
-  try {
-    const res = await requestClient.get<MemberItem[]>(
-      `/groups/${groupId}/members`,
-    );
-    members.value = res;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    membersLoading.value = false;
-  }
 }
 
 function handleAddMember() {
@@ -222,18 +178,17 @@ async function handleAddMemberSubmit() {
     message.success('添加成功');
     addMemberModalVisible.value = false;
     await fetchMembers(currentGroup.value.id);
-    fetchData(); // 刷新列表以更新成员数
-  } catch (e: any) {
-    message.error(e.message || '添加失败');
+    fetchData();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '添加失败';
+    message.error(errorMessage);
   }
 }
 
 async function handleRemoveMember(memberId: number) {
   if (!currentGroup.value) return;
   try {
-    await requestClient.delete(
-      `/groups/${currentGroup.value.id}/members/${memberId}`,
-    );
+    await requestClient.delete(`/groups/${currentGroup.value.id}/members/${memberId}`);
     message.success('移除成功');
     await fetchMembers(currentGroup.value.id);
     fetchData();
@@ -242,11 +197,7 @@ async function handleRemoveMember(memberId: number) {
   }
 }
 
-function handleTableChange(pag: any) {
-  pagination.value.current = pag.current;
-  pagination.value.pageSize = pag.pageSize;
-  fetchData();
-}
+// ==================== 生命周期 ====================
 
 onMounted(() => {
   fetchData();
@@ -258,27 +209,28 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">群管理</h2>
-      <Button type="primary" @click="handleAdd">新建群</Button>
+      <Button type="primary" @click="openCreate">新建群</Button>
     </div>
 
-    <Table
-      :columns="columns"
-      :data-source="dataSource"
-      :loading="loading"
-      :pagination="pagination"
-      row-key="id"
-      @change="handleTableChange"
-    >
+    <!-- 表格区 -->
+    <Table v-bind="tableProps" :columns="columns">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleViewMembers(record)"
-              >成员</Button
+            <Button
+              type="link"
+              size="small"
+              @click="handleViewMembers(record as GroupItem)"
             >
-            <Button type="link" size="small" @click="handleEdit(record)"
-              >编辑</Button
+              成员
+            </Button>
+            <Button type="link" size="small" @click="handleEdit(record as GroupItem)">
+              编辑
+            </Button>
+            <Popconfirm
+              title="确定删除吗？"
+              @confirm="handleDelete((record as GroupItem).id)"
             >
-            <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
           </Space>
@@ -286,8 +238,12 @@ onMounted(() => {
       </template>
     </Table>
 
-    <!-- 新建/编辑群弹窗 -->
-    <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit">
+    <!-- 新建/编辑群 Modal -->
+    <Modal
+      v-model:open="visible"
+      :title="isEditing ? '编辑群' : '新建群'"
+      @ok="submit"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="群名称" required>
           <Input v-model:value="formState.name" placeholder="请输入群名称" />
@@ -302,7 +258,7 @@ onMounted(() => {
       </Form>
     </Modal>
 
-    <!-- 群成员抽屉 -->
+    <!-- 群成员 Drawer -->
     <Drawer
       v-model:open="memberDrawerVisible"
       :title="`群成员 - ${currentGroup?.name || ''}`"
@@ -323,7 +279,7 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Popconfirm
               title="确定移除吗？"
-              @confirm="handleRemoveMember(record.id)"
+              @confirm="handleRemoveMember((record as MemberItem).id)"
             >
               <Button type="link" size="small" danger>移除</Button>
             </Popconfirm>
@@ -332,7 +288,7 @@ onMounted(() => {
       </Table>
     </Drawer>
 
-    <!-- 添加成员弹窗 -->
+    <!-- 添加成员 Modal -->
     <Modal
       v-model:open="addMemberModalVisible"
       title="添加群成员"
@@ -340,15 +296,16 @@ onMounted(() => {
     >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="选择客户" required>
-          <select
-            v-model="selectedCustomerId"
-            class="w-full rounded border p-2"
-          >
-            <option :value="undefined">请选择客户</option>
-            <option v-for="c in customers" :key="c.id" :value="c.id">
-              {{ c.name }}
-            </option>
-          </select>
+          <Select
+            v-model:value="selectedCustomerId"
+            placeholder="请选择客户"
+            show-search
+            :filter-option="
+              (input: string, option: any) =>
+                option.label.toLowerCase().includes(input.toLowerCase())
+            "
+            :options="customers.map((c) => ({ value: c.id, label: c.name }))"
+          />
         </Form.Item>
       </Form>
     </Modal>

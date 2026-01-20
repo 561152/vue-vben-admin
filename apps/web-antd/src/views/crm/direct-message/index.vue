@@ -21,7 +21,6 @@ import {
 } from 'ant-design-vue';
 import {
   SendOutlined,
-  MessageOutlined,
   UserOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -46,27 +45,81 @@ import {
   type WecomEmployee,
   type EmployeeCustomer,
 } from '#/api/crm';
+import { useCrudTable } from '#/composables';
+import {
+  messageStatusOptions,
+  messageTypeOptions,
+  findOption,
+  withAllOption,
+} from '#/constants/crm-options';
 import dayjs from 'dayjs';
 
-// ==================== State ====================
+// ==================== 类型定义 ====================
 
-const loading = ref(false);
-const dataSource = ref<DirectMessage[]>([]);
-const pagination = ref({ current: 1, pageSize: 20, total: 0 });
+interface MessageFilters {
+  status?: string;
+}
+
+// ==================== 表格列定义 ====================
+
+const columns = [
+  { title: '客户', key: 'customer', width: 200 },
+  { title: '消息内容', dataIndex: ['content', 'text'], key: 'content', ellipsis: true },
+  {
+    title: '类型',
+    dataIndex: 'messageType',
+    key: 'messageType',
+    width: 100,
+    customRender: ({ text }: { text: string }) => {
+      const opt = findOption(messageTypeOptions, text);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+    },
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 100,
+    customRender: ({ text }: { text: string }) => {
+      const opt = findOption(messageStatusOptions, text);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+    },
+  },
+  {
+    title: '发送时间',
+    dataIndex: 'sentAt',
+    key: 'sentAt',
+    width: 140,
+    customRender: ({ text }: { text: string | null }) =>
+      text ? dayjs(text).format('MM-DD HH:mm') : '-',
+  },
+  { title: '操作', key: 'action', width: 80, fixed: 'right' as const },
+];
+
+// ==================== 表格逻辑 ====================
+
+const { tableProps, filters, fetchData } = useCrudTable<DirectMessage, MessageFilters>({
+  fetchApi: async (params) => {
+    const apiParams: Record<string, unknown> = {
+      page: params.page,
+      pageSize: params.pageSize,
+    };
+    if (params.status) apiParams.status = params.status;
+    const res = await getDirectMessages(apiParams);
+    return { items: (res as any).data || [], total: res.total || 0 };
+  },
+});
+
+// ==================== 发送 Modal 相关 ====================
+
 const sendModalVisible = ref(false);
-const detailDrawerVisible = ref(false);
-const selectedMessage = ref<DirectMessage | null>(null);
+const sendMode = ref<'CUSTOMER' | 'EMPLOYEE' | 'TEST'>('CUSTOMER');
 
 const customers = ref<Customer[]>([]);
 const templates = ref<MessageTemplate[]>([]);
 const employees = ref<WecomEmployee[]>([]);
 const employeeCustomers = ref<EmployeeCustomer[]>([]);
-const filterStatus = ref<string | undefined>(undefined);
 
-// Send mode: CUSTOMER | EMPLOYEE | TEST
-const sendMode = ref<'CUSTOMER' | 'EMPLOYEE' | 'TEST'>('CUSTOMER');
-
-// Customer mode form
 const customerFormState = ref({
   customerId: undefined as number | undefined,
   customerIds: [] as number[],
@@ -75,7 +128,6 @@ const customerFormState = ref({
   isBatch: false,
 });
 
-// Employee mode form
 const employeeFormState = ref({
   wecomUserIds: [] as string[],
   textContent: '',
@@ -83,7 +135,6 @@ const employeeFormState = ref({
   allowSelect: false,
 });
 
-// Test mode form
 const testFormState = ref({
   selectedEmployeeId: undefined as string | undefined,
   customerId: undefined as number | undefined,
@@ -93,108 +144,38 @@ const testFormState = ref({
 
 const employeeLoading = ref(false);
 const employeeCustomersLoading = ref(false);
-const employeeSearchKeyword = ref('');
 
-// ==================== Computed ====================
-
-const selectedEmployeesCustomerCount = computed(() => {
-  return employees.value
+const selectedEmployeesCustomerCount = computed(() =>
+  employees.value
     .filter((e) => employeeFormState.value.wecomUserIds.includes(e.wecomUserId))
-    .reduce((sum, e) => sum + e.customerCount, 0);
-});
+    .reduce((sum, e) => sum + e.customerCount, 0),
+);
 
-// ==================== Status Options ====================
+// ==================== 详情 Drawer ====================
 
-const statusOptions = [
-  { value: 'PENDING', label: '待发送', color: 'default' },
-  { value: 'SENDING', label: '发送中', color: 'processing' },
-  { value: 'SENT', label: '已发送', color: 'success' },
-  { value: 'DELIVERED', label: '已送达', color: 'success' },
-  { value: 'FAILED', label: '失败', color: 'error' },
-];
+const detailDrawerVisible = ref(false);
+const selectedMessage = ref<DirectMessage | null>(null);
 
-// ==================== Table Columns ====================
+function handleViewDetail(record: DirectMessage) {
+  selectedMessage.value = record;
+  detailDrawerVisible.value = true;
+}
 
-const columns = [
-  {
-    title: '客户',
-    key: 'customer',
-    width: 200,
-  },
-  {
-    title: '消息内容',
-    dataIndex: ['content', 'text'],
-    key: 'content',
-    ellipsis: true,
-  },
-  {
-    title: '类型',
-    dataIndex: 'messageType',
-    key: 'messageType',
-    width: 100,
-    customRender: ({ text }: { text: string }) => {
-      const typeMap: Record<string, { label: string; color: string }> = {
-        SINGLE: { label: '单发', color: 'blue' },
-        EMPLOYEE_BATCH: { label: '员工批量', color: 'purple' },
-        TEST: { label: '测试', color: 'orange' },
-        WELCOME: { label: '欢迎语', color: 'green' },
-      };
-      const opt = typeMap[text] || { label: text, color: 'default' };
-      return h(Tag, { color: opt.color }, () => opt.label);
-    },
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    width: 100,
-    customRender: ({ text }: { text: string }) => {
-      const opt = statusOptions.find((o) => o.value === text);
-      return h(
-        Tag,
-        { color: opt?.color || 'default' },
-        () => opt?.label || text,
-      );
-    },
-  },
-  {
-    title: '发送时间',
-    dataIndex: 'sentAt',
-    key: 'sentAt',
-    width: 140,
-    customRender: ({ text }: { text: string | null }) => {
-      if (!text) return '-';
-      return dayjs(text).format('MM-DD HH:mm');
-    },
-  },
-  {
-    title: '操作',
-    key: 'action',
-    width: 80,
-    fixed: 'right' as const,
-  },
-];
-
-// ==================== Data Fetching ====================
-
-async function fetchData() {
-  loading.value = true;
-  try {
-    const params: Record<string, unknown> = {
-      page: pagination.value.current,
-      pageSize: pagination.value.pageSize,
-    };
-    if (filterStatus.value) params.status = filterStatus.value;
-
-    const res = await getDirectMessages(params);
-    dataSource.value = res.data || [];
-    pagination.value.total = res.total || 0;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
+function getStatusIcon(status: string) {
+  switch (status) {
+    case 'SENT':
+    case 'DELIVERED':
+      return h(CheckCircleOutlined, { style: { color: '#52c41a' } });
+    case 'FAILED':
+      return h(CloseCircleOutlined, { style: { color: '#ff4d4f' } });
+    case 'SENDING':
+      return h(ReloadOutlined, { spin: true, style: { color: '#1890ff' } });
+    default:
+      return h(ClockCircleOutlined, { style: { color: '#d9d9d9' } });
   }
 }
+
+// ==================== 数据获取 ====================
 
 async function fetchCustomers() {
   try {
@@ -208,7 +189,7 @@ async function fetchCustomers() {
 async function fetchTemplates() {
   try {
     const res = await getMessageTemplates({ isActive: true, pageSize: 100 });
-    templates.value = res.data || [];
+    templates.value = (res as any).data || res.items || [];
   } catch (e) {
     console.error(e);
   }
@@ -218,9 +199,7 @@ async function fetchEmployees(keyword?: string) {
   employeeLoading.value = true;
   try {
     const params: Record<string, unknown> = { pageSize: 200 };
-    if (keyword) {
-      params.keyword = keyword;
-    }
+    if (keyword) params.keyword = keyword;
     const res = await getEmployees(params);
     employees.value = res.items || [];
   } catch (e) {
@@ -230,16 +209,10 @@ async function fetchEmployees(keyword?: string) {
   }
 }
 
-// 防抖搜索员工
 let employeeSearchTimer: ReturnType<typeof setTimeout> | null = null;
 function handleEmployeeSearch(keyword: string) {
-  employeeSearchKeyword.value = keyword;
-  if (employeeSearchTimer) {
-    clearTimeout(employeeSearchTimer);
-  }
-  employeeSearchTimer = setTimeout(() => {
-    fetchEmployees(keyword);
-  }, 300);
+  if (employeeSearchTimer) clearTimeout(employeeSearchTimer);
+  employeeSearchTimer = setTimeout(() => fetchEmployees(keyword), 300);
 }
 
 async function fetchEmployeeCustomers(wecomUserId: string) {
@@ -255,10 +228,9 @@ async function fetchEmployeeCustomers(wecomUserId: string) {
   }
 }
 
-// ==================== Event Handlers ====================
+// ==================== 发送逻辑 ====================
 
 function handleOpenSendModal() {
-  // Reset all forms
   customerFormState.value = {
     customerId: undefined,
     customerIds: [],
@@ -284,80 +256,68 @@ function handleOpenSendModal() {
 
 async function handleSubmitSend() {
   try {
-    if (sendMode.value === 'CUSTOMER') {
-      await handleCustomerSend();
-    } else if (sendMode.value === 'EMPLOYEE') {
-      await handleEmployeeSend();
-    } else if (sendMode.value === 'TEST') {
-      await handleTestSend();
-    }
+    if (sendMode.value === 'CUSTOMER') await handleCustomerSend();
+    else if (sendMode.value === 'EMPLOYEE') await handleEmployeeSend();
+    else if (sendMode.value === 'TEST') await handleTestSend();
     sendModalVisible.value = false;
     fetchData();
-  } catch (e: any) {
-    message.error(e.message || '发送失败');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '发送失败';
+    message.error(errorMessage);
   }
 }
 
 async function handleCustomerSend() {
-  if (customerFormState.value.isBatch) {
-    if (!customerFormState.value.customerIds.length) {
+  const form = customerFormState.value;
+  if (form.isBatch) {
+    if (!form.customerIds.length) {
       message.warning('请选择客户');
       return;
     }
-    if (
-      !customerFormState.value.textContent &&
-      !customerFormState.value.templateId
-    ) {
+    if (!form.textContent && !form.templateId) {
       message.warning('请输入消息内容或选择模板');
       return;
     }
     const res = await sendBatchDirectMessages({
-      customerIds: customerFormState.value.customerIds,
-      textContent: customerFormState.value.textContent || undefined,
-      templateId: customerFormState.value.templateId,
+      customerIds: form.customerIds,
+      textContent: form.textContent || undefined,
+      templateId: form.templateId,
     });
     message.success(`成功发送 ${res.successCount}/${res.totalCount} 条消息`);
   } else {
-    if (!customerFormState.value.customerId) {
+    if (!form.customerId) {
       message.warning('请选择客户');
       return;
     }
-    if (
-      !customerFormState.value.textContent &&
-      !customerFormState.value.templateId
-    ) {
+    if (!form.textContent && !form.templateId) {
       message.warning('请输入消息内容或选择模板');
       return;
     }
     await sendDirectMessage({
-      customerId: customerFormState.value.customerId,
-      textContent: customerFormState.value.textContent || undefined,
-      templateId: customerFormState.value.templateId,
+      customerId: form.customerId,
+      textContent: form.textContent || undefined,
+      templateId: form.templateId,
     });
     message.success('消息已发送');
   }
 }
 
 async function handleEmployeeSend() {
-  if (!employeeFormState.value.wecomUserIds.length) {
+  const form = employeeFormState.value;
+  if (!form.wecomUserIds.length) {
     message.warning('请选择员工');
     return;
   }
-  if (
-    !employeeFormState.value.textContent &&
-    !employeeFormState.value.templateId
-  ) {
+  if (!form.textContent && !form.templateId) {
     message.warning('请输入消息内容或选择模板');
     return;
   }
-
   const res = await sendToEmployees({
-    wecomUserIds: employeeFormState.value.wecomUserIds,
-    textContent: employeeFormState.value.textContent || undefined,
-    templateId: employeeFormState.value.templateId,
-    allowSelect: employeeFormState.value.allowSelect,
+    wecomUserIds: form.wecomUserIds,
+    textContent: form.textContent || undefined,
+    templateId: form.templateId,
+    allowSelect: form.allowSelect,
   });
-
   const successCount = res.results.filter((r) => r.status === 'SENT').length;
   if (res.success) {
     message.success(
@@ -369,21 +329,20 @@ async function handleEmployeeSend() {
 }
 
 async function handleTestSend() {
-  if (!testFormState.value.customerId) {
+  const form = testFormState.value;
+  if (!form.customerId) {
     message.warning('请选择测试客户');
     return;
   }
-  if (!testFormState.value.textContent && !testFormState.value.templateId) {
+  if (!form.textContent && !form.templateId) {
     message.warning('请输入消息内容或选择模板');
     return;
   }
-
   const res = await sendTestMessage({
-    customerId: testFormState.value.customerId,
-    textContent: testFormState.value.textContent || undefined,
-    templateId: testFormState.value.templateId,
+    customerId: form.customerId,
+    textContent: form.textContent || undefined,
+    templateId: form.templateId,
   });
-
   if (res.status === 'SENT') {
     message.success('测试消息已发送');
   } else {
@@ -391,55 +350,23 @@ async function handleTestSend() {
   }
 }
 
-function handleViewDetail(record: DirectMessage) {
-  selectedMessage.value = record;
-  detailDrawerVisible.value = true;
-}
-
-function handleTableChange(pag: any) {
-  pagination.value.current = pag.current;
-  pagination.value.pageSize = pag.pageSize;
-  fetchData();
+function handleTemplateChange(
+  templateId: unknown,
+  target: 'customer' | 'employee' | 'test',
+) {
+  if (!templateId || typeof templateId !== 'number') return;
+  const template = templates.value.find((t) => t.id === templateId);
+  if (!template) return;
+  const text = template.content.text || '';
+  if (target === 'customer') customerFormState.value.textContent = text;
+  else if (target === 'employee') employeeFormState.value.textContent = text;
+  else testFormState.value.textContent = text;
 }
 
 function handleFilter() {
-  pagination.value.current = 1;
   fetchData();
 }
 
-function handleTemplateChange(
-  templateId: number | undefined,
-  target: 'customer' | 'employee' | 'test',
-) {
-  if (templateId) {
-    const template = templates.value.find((t) => t.id === templateId);
-    if (template) {
-      if (target === 'customer') {
-        customerFormState.value.textContent = template.content.text || '';
-      } else if (target === 'employee') {
-        employeeFormState.value.textContent = template.content.text || '';
-      } else {
-        testFormState.value.textContent = template.content.text || '';
-      }
-    }
-  }
-}
-
-function getStatusIcon(status: string) {
-  switch (status) {
-    case 'SENT':
-    case 'DELIVERED':
-      return h(CheckCircleOutlined, { style: { color: '#52c41a' } });
-    case 'FAILED':
-      return h(CloseCircleOutlined, { style: { color: '#ff4d4f' } });
-    case 'SENDING':
-      return h(ReloadOutlined, { spin: true, style: { color: '#1890ff' } });
-    default:
-      return h(ClockCircleOutlined, { style: { color: '#d9d9d9' } });
-  }
-}
-
-// Watch for employee selection in test mode
 watch(
   () => testFormState.value.selectedEmployeeId,
   (newVal) => {
@@ -452,7 +379,7 @@ watch(
   },
 );
 
-// ==================== Lifecycle ====================
+// ==================== 生命周期 ====================
 
 onMounted(() => {
   fetchData();
@@ -466,20 +393,18 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">消息推送</h2>
-      <Space>
-        <Button type="primary" @click="handleOpenSendModal">
-          <SendOutlined /> 发送消息
-        </Button>
-      </Space>
+      <Button type="primary" @click="handleOpenSendModal">
+        <SendOutlined /> 发送消息
+      </Button>
     </div>
 
-    <!-- Filters -->
+    <!-- 筛选区 -->
     <Card class="mb-4" size="small">
       <Space wrap>
         <span class="text-gray-500">状态:</span>
         <Select
-          v-model:value="filterStatus"
-          :options="[{ value: '', label: '全部' }, ...statusOptions]"
+          v-model:value="filters.status"
+          :options="withAllOption(messageStatusOptions)"
           placeholder="选择状态"
           style="width: 120px"
           allow-clear
@@ -491,16 +416,8 @@ onMounted(() => {
       </Space>
     </Card>
 
-    <!-- Table -->
-    <Table
-      :columns="columns"
-      :data-source="dataSource"
-      :loading="loading"
-      :pagination="pagination"
-      :scroll="{ x: 900 }"
-      row-key="id"
-      @change="handleTableChange"
-    >
+    <!-- 表格区 -->
+    <Table v-bind="tableProps" :columns="columns" :scroll="{ x: 900 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'customer'">
           <div class="flex items-center gap-2">
@@ -508,24 +425,24 @@ onMounted(() => {
               <template #icon><UserOutlined /></template>
             </Avatar>
             <div>
-              <div class="font-medium">
-                {{ record.customerName || '未知客户' }}
-              </div>
-              <div class="text-xs text-gray-400">
-                {{ record.externalUserid }}
-              </div>
+              <div class="font-medium">{{ record.customerName || '未知客户' }}</div>
+              <div class="text-xs text-gray-400">{{ record.externalUserid }}</div>
             </div>
           </div>
         </template>
         <template v-if="column.key === 'action'">
-          <Button type="link" size="small" @click="handleViewDetail(record)">
+          <Button
+            type="link"
+            size="small"
+            @click="handleViewDetail(record as DirectMessage)"
+          >
             详情
           </Button>
         </template>
       </template>
     </Table>
 
-    <!-- Send Modal -->
+    <!-- 发送 Modal -->
     <Modal
       v-model:open="sendModalVisible"
       title="发送消息"
@@ -541,19 +458,13 @@ onMounted(() => {
     >
       <Tabs v-model:activeKey="sendMode" class="mt-2">
         <TabPane key="CUSTOMER">
-          <template #tab>
-            <span><UserOutlined /> 按客户发送</span>
-          </template>
+          <template #tab><UserOutlined /> 按客户发送</template>
         </TabPane>
         <TabPane key="EMPLOYEE">
-          <template #tab>
-            <span><TeamOutlined /> 按员工发送</span>
-          </template>
+          <template #tab><TeamOutlined /> 按员工发送</template>
         </TabPane>
         <TabPane key="TEST">
-          <template #tab>
-            <span><ExperimentOutlined /> 测试发送</span>
-          </template>
+          <template #tab><ExperimentOutlined /> 测试发送</template>
         </TabPane>
       </Tabs>
 
@@ -597,7 +508,7 @@ onMounted(() => {
               placeholder="选择消息模板（可选）"
               allow-clear
               :options="templates.map((t) => ({ value: t.id, label: t.name }))"
-              @change="(v: number) => handleTemplateChange(v, 'customer')"
+              @change="(v) => handleTemplateChange(v, 'customer')"
             />
           </Form.Item>
           <Form.Item label="消息内容" required>
@@ -650,8 +561,7 @@ onMounted(() => {
             class="mb-4 rounded bg-blue-50 p-3"
           >
             <span class="text-blue-600">
-              预计发送给
-              <strong>{{ selectedEmployeesCustomerCount }}</strong> 个客户
+              预计发送给 <strong>{{ selectedEmployeesCustomerCount }}</strong> 个客户
             </span>
           </div>
           <Form.Item label="选择模板">
@@ -660,7 +570,7 @@ onMounted(() => {
               placeholder="选择消息模板（可选）"
               allow-clear
               :options="templates.map((t) => ({ value: t.id, label: t.name }))"
-              @change="(v: number) => handleTemplateChange(v, 'employee')"
+              @change="(v) => handleTemplateChange(v, 'employee')"
             />
           </Form.Item>
           <Form.Item label="消息内容" required>
@@ -728,7 +638,7 @@ onMounted(() => {
               placeholder="选择消息模板（可选）"
               allow-clear
               :options="templates.map((t) => ({ value: t.id, label: t.name }))"
-              @change="(v: number) => handleTemplateChange(v, 'test')"
+              @change="(v) => handleTemplateChange(v, 'test')"
             />
           </Form.Item>
           <Form.Item label="消息内容" required>
@@ -744,42 +654,30 @@ onMounted(() => {
       </div>
     </Modal>
 
-    <!-- Detail Drawer -->
+    <!-- 详情 Drawer -->
     <Drawer v-model:open="detailDrawerVisible" title="消息详情" width="400">
       <template v-if="selectedMessage">
         <div class="space-y-4">
           <div>
             <div class="text-sm text-gray-500">客户</div>
-            <div class="font-medium">
-              {{ selectedMessage.customerName || '未知客户' }}
-            </div>
+            <div class="font-medium">{{ selectedMessage.customerName || '未知客户' }}</div>
           </div>
           <div>
             <div class="text-sm text-gray-500">消息类型</div>
             <div>
-              {{
-                {
-                  SINGLE: '单发',
-                  EMPLOYEE_BATCH: '员工批量',
-                  TEST: '测试',
-                  WELCOME: '欢迎语',
-                }[selectedMessage.messageType] || selectedMessage.messageType
-              }}
+              {{ findOption(messageTypeOptions, selectedMessage.messageType)?.label || selectedMessage.messageType }}
             </div>
           </div>
           <div>
             <div class="text-sm text-gray-500">状态</div>
             <div class="flex items-center gap-2">
               <component :is="() => getStatusIcon(selectedMessage!.status)" />
-              <span>{{
-                statusOptions.find((o) => o.value === selectedMessage?.status)
-                  ?.label
-              }}</span>
+              <span>{{ findOption(messageStatusOptions, selectedMessage.status)?.label }}</span>
             </div>
           </div>
           <div>
             <div class="text-sm text-gray-500">消息内容</div>
-            <div class="mt-1 rounded bg-gray-50 p-3 whitespace-pre-wrap">
+            <div class="mt-1 whitespace-pre-wrap rounded bg-gray-50 p-3">
               {{ selectedMessage.content?.text || '无文本内容' }}
             </div>
           </div>
@@ -789,17 +687,11 @@ onMounted(() => {
           </div>
           <div>
             <div class="text-sm text-gray-500">创建时间</div>
-            <div>
-              {{
-                dayjs(selectedMessage.createdAt).format('YYYY-MM-DD HH:mm:ss')
-              }}
-            </div>
+            <div>{{ dayjs(selectedMessage.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
           </div>
           <div v-if="selectedMessage.sentAt">
             <div class="text-sm text-gray-500">发送时间</div>
-            <div>
-              {{ dayjs(selectedMessage.sentAt).format('YYYY-MM-DD HH:mm:ss') }}
-            </div>
+            <div>{{ dayjs(selectedMessage.sentAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
           </div>
         </div>
       </template>

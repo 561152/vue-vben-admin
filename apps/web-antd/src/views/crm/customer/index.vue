@@ -8,21 +8,26 @@ import {
   Form,
   Input,
   Select,
-  message,
   Tag,
   Popconfirm,
   Avatar,
   Card,
   InputSearch,
 } from 'ant-design-vue';
-import {
-  UserOutlined,
-  WechatOutlined,
-  SearchOutlined,
-} from '@ant-design/icons-vue';
+import { UserOutlined, WechatOutlined } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useCrudTable, useModalForm } from '#/composables';
+import {
+  customerStatusOptions,
+  customerSourceOptions,
+  customerLevelOptions,
+  findOption,
+  withAllOption,
+} from '#/constants/crm-options';
 import dayjs from 'dayjs';
 import CustomerDetailDrawer from './components/CustomerDetailDrawer.vue';
+
+// ==================== 类型定义 ====================
 
 interface CustomerItem {
   id: number;
@@ -43,86 +48,37 @@ interface CustomerItem {
   createdAt: string;
 }
 
-const loading = ref(false);
-const dataSource = ref<CustomerItem[]>([]);
-const pagination = ref({ current: 1, pageSize: 20, total: 0 });
-const modalVisible = ref(false);
-const modalTitle = ref('新增客户');
-const editingId = ref<number | null>(null);
-const formState = ref({
-  name: '',
-  phone: '',
-  email: '',
-  company: '',
-  status: 'LEAD',
-  source: '',
-  remark: '',
-});
+interface CustomerFilters {
+  source?: string;
+  status?: string;
+  customerLevel?: string;
+  keyword?: string;
+}
 
-// Detail drawer
-const detailVisible = ref(false);
-const detailCustomerId = ref<number | null>(null);
+interface CustomerFormState {
+  name: string;
+  phone: string;
+  email: string;
+  company: string;
+  status: string;
+  source: string;
+  remark: string;
+}
 
-// Filters
-const filterSource = ref<string | undefined>(undefined);
-const filterStatus = ref<string | undefined>(undefined);
-const filterLevel = ref<string | undefined>(undefined);
-const searchKeyword = ref('');
-
-const statusOptions = [
-  { value: 'LEAD', label: '潜在客户', color: 'blue' },
-  { value: 'OPPORTUNITY', label: '商机', color: 'orange' },
-  { value: 'CUSTOMER', label: '成交客户', color: 'green' },
-  { value: 'LOST', label: '已流失', color: 'red' },
-  { value: 'INVALID', label: '无效客户', color: 'default' },
-];
-
-const sourceOptions = [
-  { value: 'MANUAL', label: '手动录入', color: 'default' },
-  { value: 'WECOM', label: '企业微信', color: 'green' },
-  { value: 'IMPORT', label: '批量导入', color: 'blue' },
-  { value: 'WEBSITE', label: '官网表单', color: 'purple' },
-  { value: 'DOUYIN', label: '抖音', color: 'pink' },
-  { value: 'XIAOHONGSHU', label: '小红书', color: 'red' },
-  { value: 'WECHAT', label: '微信', color: 'green' },
-  { value: 'API', label: 'API', color: 'cyan' },
-];
-
-const levelOptions = [
-  { value: 'VIP', label: 'VIP', color: 'gold' },
-  { value: 'IMPORTANT', label: '重要客户', color: 'orange' },
-  { value: 'NORMAL', label: '普通客户', color: 'blue' },
-  { value: 'POTENTIAL', label: '潜在客户', color: 'cyan' },
-  { value: 'INACTIVE', label: '不活跃', color: 'default' },
-];
+// ==================== 表格列定义 ====================
 
 const columns = [
-  {
-    title: '客户',
-    key: 'customer',
-    width: 220,
-    fixed: 'left',
-  },
+  { title: '客户', key: 'customer', width: 220, fixed: 'left' as const },
   { title: '电话', dataIndex: 'phone', key: 'phone', width: 140 },
-  {
-    title: '公司',
-    dataIndex: 'company',
-    key: 'company',
-    ellipsis: true,
-    width: 150,
-  },
+  { title: '公司', dataIndex: 'company', key: 'company', ellipsis: true, width: 150 },
   {
     title: '等级',
     dataIndex: 'customerLevel',
     key: 'customerLevel',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = levelOptions.find((o) => o.value === text);
-      return h(
-        Tag,
-        { color: opt?.color || 'default' },
-        () => opt?.label || text,
-      );
+      const opt = findOption(customerLevelOptions, text);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
     },
   },
   {
@@ -131,7 +87,7 @@ const columns = [
     key: 'source',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = sourceOptions.find((o) => o.value === text);
+      const opt = findOption(customerSourceOptions, text);
       if (!opt) return h(Tag, { color: 'default' }, () => text || '-');
       return h(Tag, { color: opt.color }, () => opt.label);
     },
@@ -142,12 +98,8 @@ const columns = [
     key: 'status',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const opt = statusOptions.find((o) => o.value === text);
-      return h(
-        Tag,
-        { color: opt?.color || 'default' },
-        () => opt?.label || text,
-      );
+      const opt = findOption(customerStatusOptions, text);
+      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
     },
   },
   {
@@ -163,48 +115,58 @@ const columns = [
     dataIndex: 'lastActiveAt',
     key: 'lastActiveAt',
     width: 120,
-    customRender: ({ text }: { text: string }) => {
-      if (!text) return '-';
-      return dayjs(text).fromNow();
-    },
+    customRender: ({ text }: { text: string }) => (text ? dayjs(text).fromNow() : '-'),
   },
-  {
-    title: '操作',
-    key: 'action',
-    width: 160,
-    fixed: 'right',
-  },
+  { title: '操作', key: 'action', width: 160, fixed: 'right' as const },
 ];
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const params: Record<string, unknown> = {
-      page: pagination.value.current,
-      pageSize: pagination.value.pageSize,
+// ==================== 表格逻辑 ====================
+
+const {
+  tableProps,
+  filters,
+  search,
+  resetFilters,
+  fetchData,
+  handleDelete,
+} = useCrudTable<CustomerItem, CustomerFilters>({
+  fetchApi: async (params) => {
+    const apiParams: Record<string, unknown> = {
+      page: params.page,
+      pageSize: params.pageSize,
     };
-    if (filterSource.value) params.source = filterSource.value;
-    if (filterStatus.value) params.status = filterStatus.value;
-    if (filterLevel.value) params.customerLevel = filterLevel.value;
-    if (searchKeyword.value) params.keyword = searchKeyword.value;
+    if (params.source) apiParams.source = params.source;
+    if (params.status) apiParams.status = params.status;
+    if (params.customerLevel) apiParams.customerLevel = params.customerLevel;
+    if (params.keyword) apiParams.keyword = params.keyword;
 
-    const res = await requestClient.get<{
-      items: CustomerItem[];
-      total: number;
-    }>('/customers', { params });
-    dataSource.value = res.items;
-    pagination.value.total = res.total;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}
+    return requestClient.get<{ items: CustomerItem[]; total: number }>(
+      '/customers',
+      { params: apiParams },
+    );
+  },
+  deleteApi: async (id) => {
+    await requestClient.delete(`/customers/${id}`);
+  },
+});
 
-function handleAdd() {
-  editingId.value = null;
-  modalTitle.value = '新增客户';
-  formState.value = {
+// ==================== Modal 逻辑 ====================
+
+const {
+  visible: modalVisible,
+  formState,
+  isEditing,
+  openCreate,
+  openEdit,
+  submit,
+} = useModalForm<CustomerFormState>({
+  createApi: async (data) => {
+    await requestClient.post('/customers', data);
+  },
+  updateApi: async (id, data) => {
+    await requestClient.put(`/customers/${id}`, data);
+  },
+  initialValues: () => ({
     name: '',
     phone: '',
     email: '',
@@ -212,14 +174,24 @@ function handleAdd() {
     status: 'LEAD',
     source: '',
     remark: '',
-  };
-  modalVisible.value = true;
+  }),
+  afterSubmit: fetchData,
+});
+
+// ==================== 详情抽屉 ====================
+
+const detailVisible = ref(false);
+const detailCustomerId = ref<number | null>(null);
+
+function handleView(record: CustomerItem) {
+  detailCustomerId.value = record.id;
+  detailVisible.value = true;
 }
 
-async function handleEdit(record: CustomerItem) {
-  editingId.value = record.id;
-  modalTitle.value = '编辑客户';
-  formState.value = {
+// ==================== 事件处理 ====================
+
+function handleEdit(record: CustomerItem) {
+  openEdit(record.id, {
     name: record.name,
     phone: record.phone || '',
     email: record.email || '',
@@ -227,129 +199,78 @@ async function handleEdit(record: CustomerItem) {
     status: record.status,
     source: record.source || '',
     remark: record.remark || '',
-  };
-  modalVisible.value = true;
-}
-
-async function handleDelete(id: number) {
-  try {
-    await requestClient.delete(`/customers/${id}`);
-    message.success('删除成功');
-    fetchData();
-  } catch (e) {
-    message.error('删除失败');
-  }
-}
-
-async function handleSubmit() {
-  try {
-    if (editingId.value) {
-      await requestClient.put(`/customers/${editingId.value}`, formState.value);
-      message.success('更新成功');
-    } else {
-      await requestClient.post('/customers', formState.value);
-      message.success('创建成功');
-    }
-    modalVisible.value = false;
-    fetchData();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
-  }
-}
-
-function handleView(record: CustomerItem) {
-  detailCustomerId.value = record.id;
-  detailVisible.value = true;
-}
-
-function handleTableChange(pag: any) {
-  pagination.value.current = pag.current;
-  pagination.value.pageSize = pag.pageSize;
-  fetchData();
-}
-
-function handleFilter() {
-  pagination.value.current = 1;
-  fetchData();
-}
-
-function handleResetFilter() {
-  filterSource.value = undefined;
-  filterStatus.value = undefined;
-  filterLevel.value = undefined;
-  searchKeyword.value = '';
-  pagination.value.current = 1;
-  fetchData();
+  });
 }
 
 function handleSearch(value: string) {
-  searchKeyword.value = value;
-  pagination.value.current = 1;
-  fetchData();
+  filters.value.keyword = value;
+  search();
 }
 
-onMounted(() => {
-  fetchData();
-});
+function handleFilter() {
+  search();
+}
+
+function handleReset() {
+  filters.value.keyword = '';
+  resetFilters();
+}
+
+// ==================== 生命周期 ====================
+
+onMounted(fetchData);
 </script>
 
 <template>
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">客户列表</h2>
-      <Button type="primary" @click="handleAdd">新增客户</Button>
+      <Button type="primary" @click="openCreate">新增客户</Button>
     </div>
 
-    <!-- Filters -->
+    <!-- 筛选区 -->
     <Card class="mb-4" size="small">
       <div class="flex flex-wrap items-center gap-4">
         <InputSearch
-          v-model:value="searchKeyword"
+          v-model:value="filters.keyword"
           placeholder="搜索客户名称/电话"
           style="width: 200px"
           allow-clear
           @search="handleSearch"
         />
         <Select
-          v-model:value="filterStatus"
-          :options="[{ value: '', label: '全部状态' }, ...statusOptions]"
+          v-model:value="filters.status"
+          :options="withAllOption(customerStatusOptions, '全部状态')"
           placeholder="客户状态"
           style="width: 120px"
           allow-clear
         />
         <Select
-          v-model:value="filterLevel"
-          :options="[{ value: '', label: '全部等级' }, ...levelOptions]"
+          v-model:value="filters.customerLevel"
+          :options="withAllOption(customerLevelOptions, '全部等级')"
           placeholder="客户等级"
           style="width: 120px"
           allow-clear
         />
         <Select
-          v-model:value="filterSource"
-          :options="[{ value: '', label: '全部来源' }, ...sourceOptions]"
+          v-model:value="filters.source"
+          :options="withAllOption(customerSourceOptions, '全部来源')"
           placeholder="来源渠道"
           style="width: 120px"
           allow-clear
         />
         <Button type="primary" @click="handleFilter">筛选</Button>
-        <Button @click="handleResetFilter">重置</Button>
+        <Button @click="handleReset">重置</Button>
       </div>
     </Card>
 
-    <Table
-      :columns="columns"
-      :data-source="dataSource"
-      :loading="loading"
-      :pagination="pagination"
-      :scroll="{ x: 1400 }"
-      row-key="id"
-      @change="handleTableChange"
-    >
+    <!-- 表格区 -->
+    <Table v-bind="tableProps" :columns="columns" :scroll="{ x: 1400 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'customer'">
           <div
             class="flex cursor-pointer items-center gap-2"
-            @click="handleView(record)"
+            @click="handleView(record as CustomerItem)"
           >
             <Avatar v-if="record.avatar" :src="record.avatar" :size="40" />
             <Avatar v-else :size="40">
@@ -371,13 +292,16 @@ onMounted(() => {
         </template>
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleView(record)"
-              >详情</Button
+            <Button type="link" size="small" @click="handleView(record as CustomerItem)">
+              详情
+            </Button>
+            <Button type="link" size="small" @click="handleEdit(record as CustomerItem)">
+              编辑
+            </Button>
+            <Popconfirm
+              title="确定删除吗？"
+              @confirm="handleDelete((record as CustomerItem).id)"
             >
-            <Button type="link" size="small" @click="handleEdit(record)"
-              >编辑</Button
-            >
-            <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">
               <Button type="link" size="small" danger>删除</Button>
             </Popconfirm>
           </Space>
@@ -385,8 +309,12 @@ onMounted(() => {
       </template>
     </Table>
 
-    <!-- Create/Edit Modal -->
-    <Modal v-model:open="modalVisible" :title="modalTitle" @ok="handleSubmit">
+    <!-- 新增/编辑 Modal -->
+    <Modal
+      v-model:open="modalVisible"
+      :title="isEditing ? '编辑客户' : '新增客户'"
+      @ok="submit"
+    >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="客户名称" required>
           <Input v-model:value="formState.name" placeholder="请输入客户名称" />
@@ -398,31 +326,25 @@ onMounted(() => {
           <Input v-model:value="formState.email" placeholder="请输入邮箱" />
         </Form.Item>
         <Form.Item label="公司">
-          <Input
-            v-model:value="formState.company"
-            placeholder="请输入公司名称"
-          />
+          <Input v-model:value="formState.company" placeholder="请输入公司名称" />
         </Form.Item>
         <Form.Item label="状态">
-          <Select v-model:value="formState.status" :options="statusOptions" />
+          <Select v-model:value="formState.status" :options="customerStatusOptions" />
         </Form.Item>
         <Form.Item label="来源">
           <Select
             v-model:value="formState.source"
-            :options="sourceOptions"
-            allowClear
+            :options="customerSourceOptions"
+            allow-clear
           />
         </Form.Item>
         <Form.Item label="备注">
-          <Input.TextArea
-            v-model:value="formState.remark"
-            placeholder="请输入备注"
-          />
+          <Input.TextArea v-model:value="formState.remark" placeholder="请输入备注" />
         </Form.Item>
       </Form>
     </Modal>
 
-    <!-- Detail Drawer -->
+    <!-- 详情抽屉 -->
     <CustomerDetailDrawer
       v-model:open="detailVisible"
       :customer-id="detailCustomerId"
