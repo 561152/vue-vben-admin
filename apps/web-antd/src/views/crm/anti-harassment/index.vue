@@ -26,16 +26,19 @@ import {
   SettingOutlined,
   SafetyOutlined,
   StopOutlined,
-  UserSwitchOutlined,
+  WarningOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
+import { useCrudTable } from '#/composables';
 
-// Types
+// ==================== 类型定义 ====================
+
 interface AntiHarassmentRule {
   id: number;
   name: string;
   ruleType: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   action: string;
   groupIds: string[];
   isActive: boolean;
@@ -51,18 +54,24 @@ interface SensitiveWord {
   isActive: boolean;
 }
 
-// State
+// ==================== Router ====================
+
+const router = useRouter();
+
+// ==================== 状态 ====================
+
 const activeTab = ref('rules');
-const loading = ref(false);
-const rules = ref<AntiHarassmentRule[]>([]);
 const sensitiveWords = ref<SensitiveWord[]>([]);
+const wordsLoading = ref(false);
 const whitelistCount = ref(0);
 const blacklistCount = ref(0);
+const violationCount = ref(0);
 
-// Modal state
+// Modal state (保留手动管理，因表单逻辑复杂)
 const ruleModalVisible = ref(false);
 const ruleModalTitle = ref('新建规则');
 const editingRule = ref<AntiHarassmentRule | null>(null);
+const modalLoading = ref(false);
 
 // Form state
 const ruleForm = ref({
@@ -112,7 +121,8 @@ const messageTypeOptions = [
   { value: 'CHAT_HISTORY', label: '聊天记录' },
 ];
 
-// Table columns
+// ==================== 表格列定义 ====================
+
 const ruleColumns = [
   { title: '规则名称', dataIndex: 'name', key: 'name' },
   {
@@ -133,40 +143,30 @@ const ruleColumns = [
       return option?.label || text;
     },
   },
-  {
-    title: '状态',
-    dataIndex: 'isActive',
-    key: 'isActive',
-  },
-  {
-    title: '优先级',
-    dataIndex: 'priority',
-    key: 'priority',
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 150,
-  },
+  { title: '状态', dataIndex: 'isActive', key: 'isActive' },
+  { title: '优先级', dataIndex: 'priority', key: 'priority' },
+  { title: '操作', key: 'actions', width: 150 },
 ];
 
-// API calls
-async function fetchRules() {
-  loading.value = true;
-  try {
-    const res = await requestClient.get<{ items: AntiHarassmentRule[] }>(
+// ==================== 规则表格逻辑 ====================
+
+const { tableProps, dataSource: rules, fetchData } = useCrudTable<AntiHarassmentRule>({
+  fetchApi: async (params) => {
+    const res = await requestClient.get<{ items: AntiHarassmentRule[]; total?: number }>(
       '/anti-harassment/rules',
-      { params: { pageSize: 100 } },
+      { params: { page: params.page, pageSize: params.pageSize } },
     );
-    rules.value = res.items || [];
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}
+    return { items: res.items || [], total: res.total || res.items?.length || 0 };
+  },
+  deleteApi: async (id) => {
+    await requestClient.delete(`/anti-harassment/rules/${id}`);
+  },
+});
+
+// ==================== 辅助数据加载 ====================
 
 async function fetchSensitiveWords() {
+  wordsLoading.value = true;
   try {
     const res = await requestClient.get<{ items: SensitiveWord[] }>(
       '/anti-harassment/sensitive-words',
@@ -175,17 +175,34 @@ async function fetchSensitiveWords() {
     sensitiveWords.value = res.items || [];
   } catch (e) {
     console.error(e);
+  } finally {
+    wordsLoading.value = false;
   }
 }
 
 async function fetchListCounts() {
   try {
     const [whiteRes, blackRes] = await Promise.all([
-      requestClient.get<{ total: number }>('/anti-harassment/whitelist/count'),
-      requestClient.get<{ total: number }>('/anti-harassment/blacklist/count'),
+      requestClient.get<{ total: number }>('/anti-harassment/lists', {
+        params: { listType: 'WHITELIST', pageSize: 1 },
+      }),
+      requestClient.get<{ total: number }>('/anti-harassment/lists', {
+        params: { listType: 'BLACKLIST', pageSize: 1 },
+      }),
     ]);
     whitelistCount.value = whiteRes.total || 0;
     blacklistCount.value = blackRes.total || 0;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function fetchViolationCount() {
+  try {
+    const res = await requestClient.get<{ totalCount: number }>(
+      '/anti-harassment/violations/statistics',
+    );
+    violationCount.value = res.totalCount || 0;
   } catch (e) {
     console.error(e);
   }
@@ -244,7 +261,7 @@ async function handleSaveRule() {
     return;
   }
 
-  loading.value = true;
+  modalLoading.value = true;
   try {
     const payload = {
       name: ruleForm.value.name,
@@ -266,17 +283,18 @@ async function handleSaveRule() {
     }
 
     ruleModalVisible.value = false;
-    fetchRules();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
+    fetchData();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '操作失败';
+    message.error(errorMessage);
   } finally {
-    loading.value = false;
+    modalLoading.value = false;
   }
 }
 
 function buildRuleConfig() {
   const form = ruleForm.value;
-  const config: Record<string, any> = {
+  const config: Record<string, unknown> = {
     warningMessage: form.warningMessage,
     warnCount: form.warnCount,
     addToOrgBlacklist: form.addToOrgBlacklist,
@@ -308,9 +326,10 @@ async function handleDeleteRule(id: number) {
   try {
     await requestClient.delete(`/anti-harassment/rules/${id}`);
     message.success('规则删除成功');
-    fetchRules();
-  } catch (e: any) {
-    message.error(e.message || '删除失败');
+    fetchData();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '删除失败';
+    message.error(errorMessage);
   }
 }
 
@@ -320,25 +339,33 @@ async function handleToggleRule(rule: AntiHarassmentRule) {
       isActive: !rule.isActive,
     });
     message.success(rule.isActive ? '规则已禁用' : '规则已启用');
-    fetchRules();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
+    fetchData();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '操作失败';
+    message.error(errorMessage);
   }
 }
 
 // Navigation
 function goToWhitelist() {
-  // router.push('/crm/anti-harassment/whitelist');
+  router.push('/crm/anti-harassment/whitelist');
 }
 
 function goToBlacklist() {
-  // router.push('/crm/anti-harassment/blacklist');
+  router.push('/crm/anti-harassment/blacklist');
 }
 
+function goToViolations() {
+  router.push('/crm/anti-harassment/violations');
+}
+
+// ==================== 生命周期 ====================
+
 onMounted(() => {
-  fetchRules();
+  fetchData();
   fetchSensitiveWords();
   fetchListCounts();
+  fetchViolationCount();
 });
 </script>
 
@@ -352,7 +379,7 @@ onMounted(() => {
     </div>
 
     <!-- Quick Actions -->
-    <div class="mb-4 grid grid-cols-3 gap-4">
+    <div class="mb-4 grid grid-cols-4 gap-4">
       <Card hoverable @click="handleCreateRule">
         <div class="flex items-center">
           <div
@@ -363,6 +390,20 @@ onMounted(() => {
           <div>
             <div class="font-medium">配置防骚扰规则</div>
             <div class="text-sm text-gray-500">{{ rules.length }} 条规则</div>
+          </div>
+        </div>
+      </Card>
+
+      <Card hoverable @click="goToViolations">
+        <div class="flex items-center">
+          <div
+            class="mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-100"
+          >
+            <WarningOutlined class="text-xl text-orange-500" />
+          </div>
+          <div>
+            <div class="font-medium">违规记录</div>
+            <div class="text-sm text-gray-500">{{ violationCount }} 条记录</div>
           </div>
         </div>
       </Card>
@@ -408,13 +449,7 @@ onMounted(() => {
             </Space>
           </div>
 
-          <Table
-            :columns="ruleColumns"
-            :data-source="rules"
-            :loading="loading"
-            :pagination="{ pageSize: 10 }"
-            row-key="id"
-          >
+          <Table v-bind="tableProps" :columns="ruleColumns">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'isActive'">
                 <Badge
@@ -452,7 +487,7 @@ onMounted(() => {
 
           <Table
             :data-source="sensitiveWords"
-            :loading="loading"
+            :loading="wordsLoading"
             :pagination="{ pageSize: 20 }"
             row-key="id"
           >
@@ -490,7 +525,7 @@ onMounted(() => {
       :title="ruleModalTitle"
       width="640px"
       @ok="handleSaveRule"
-      :confirmLoading="loading"
+      :confirmLoading="modalLoading"
     >
       <Form layout="vertical" class="mt-4">
         <Form.Item label="规则名称" required>

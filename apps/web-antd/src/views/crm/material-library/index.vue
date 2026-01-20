@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import {
   Button,
   Space,
@@ -11,13 +11,10 @@ import {
   Form,
   Input,
   Select,
-  Upload,
   Popconfirm,
-  Image,
-  Tabs,
-  TabPane,
+  Tree,
+  Empty,
 } from 'ant-design-vue';
-import type { UploadFile, UploadProps } from 'ant-design-vue';
 import {
   PlusOutlined,
   EditOutlined,
@@ -26,399 +23,374 @@ import {
   VideoCameraOutlined,
   FileOutlined,
   LinkOutlined,
-  AppstoreOutlined,
-  LikeOutlined,
-  CommentOutlined,
-  StarOutlined,
+  FileTextOutlined,
   EyeOutlined,
+  SendOutlined,
+  FolderOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useCrudTable, useModalForm } from '#/composables';
 
-// Types
+// ==================== 类型定义 ====================
+
 interface MaterialItem {
   id: number;
-  title: string;
-  content: string;
-  type: string;
-  url: string;
-  thumbnail: string;
-  likeCount: number;
-  commentCount: number;
-  favoriteCount: number;
+  name: string;
+  description: string | null;
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'FILE' | 'MIXED';
+  content: string | null;
+  mediaIds: number[];
+  linkUrl: string | null;
+  linkTitle: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  tags: string[];
   viewCount: number;
   usageCount: number;
-  createdBy: string;
+  likeCount: number;
+  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+  isPublic: boolean;
+  createdBy: number;
   createdAt: string;
-  tags: string[];
+  updatedAt: string;
 }
 
-// State
-const loading = ref(false);
-const materials = ref<MaterialItem[]>([]);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(10);
+interface CategoryItem {
+  id: number;
+  name: string;
+  parentId: number | null;
+  sort: number;
+  children?: CategoryItem[];
+  materialCount?: number;
+}
 
-// Filters
-const filters = ref({
-  keyword: '',
-  type: '',
-  createdBy: '',
-  tags: [] as string[],
+interface MaterialFormState {
+  name: string;
+  description: string;
+  type: MaterialItem['type'];
+  content: string;
+  mediaIds: number[];
+  linkUrl: string;
+  linkTitle: string;
+  categoryId: number | null;
+  tags: string[];
+  isPublic: boolean;
+}
+
+interface MaterialFilters {
+  keyword?: string;
+  type?: string;
+  status?: string;
+  categoryId?: number | null;
+}
+
+// ==================== 分类状态 ====================
+
+const categories = ref<CategoryItem[]>([]);
+const selectedCategoryId = ref<number | null>(null);
+const categoryModalVisible = ref(false);
+const categoryFormState = ref({
+  name: '',
+  parentId: null as number | null,
 });
 
-// Modal
-const createModalVisible = ref(false);
-const editingMaterial = ref<MaterialItem | null>(null);
+// ==================== 常量 ====================
 
-// Form
-const formState = ref({
-  title: '',
-  content: '',
-  type: 'TEXT',
-  attachments: [] as UploadFile[],
-  tags: [] as string[],
-});
-
-// Material types
 const materialTypes = [
+  { key: 'TEXT', icon: FileTextOutlined, label: '文本' },
   { key: 'IMAGE', icon: PictureOutlined, label: '图片' },
   { key: 'VIDEO', icon: VideoCameraOutlined, label: '视频' },
   { key: 'FILE', icon: FileOutlined, label: '文件' },
-  { key: 'LINK', icon: LinkOutlined, label: '网页' },
-  { key: 'MINIPROGRAM', icon: AppstoreOutlined, label: '小程序' },
+  { key: 'LINK', icon: LinkOutlined, label: '链接' },
+  { key: 'MIXED', icon: FolderOutlined, label: '图文' },
 ];
 
-// Table columns
 const columns = [
-  { title: '素材内容', dataIndex: 'content', key: 'content', width: 300 },
-  {
-    title: '点赞',
-    dataIndex: 'likeCount',
-    key: 'likeCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '评论',
-    dataIndex: 'commentCount',
-    key: 'commentCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '收藏',
-    dataIndex: 'favoriteCount',
-    key: 'favoriteCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '浏览',
-    dataIndex: 'viewCount',
-    key: 'viewCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '使用次数',
-    dataIndex: 'usageCount',
-    key: 'usageCount',
-    width: 100,
-  },
-  { title: '创建人', dataIndex: 'createdBy', key: 'createdBy', width: 100 },
+  { title: '素材名称', dataIndex: 'name', key: 'name', width: 200 },
+  { title: '内容预览', dataIndex: 'content', key: 'content', width: 300, ellipsis: true },
+  { title: '类型', dataIndex: 'type', key: 'type', width: 80 },
+  { title: '分类', dataIndex: 'categoryName', key: 'categoryName', width: 100 },
+  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', width: 80, sorter: true },
+  { title: '使用次数', dataIndex: 'usageCount', key: 'usageCount', width: 100, sorter: true },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 150,
-    fixed: 'right' as const,
-  },
+  { title: '操作', key: 'actions', width: 150, fixed: 'right' as const },
 ];
 
-// Tag presets for filtering
 const tagPresets = [
-  { label: '10月', value: '10月' },
-  { label: '11月', value: '11月' },
-  { label: '12月', value: '12月' },
-  { label: '本地', value: '本地' },
-  { label: '外地', value: '外地' },
-  { label: '公众号', value: '公众号' },
-  { label: '导购', value: '导购' },
-  { label: '活动引入', value: '活动引入' },
+  { label: '产品', value: '产品' },
+  { label: '活动', value: '活动' },
+  { label: '节日', value: '节日' },
+  { label: '促销', value: '促销' },
+  { label: '公告', value: '公告' },
 ];
 
-// Category presets
-const categoryPresets = [
-  { label: '店庆', value: '店庆' },
-  { label: '周末', value: '周末' },
-];
+const typeLabels: Record<MaterialItem['type'], string> = {
+  TEXT: '文本',
+  IMAGE: '图片',
+  VIDEO: '视频',
+  FILE: '文件',
+  LINK: '链接',
+  MIXED: '图文',
+};
 
-// API calls
-async function fetchMaterials() {
-  loading.value = true;
-  try {
-    const params: Record<string, any> = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
+// ==================== 计算属性 ====================
+
+const categoryTreeData = computed(() => {
+  const buildTree = (items: CategoryItem[], parentId: number | null = null): any[] => {
+    return items
+      .filter((item) => item.parentId === parentId)
+      .map((item) => ({
+        key: item.id,
+        title: `${item.name} (${item.materialCount || 0})`,
+        children: buildTree(items, item.id),
+      }));
+  };
+  return [{ key: null, title: '全部分类', children: buildTree(categories.value) }];
+});
+
+// ==================== 表格逻辑 ====================
+
+const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
+  MaterialItem,
+  MaterialFilters
+>({
+  fetchApi: async (params) => {
+    const apiParams: Record<string, unknown> = {
+      page: params.page,
+      pageSize: params.pageSize,
     };
+    if (params.keyword) apiParams.keyword = params.keyword;
+    if (params.type) apiParams.type = params.type;
+    if (params.status) apiParams.status = params.status;
+    if (selectedCategoryId.value) apiParams.categoryId = selectedCategoryId.value;
 
-    if (filters.value.keyword) params.keyword = filters.value.keyword;
-    if (filters.value.type) params.type = filters.value.type;
-    if (filters.value.createdBy) params.createdBy = filters.value.createdBy;
-    if (filters.value.tags.length) params.tags = filters.value.tags.join(',');
+    const res = await requestClient.get<{ data: MaterialItem[]; total: number }>(
+      '/crm/materials',
+      { params: apiParams },
+    );
+    return { items: res.data || [], total: res.total || 0 };
+  },
+  deleteApi: async (id) => {
+    await requestClient.delete(`/crm/materials/${id}`);
+  },
+  initialFilters: { status: 'ACTIVE' },
+});
 
-    const res = await requestClient.get<{
-      items: MaterialItem[];
-      total: number;
-    }>('/materials', { params });
-    materials.value = res.items || [];
-    total.value = res.total || 0;
+// ==================== Modal 逻辑 ====================
+
+const { visible, formState, isEditing, openCreate, openEdit, submit } =
+  useModalForm<MaterialFormState>({
+    createApi: async (data) => {
+      await requestClient.post('/crm/materials', {
+        name: data.name,
+        description: data.description || undefined,
+        type: data.type,
+        content: data.content || undefined,
+        mediaIds: data.mediaIds.length ? data.mediaIds : undefined,
+        linkUrl: data.linkUrl || undefined,
+        linkTitle: data.linkTitle || undefined,
+        categoryId: data.categoryId || undefined,
+        tags: data.tags.length ? data.tags : undefined,
+        isPublic: data.isPublic,
+      });
+    },
+    updateApi: async (id, data) => {
+      await requestClient.put(`/crm/materials/${id}`, {
+        name: data.name,
+        description: data.description || undefined,
+        type: data.type,
+        content: data.content || undefined,
+        mediaIds: data.mediaIds.length ? data.mediaIds : undefined,
+        linkUrl: data.linkUrl || undefined,
+        linkTitle: data.linkTitle || undefined,
+        categoryId: data.categoryId || undefined,
+        tags: data.tags.length ? data.tags : undefined,
+        isPublic: data.isPublic,
+      });
+    },
+    initialValues: () => ({
+      name: '',
+      description: '',
+      type: 'TEXT',
+      content: '',
+      mediaIds: [],
+      linkUrl: '',
+      linkTitle: '',
+      categoryId: null,
+      tags: [],
+      isPublic: true,
+    }),
+    afterSubmit: fetchData,
+  });
+
+// ==================== 分类相关 ====================
+
+async function fetchCategories() {
+  try {
+    const res = await requestClient.get<CategoryItem[]>('/crm/materials/categories/tree');
+    categories.value = flattenCategories(res);
   } catch (e) {
     console.error(e);
-  } finally {
-    loading.value = false;
   }
 }
 
-async function handleCreate() {
-  if (!formState.value.content && formState.value.attachments.length === 0) {
-    message.warning('请输入内容或添加附件');
+function flattenCategories(items: CategoryItem[]): CategoryItem[] {
+  const result: CategoryItem[] = [];
+  function traverse(list: CategoryItem[]) {
+    for (const item of list) {
+      result.push(item);
+      if (item.children?.length) {
+        traverse(item.children);
+      }
+    }
+  }
+  traverse(items);
+  return result;
+}
+
+async function handleCreateCategory() {
+  if (!categoryFormState.value.name) {
+    message.warning('请输入分类名称');
     return;
   }
 
-  loading.value = true;
   try {
-    const payload = {
-      title: formState.value.title,
-      content: formState.value.content,
-      type: formState.value.type,
-      attachments: formState.value.attachments.map((f) => ({
-        type: f.type,
-        url: f.response?.url || f.url,
-        name: f.name,
-      })),
-      tags: formState.value.tags,
-    };
-
-    if (editingMaterial.value) {
-      await requestClient.put(
-        `/materials/${editingMaterial.value.id}`,
-        payload,
-      );
-      message.success('素材更新成功');
-    } else {
-      await requestClient.post('/materials', payload);
-      message.success('素材创建成功');
-    }
-
-    createModalVisible.value = false;
-    resetForm();
-    fetchMaterials();
-  } catch (e: any) {
-    message.error(e.message || '操作失败');
-  } finally {
-    loading.value = false;
+    await requestClient.post('/crm/materials/categories', {
+      name: categoryFormState.value.name,
+      parentId: categoryFormState.value.parentId || undefined,
+    });
+    message.success('分类创建成功');
+    categoryModalVisible.value = false;
+    categoryFormState.value = { name: '', parentId: null };
+    fetchCategories();
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '创建分类失败';
+    message.error(errorMessage);
   }
 }
 
-async function handleDelete(id: number) {
-  try {
-    await requestClient.delete(`/materials/${id}`);
-    message.success('删除成功');
-    fetchMaterials();
-  } catch (e: any) {
-    message.error(e.message || '删除失败');
-  }
-}
+// ==================== 事件处理 ====================
 
 function handleEdit(material: MaterialItem) {
-  editingMaterial.value = material;
-  formState.value = {
-    title: material.title,
-    content: material.content,
+  openEdit(material.id, {
+    name: material.name,
+    description: material.description || '',
     type: material.type,
-    attachments: [],
+    content: material.content || '',
+    mediaIds: material.mediaIds || [],
+    linkUrl: material.linkUrl || '',
+    linkTitle: material.linkTitle || '',
+    categoryId: material.categoryId,
     tags: material.tags || [],
-  };
-  createModalVisible.value = true;
+    isPublic: material.isPublic,
+  });
 }
 
-function handleOpenCreate() {
-  editingMaterial.value = null;
-  resetForm();
-  createModalVisible.value = true;
+function handleCategorySelect(selectedKeys: (string | number)[]) {
+  selectedCategoryId.value = selectedKeys[0] as number | null;
+  search();
 }
 
-function resetForm() {
-  formState.value = {
-    title: '',
-    content: '',
-    type: 'TEXT',
-    attachments: [],
-    tags: [],
-  };
+function formatDate(dateStr: string) {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleString('zh-CN');
 }
 
-function handlePageChange(page: number, size: number) {
-  currentPage.value = page;
-  pageSize.value = size;
-  fetchMaterials();
-}
-
-function handleUploadChange(info: { fileList: UploadFile[] }) {
-  formState.value.attachments = info.fileList;
-}
+// ==================== 生命周期 ====================
 
 onMounted(() => {
-  fetchMaterials();
+  fetchCategories();
+  fetchData();
 });
 </script>
 
 <template>
-  <div class="p-5">
-    <div class="mb-4">
-      <h2 class="text-xl font-bold">素材库</h2>
-      <p class="text-gray-500">
-        可添加产品、活动、节日问候等内容，便于成员群发消息时使用，提升营销效率
-      </p>
-    </div>
+  <div class="flex h-full gap-4 p-5">
+    <!-- Left: Category Tree -->
+    <Card class="w-64 flex-shrink-0" title="素材分类">
+      <template #extra>
+        <Button type="link" size="small" @click="categoryModalVisible = true">
+          <PlusOutlined /> 添加
+        </Button>
+      </template>
+      <Tree
+        v-if="categoryTreeData.length"
+        :tree-data="categoryTreeData"
+        :selected-keys="[selectedCategoryId]"
+        default-expand-all
+        @select="handleCategorySelect"
+      />
+      <Empty v-else description="暂无分类" />
+    </Card>
 
-    <Card>
-      <!-- Filters -->
-      <div
-        class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4"
-      >
-        <div class="flex items-center gap-2">
-          <span class="font-medium">筛选条件:</span>
-          <Input
-            v-model:value="filters.keyword"
-            placeholder="活动标题【包含】"
-            style="width: 160px"
-            allow-clear
-          />
-        </div>
-
-        <Input
-          placeholder="创建人【在之中】"
-          style="width: 160px"
-          allow-clear
-        />
-
-        <Input
-          placeholder="创建时间【大于等于】"
-          style="width: 180px"
-          allow-clear
-        />
-
-        <Input
-          placeholder="创建时间【小于】"
-          style="width: 160px"
-          allow-clear
-        />
-
-        <Button type="primary" @click="fetchMaterials">筛选</Button>
-      </div>
-
-      <!-- Tags filter -->
-      <div class="mb-4 flex flex-wrap gap-2">
-        <span class="text-gray-500">选择标签:</span>
-        <Tag
-          v-for="tag in tagPresets"
-          :key="tag.value"
-          :color="filters.tags.includes(tag.value) ? 'blue' : 'default'"
-          class="cursor-pointer"
-          @click="
-            filters.tags.includes(tag.value)
-              ? filters.tags.splice(filters.tags.indexOf(tag.value), 1)
-              : filters.tags.push(tag.value)
-          "
-        >
-          {{ tag.label }}
-        </Tag>
-      </div>
-
-      <!-- Category filter -->
-      <div class="mb-4 flex flex-wrap gap-2">
-        <span class="text-gray-500">地区:</span>
-        <Tag class="cursor-pointer">本地</Tag>
-        <Tag class="cursor-pointer">外地</Tag>
-        <span class="ml-4 text-gray-500">入会路径:</span>
-        <Tag class="cursor-pointer">公众号</Tag>
-        <Tag class="cursor-pointer">导购</Tag>
-        <Tag class="cursor-pointer">活动引入</Tag>
-      </div>
-
-      <!-- Actions -->
-      <div class="mb-4 flex justify-between">
-        <Button type="primary" @click="handleOpenCreate">
+    <!-- Right: Material List -->
+    <Card class="flex-1" title="素材列表">
+      <template #extra>
+        <Button type="primary" @click="openCreate">
           <PlusOutlined /> 添加素材
         </Button>
+      </template>
+
+      <!-- Filters -->
+      <div class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4">
+        <Input
+          v-model:value="filters.keyword"
+          placeholder="搜索素材名称/内容"
+          style="width: 200px"
+          allow-clear
+          @press-enter="search"
+        />
+
+        <Select
+          v-model:value="filters.type"
+          placeholder="素材类型"
+          style="width: 120px"
+          allow-clear
+        >
+          <Select.Option v-for="t in materialTypes" :key="t.key" :value="t.key">
+            {{ t.label }}
+          </Select.Option>
+        </Select>
+
+        <Select
+          v-model:value="filters.status"
+          placeholder="状态"
+          style="width: 100px"
+          allow-clear
+        >
+          <Select.Option value="ACTIVE">启用</Select.Option>
+          <Select.Option value="DRAFT">草稿</Select.Option>
+          <Select.Option value="ARCHIVED">归档</Select.Option>
+        </Select>
+
+        <Button type="primary" @click="search">搜索</Button>
       </div>
 
       <!-- Table -->
-      <Table
-        :columns="columns"
-        :data-source="materials"
-        :loading="loading"
-        :pagination="{
-          current: currentPage,
-          pageSize: pageSize,
-          total: total,
-          onChange: handlePageChange,
-          showSizeChanger: true,
-          showTotal: (t: number) => `共 ${t} 条`,
-        }"
-        row-key="id"
-        :scroll="{ x: 1200 }"
-      >
+      <Table v-bind="tableProps" :columns="columns" :scroll="{ x: 1200 }">
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'name'">
+            <div class="font-medium">{{ record.name }}</div>
+            <div v-if="record.tags?.length" class="mt-1">
+              <Tag v-for="tag in record.tags.slice(0, 3)" :key="tag" size="small">
+                {{ tag }}
+              </Tag>
+              <span v-if="record.tags.length > 3" class="text-xs text-gray-400">
+                +{{ record.tags.length - 3 }}
+              </span>
+            </div>
+          </template>
+
           <template v-if="column.key === 'content'">
-            <div class="flex items-start gap-2">
-              <Image
-                v-if="record.thumbnail"
-                :src="record.thumbnail"
-                :width="60"
-                :height="60"
-                class="flex-shrink-0 rounded"
-              />
-              <div class="min-w-0 flex-1">
-                <div class="line-clamp-1 font-medium">{{ record.title }}</div>
-                <div class="line-clamp-2 text-sm text-gray-500">
-                  {{ record.content }}
-                </div>
-                <div v-if="record.tags?.length" class="mt-1">
-                  <Tag
-                    v-for="tag in record.tags.slice(0, 3)"
-                    :key="tag"
-                    size="small"
-                  >
-                    {{ tag }}
-                  </Tag>
-                </div>
-              </div>
+            <div class="line-clamp-2 text-sm text-gray-600">
+              {{ record.content || record.linkUrl || '-' }}
             </div>
           </template>
 
-          <template v-if="column.key === 'likeCount'">
-            <div class="flex items-center gap-1 text-gray-500">
-              <LikeOutlined />
-              {{ record.likeCount || 0 }}
-            </div>
-          </template>
-
-          <template v-if="column.key === 'commentCount'">
-            <div class="flex items-center gap-1 text-gray-500">
-              <CommentOutlined />
-              {{ record.commentCount || 0 }}
-            </div>
-          </template>
-
-          <template v-if="column.key === 'favoriteCount'">
-            <div class="flex items-center gap-1 text-gray-500">
-              <StarOutlined />
-              {{ record.favoriteCount || 0 }}
-            </div>
+          <template v-if="column.key === 'type'">
+            <Tag :color="record.type === 'TEXT' ? 'blue' : record.type === 'IMAGE' ? 'green' : 'orange'">
+              {{ typeLabels[record.type] }}
+            </Tag>
           </template>
 
           <template v-if="column.key === 'viewCount'">
@@ -428,14 +400,29 @@ onMounted(() => {
             </div>
           </template>
 
+          <template v-if="column.key === 'usageCount'">
+            <div class="flex items-center gap-1 text-gray-500">
+              <SendOutlined />
+              {{ record.usageCount || 0 }}
+            </div>
+          </template>
+
+          <template v-if="column.key === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
+          </template>
+
           <template v-if="column.key === 'actions'">
             <Space>
-              <Button type="link" size="small" @click="handleEdit(record)">
+              <Button
+                type="link"
+                size="small"
+                @click="handleEdit(record as MaterialItem)"
+              >
                 <EditOutlined /> 编辑
               </Button>
               <Popconfirm
                 title="确定要删除吗？"
-                @confirm="handleDelete(record.id)"
+                @confirm="handleDelete((record as MaterialItem).id)"
               >
                 <Button type="link" size="small" danger>
                   <DeleteOutlined /> 删除
@@ -449,58 +436,75 @@ onMounted(() => {
 
     <!-- Create/Edit Modal -->
     <Modal
-      v-model:open="createModalVisible"
-      :title="editingMaterial ? '编辑素材' : '添加素材'"
-      width="600px"
-      @ok="handleCreate"
-      :confirmLoading="loading"
+      v-model:open="visible"
+      :title="isEditing ? '编辑素材' : '添加素材'"
+      width="700px"
+      @ok="submit"
     >
       <Form layout="vertical" class="mt-4">
-        <Form.Item label="素材标题">
+        <Form.Item label="素材名称" required>
           <Input
-            v-model:value="formState.title"
-            placeholder="可输入产品、活动、节日问候等内容"
+            v-model:value="formState.name"
+            placeholder="输入素材名称"
+            :maxlength="100"
           />
         </Form.Item>
 
-        <Form.Item label="素材内容">
+        <Form.Item label="素材描述">
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="简要描述素材用途"
+            :rows="2"
+            :maxlength="500"
+          />
+        </Form.Item>
+
+        <Form.Item label="素材类型">
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-for="type in materialTypes"
+              :key="type.key"
+              :type="formState.type === type.key ? 'primary' : 'default'"
+              @click="formState.type = type.key as MaterialItem['type']"
+            >
+              <component :is="type.icon" /> {{ type.label }}
+            </Button>
+          </div>
+        </Form.Item>
+
+        <Form.Item v-if="['TEXT', 'MIXED'].includes(formState.type)" label="文本内容">
           <Input.TextArea
             v-model:value="formState.content"
-            placeholder="输入素材内容..."
+            placeholder="输入素材文本内容..."
             :rows="4"
             :maxlength="2000"
             show-count
           />
         </Form.Item>
 
-        <Form.Item label="添加附件">
-          <div class="rounded border border-dashed p-4">
-            <div class="flex gap-2">
-              <Button
-                v-for="type in materialTypes"
-                :key="type.key"
-                class="flex h-16 w-16 flex-col items-center justify-center"
-                :type="formState.type === type.key ? 'primary' : 'default'"
-                @click="formState.type = type.key"
-              >
-                <component :is="type.icon" class="text-lg" />
-                <span class="mt-1 text-xs">{{ type.label }}</span>
-              </Button>
-            </div>
-            <div class="mt-4">
-              <Upload
-                v-model:fileList="formState.attachments"
-                list-type="picture-card"
-                :max-count="9"
-                @change="handleUploadChange"
-              >
-                <div>
-                  <PlusOutlined />
-                  <div class="mt-1 text-xs">添加图片等附件</div>
-                </div>
-              </Upload>
-            </div>
-          </div>
+        <Form.Item v-if="formState.type === 'LINK'" label="链接地址">
+          <Input v-model:value="formState.linkUrl" placeholder="https://" />
+        </Form.Item>
+
+        <Form.Item v-if="formState.type === 'LINK'" label="链接标题">
+          <Input v-model:value="formState.linkTitle" placeholder="链接显示标题" />
+        </Form.Item>
+
+        <Form.Item label="所属分类">
+          <Select
+            v-model:value="formState.categoryId"
+            placeholder="选择分类"
+            allow-clear
+            style="width: 200px"
+          >
+            <Select.Option
+              v-for="cat in categories"
+              :key="cat.id"
+              :value="cat.id"
+            >
+              {{ cat.name }}
+            </Select.Option>
+          </Select>
         </Form.Item>
 
         <Form.Item label="标签">
@@ -510,12 +514,32 @@ onMounted(() => {
             placeholder="添加标签，便于分类管理"
             :token-separators="[',', '，']"
           >
-            <Select.Option
-              v-for="tag in tagPresets"
-              :key="tag.value"
-              :value="tag.value"
-            >
+            <Select.Option v-for="tag in tagPresets" :key="tag.value" :value="tag.value">
               {{ tag.label }}
+            </Select.Option>
+          </Select>
+        </Form.Item>
+      </Form>
+    </Modal>
+
+    <!-- Category Modal -->
+    <Modal
+      v-model:open="categoryModalVisible"
+      title="添加分类"
+      @ok="handleCreateCategory"
+    >
+      <Form layout="vertical" class="mt-4">
+        <Form.Item label="分类名称" required>
+          <Input v-model:value="categoryFormState.name" placeholder="输入分类名称" />
+        </Form.Item>
+        <Form.Item label="上级分类">
+          <Select
+            v-model:value="categoryFormState.parentId"
+            placeholder="选择上级分类（可选）"
+            allow-clear
+          >
+            <Select.Option v-for="cat in categories" :key="cat.id" :value="cat.id">
+              {{ cat.name }}
             </Select.Option>
           </Select>
         </Form.Item>

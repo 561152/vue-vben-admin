@@ -41,7 +41,12 @@ const columns = [
       h(Tag, { color: record.color || '#1890ff' }, () => record.name),
   },
   { title: '描述', dataIndex: 'description', key: 'description' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
   { title: '操作', key: 'action', width: 150 },
 ];
@@ -103,7 +108,11 @@ onMounted(fetchData);
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record as TagItem)">
+            <Button
+              type="link"
+              size="small"
+              @click="handleEdit(record as TagItem)"
+            >
               编辑
             </Button>
             <Popconfirm
@@ -128,10 +137,16 @@ onMounted(fetchData);
           <Input v-model:value="formState.name" placeholder="请输入标签名称" />
         </Form.Item>
         <Form.Item label="颜色">
-          <Input v-model:value="formState.color" placeholder="请输入颜色值，如 #1890ff" />
+          <Input
+            v-model:value="formState.color"
+            placeholder="请输入颜色值，如 #1890ff"
+          />
         </Form.Item>
         <Form.Item label="描述">
-          <Input.TextArea v-model:value="formState.description" placeholder="请输入描述" />
+          <Input.TextArea
+            v-model:value="formState.description"
+            placeholder="请输入描述"
+          />
         </Form.Item>
       </Form>
     </Modal>

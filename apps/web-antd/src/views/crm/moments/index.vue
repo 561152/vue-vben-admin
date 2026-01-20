@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import {
   Button,
   Space,
@@ -11,19 +11,14 @@ import {
   Form,
   Input,
   Select,
-  Upload,
   DatePicker,
   Tabs,
   TabPane,
   Radio,
-  Statistic,
-  Row,
-  Col,
   Popconfirm,
   Image,
-  Badge,
 } from 'ant-design-vue';
-import type { UploadProps, UploadFile } from 'ant-design-vue';
+import type { UploadFile } from 'ant-design-vue';
 import {
   PlusOutlined,
   EditOutlined,
@@ -31,7 +26,6 @@ import {
   LikeOutlined,
   CommentOutlined,
   EyeOutlined,
-  UploadOutlined,
   PictureOutlined,
   VideoCameraOutlined,
   FileOutlined,
@@ -41,14 +35,16 @@ import {
   ExportOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useCrudTable } from '#/composables';
 import dayjs from 'dayjs';
 
-// Types
+// ==================== 类型定义 ====================
+
 interface MomentTask {
   id: number;
   name: string;
   text: string;
-  attachments: any[];
+  attachments: unknown[];
   visibleType: string;
   senderList: string[];
   status: string;
@@ -74,24 +70,26 @@ interface MaterialItem {
   createdAt: string;
 }
 
-// State
-const activeTab = ref('create');
-const loading = ref(false);
-const moments = ref<MomentTask[]>([]);
-const materials = ref<MaterialItem[]>([]);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(10);
+interface MomentFilters {
+  createdBy?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  minLikes?: number;
+  minComments?: number;
+  minViews?: number;
+}
 
-// Filters
-const filters = ref({
-  createdBy: '',
-  status: '',
-  dateRange: null as [string, string] | null,
-  minLikes: undefined as number | undefined,
-  minComments: undefined as number | undefined,
-  minViews: undefined as number | undefined,
-});
+// ==================== 状态 ====================
+
+const activeTab = ref('create');
+const materials = ref<MaterialItem[]>([]);
+const materialsLoading = ref(false);
+const materialsTotal = ref(0);
+const materialsPage = ref(1);
+
+// Filters (用于 history 表格)
+const dateRange = ref<[string, string] | null>(null);
 
 // Create form
 const createForm = ref({
@@ -100,11 +98,13 @@ const createForm = ref({
   text: '',
   attachments: [] as UploadFile[],
 });
+const createLoading = ref(false);
 
 // Modal
 const customerSelectVisible = ref(false);
 
-// Attachment types
+// ==================== 常量 ====================
+
 const attachmentTypes = [
   { key: 'image', icon: PictureOutlined, label: '图片' },
   { key: 'video', icon: VideoCameraOutlined, label: '视频' },
@@ -113,7 +113,6 @@ const attachmentTypes = [
   { key: 'miniprogram', icon: AppstoreOutlined, label: '小程序' },
 ];
 
-// Status map
 const statusMap: Record<string, { label: string; color: string }> = {
   PENDING: { label: '待发送', color: 'default' },
   SUBMITTED: { label: '已提交', color: 'processing' },
@@ -124,128 +123,80 @@ const statusMap: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: '已取消', color: 'default' },
 };
 
-// Table columns
+// ==================== 表格列定义 ====================
+
 const historyColumns = [
   { title: '内容', dataIndex: 'text', key: 'text', ellipsis: true, width: 300 },
-  {
-    title: '点赞',
-    dataIndex: 'likeCount',
-    key: 'likeCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '评论',
-    dataIndex: 'commentCount',
-    key: 'commentCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '浏览',
-    dataIndex: 'viewCount',
-    key: 'viewCount',
-    width: 80,
-    sorter: true,
-  },
+  { title: '点赞', dataIndex: 'likeCount', key: 'likeCount', width: 80, sorter: true },
+  { title: '评论', dataIndex: 'commentCount', key: 'commentCount', width: 80, sorter: true },
+  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', width: 80, sorter: true },
   { title: '创建人', dataIndex: 'createdBy', key: 'createdBy', width: 100 },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
   { title: '发表情况', dataIndex: 'status', key: 'status', width: 120 },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 100,
-    fixed: 'right' as const,
-  },
+  { title: '操作', key: 'actions', width: 100, fixed: 'right' as const },
 ];
 
 const materialColumns = [
   { title: '内容', dataIndex: 'title', key: 'title', ellipsis: true },
-  {
-    title: '点赞',
-    dataIndex: 'likeCount',
-    key: 'likeCount',
-    sorter: true,
-  },
-  {
-    title: '评论',
-    dataIndex: 'commentCount',
-    key: 'commentCount',
-    sorter: true,
-  },
-  {
-    title: '收藏',
-    key: 'favoriteCount',
-  },
-  {
-    title: '浏览',
-    dataIndex: 'viewCount',
-    key: 'viewCount',
-    sorter: true,
-  },
+  { title: '点赞', dataIndex: 'likeCount', key: 'likeCount', sorter: true },
+  { title: '评论', dataIndex: 'commentCount', key: 'commentCount', sorter: true },
+  { title: '收藏', key: 'favoriteCount' },
+  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', sorter: true },
   { title: '使用次数', key: 'usageCount' },
   { title: '创建人', dataIndex: 'createdBy', key: 'createdBy' },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 150,
-  },
+  { title: '操作', key: 'actions', width: 150 },
 ];
 
-// API calls
-async function fetchMoments() {
-  loading.value = true;
-  try {
-    const params: Record<string, any> = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
-    };
+// ==================== History 表格逻辑 ====================
 
-    if (filters.value.createdBy) params.createdBy = filters.value.createdBy;
-    if (filters.value.status) params.status = filters.value.status;
-    if (filters.value.dateRange) {
-      params.startDate = filters.value.dateRange[0];
-      params.endDate = filters.value.dateRange[1];
-    }
-    if (filters.value.minLikes) params.minLikes = filters.value.minLikes;
-    if (filters.value.minComments)
-      params.minComments = filters.value.minComments;
-    if (filters.value.minViews) params.minViews = filters.value.minViews;
+const { tableProps: historyTableProps, filters, search: searchHistory, fetchData: fetchMoments } =
+  useCrudTable<MomentTask, MomentFilters>({
+    fetchApi: async (params) => {
+      const apiParams: Record<string, unknown> = {
+        page: params.page,
+        pageSize: params.pageSize,
+      };
+      if (params.createdBy) apiParams.createdBy = params.createdBy;
+      if (params.status) apiParams.status = params.status;
+      if (dateRange.value) {
+        apiParams.startDate = dateRange.value[0];
+        apiParams.endDate = dateRange.value[1];
+      }
+      if (params.minLikes) apiParams.minLikes = params.minLikes;
+      if (params.minComments) apiParams.minComments = params.minComments;
+      if (params.minViews) apiParams.minViews = params.minViews;
 
-    const res = await requestClient.get<{ items: MomentTask[]; total: number }>(
-      '/moments',
-      { params },
-    );
-    moments.value = res.items || [];
-    total.value = res.total || 0;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-}
+      const res = await requestClient.get<{ items: MomentTask[]; total: number }>(
+        '/moments',
+        { params: apiParams },
+      );
+      return { items: res.items || [], total: res.total || 0 };
+    },
+    deleteApi: async (id) => {
+      await requestClient.delete(`/moments/${id}`);
+    },
+  });
+
+// ==================== Materials 表格加载 ====================
 
 async function fetchMaterials() {
-  loading.value = true;
+  materialsLoading.value = true;
   try {
-    const res = await requestClient.get<{
-      items: MaterialItem[];
-      total: number;
-    }>('/moments/materials', {
-      params: {
-        page: currentPage.value,
-        pageSize: pageSize.value,
-      },
-    });
+    const res = await requestClient.get<{ items: MaterialItem[]; total: number }>(
+      '/moments/materials',
+      { params: { page: materialsPage.value, pageSize: 10 } },
+    );
     materials.value = res.items || [];
-    total.value = res.total || 0;
+    materialsTotal.value = res.total || 0;
   } catch (e) {
     console.error(e);
   } finally {
-    loading.value = false;
+    materialsLoading.value = false;
   }
 }
+
+// ==================== 事件处理 ====================
 
 async function handlePublish() {
   if (!createForm.value.text && createForm.value.attachments.length === 0) {
@@ -253,7 +204,7 @@ async function handlePublish() {
     return;
   }
 
-  loading.value = true;
+  createLoading.value = true;
   try {
     await requestClient.post('/moments', {
       text: createForm.value.text,
@@ -261,7 +212,7 @@ async function handlePublish() {
       customerIds: createForm.value.customerIds,
       attachments: createForm.value.attachments.map((f) => ({
         type: f.type,
-        url: f.response?.url || f.url,
+        url: (f.response as { url?: string })?.url || f.url,
         name: f.name,
       })),
     });
@@ -272,10 +223,11 @@ async function handlePublish() {
       text: '',
       attachments: [],
     };
-  } catch (e: any) {
-    message.error(e.message || '发布失败');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '发布失败';
+    message.error(errorMessage);
   } finally {
-    loading.value = false;
+    createLoading.value = false;
   }
 }
 
@@ -283,8 +235,9 @@ async function handleRemind(id: number) {
   try {
     await requestClient.post(`/moments/${id}/remind`);
     message.success('已发送提醒');
-  } catch (e: any) {
-    message.error(e.message || '提醒失败');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '提醒失败';
+    message.error(errorMessage);
   }
 }
 
@@ -293,42 +246,32 @@ async function handleDelete(id: number) {
     await requestClient.delete(`/moments/${id}`);
     message.success('删除成功');
     fetchMoments();
-  } catch (e: any) {
-    message.error(e.message || '删除失败');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : '删除失败';
+    message.error(errorMessage);
   }
 }
 
 function handleTabChange(key: string) {
   activeTab.value = key;
-  currentPage.value = 1;
   if (key === 'history') {
     fetchMoments();
   } else if (key === 'materials') {
+    materialsPage.value = 1;
     fetchMaterials();
   }
 }
 
-function handlePageChange(page: number, size: number) {
-  currentPage.value = page;
-  pageSize.value = size;
-  if (activeTab.value === 'history') {
-    fetchMoments();
-  } else if (activeTab.value === 'materials') {
-    fetchMaterials();
-  }
-}
-
-function handleUploadChange(info: { fileList: UploadFile[] }) {
-  createForm.value.attachments = info.fileList;
+function handleMaterialsPageChange(page: number) {
+  materialsPage.value = page;
+  fetchMaterials();
 }
 
 function handleSelectCustomers() {
   customerSelectVisible.value = true;
 }
 
-function formatDate(date: string) {
-  return dayjs(date).format('YYYY年MM月DD日');
-}
+// ==================== 生命周期 ====================
 
 onMounted(() => {
   // Default to create tab, no data fetch needed
@@ -397,7 +340,7 @@ onMounted(() => {
               <Form.Item>
                 <Button
                   type="primary"
-                  :loading="loading"
+                  :loading="createLoading"
                   @click="handlePublish"
                 >
                   通知成员发表
@@ -432,9 +375,9 @@ onMounted(() => {
             </Select>
 
             <DatePicker.RangePicker
-              v-model:value="filters.dateRange"
+              v-model:value="dateRange"
               format="YYYY年MM月DD日"
-              placeholder="['开始时间', '结束时间']"
+              :placeholder="['开始时间', '结束时间']"
             />
 
             <div class="flex items-center gap-2 rounded bg-orange-50 px-3 py-1">
@@ -467,7 +410,7 @@ onMounted(() => {
               />
             </div>
 
-            <Button type="primary" @click="fetchMoments">查询</Button>
+            <Button type="primary" @click="searchHistory">查询</Button>
 
             <Button class="ml-auto"> <ExportOutlined /> 导出 </Button>
           </div>
@@ -481,18 +424,8 @@ onMounted(() => {
           </div>
 
           <Table
+            v-bind="historyTableProps"
             :columns="historyColumns"
-            :data-source="moments"
-            :loading="loading"
-            :pagination="{
-              current: currentPage,
-              pageSize: pageSize,
-              total: total,
-              onChange: handlePageChange,
-              showSizeChanger: true,
-              showTotal: (t: number) => `共 ${t} 条`,
-            }"
-            row-key="id"
             :scroll="{ x: 1200 }"
           >
             <template #bodyCell="{ column, record }">
@@ -589,12 +522,12 @@ onMounted(() => {
           <Table
             :columns="materialColumns"
             :data-source="materials"
-            :loading="loading"
+            :loading="materialsLoading"
             :pagination="{
-              current: currentPage,
-              pageSize: pageSize,
-              total: total,
-              onChange: handlePageChange,
+              current: materialsPage,
+              pageSize: 10,
+              total: materialsTotal,
+              onChange: handleMaterialsPageChange,
               showSizeChanger: true,
               showTotal: (t: number) => `共 ${t} 条`,
             }"
