@@ -120,7 +120,12 @@ const statusColors: Record<string, string> = {
 const upcomingColumns = [
   { title: '任务名称', dataIndex: 'name', key: 'name', ellipsis: true },
   { title: '类型', dataIndex: 'messageType', key: 'messageType', width: 100 },
-  { title: '计划时间', dataIndex: 'scheduledAt', key: 'scheduledAt', width: 160 },
+  {
+    title: '计划时间',
+    dataIndex: 'scheduledAt',
+    key: 'scheduledAt',
+    width: 160,
+  },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
 ];
 
@@ -128,9 +133,19 @@ const historyColumns = [
   { title: '任务名称', dataIndex: 'name', key: 'name', ellipsis: true },
   { title: '类型', dataIndex: 'messageType', key: 'messageType', width: 100 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-  { title: '计划时间', dataIndex: 'scheduledAt', key: 'scheduledAt', width: 160 },
+  {
+    title: '计划时间',
+    dataIndex: 'scheduledAt',
+    key: 'scheduledAt',
+    width: 160,
+  },
   { title: '执行时间', dataIndex: 'executedAt', key: 'executedAt', width: 160 },
-  { title: '失败原因', dataIndex: 'failReason', key: 'failReason', ellipsis: true },
+  {
+    title: '失败原因',
+    dataIndex: 'failReason',
+    key: 'failReason',
+    ellipsis: true,
+  },
 ];
 
 const trendColumns = [
@@ -348,7 +363,13 @@ onMounted(() => {
             <Progress
               type="circle"
               :percent="statistics.successRate"
-              :stroke-color="statistics.successRate >= 90 ? '#52c41a' : statistics.successRate >= 70 ? '#faad14' : '#ff4d4f'"
+              :stroke-color="
+                statistics.successRate >= 90
+                  ? '#52c41a'
+                  : statistics.successRate >= 70
+                    ? '#faad14'
+                    : '#ff4d4f'
+              "
             />
           </div>
         </Card>
@@ -358,7 +379,9 @@ onMounted(() => {
           <div class="flex items-center justify-center py-4">
             <Statistic
               :value="statistics.avgExecutionTime ?? 0"
-              :formatter="() => formatExecutionTime(statistics?.avgExecutionTime ?? null)"
+              :formatter="
+                () => formatExecutionTime(statistics?.avgExecutionTime ?? null)
+              "
             >
               <template #prefix>
                 <SyncOutlined class="text-blue-500" />
@@ -392,17 +415,26 @@ onMounted(() => {
       <Row :gutter="16">
         <Col :span="8" v-for="item in typeDistribution" :key="item.type">
           <Card size="small" :bordered="false" class="bg-gray-50">
-            <div class="flex items-center gap-2 mb-2">
+            <div class="mb-2 flex items-center gap-2">
               <component :is="typeIcons[item.type]" />
-              <span class="font-medium">{{ typeLabels[item.type] || item.type }}</span>
+              <span class="font-medium">{{
+                typeLabels[item.type] || item.type
+              }}</span>
             </div>
-            <div class="text-sm text-gray-500 mb-1">
-              总计: {{ item.total }} | 完成: {{ item.completed }} | 失败: {{ item.failed }}
+            <div class="mb-1 text-sm text-gray-500">
+              总计: {{ item.total }} | 完成: {{ item.completed }} | 失败:
+              {{ item.failed }}
             </div>
             <Progress
               :percent="item.successRate"
               size="small"
-              :stroke-color="item.successRate >= 90 ? '#52c41a' : item.successRate >= 70 ? '#faad14' : '#ff4d4f'"
+              :stroke-color="
+                item.successRate >= 90
+                  ? '#52c41a'
+                  : item.successRate >= 70
+                    ? '#faad14'
+                    : '#ff4d4f'
+              "
             />
           </Card>
         </Col>
@@ -444,7 +476,9 @@ onMounted(() => {
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'messageType'">
-                <Tag>{{ typeLabels[record.messageType] || record.messageType }}</Tag>
+                <Tag>{{
+                  typeLabels[record.messageType] || record.messageType
+                }}</Tag>
               </template>
               <template v-if="column.key === 'scheduledAt'">
                 {{ formatDate(record.scheduledAt) }}
@@ -457,7 +491,7 @@ onMounted(() => {
             </template>
             <template #emptyText>
               <div class="py-4 text-center text-gray-400">
-                <ClockCircleOutlined class="text-2xl mb-2" />
+                <ClockCircleOutlined class="mb-2 text-2xl" />
                 <p>暂无即将执行的任务</p>
               </div>
             </template>
@@ -472,7 +506,7 @@ onMounted(() => {
             <div
               v-for="item in statistics?.byStatus"
               :key="item.status"
-              class="text-center p-3 rounded bg-gray-50"
+              class="rounded bg-gray-50 p-3 text-center"
             >
               <Tag :color="statusColors[item.status]" class="mb-2">
                 {{ statusLabels[item.status] || item.status }}
@@ -522,7 +556,9 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'messageType'">
-            <Tag>{{ typeLabels[record.messageType] || record.messageType }}</Tag>
+            <Tag>{{
+              typeLabels[record.messageType] || record.messageType
+            }}</Tag>
           </template>
           <template v-if="column.key === 'status'">
             <Tag :color="statusColors[record.status]">

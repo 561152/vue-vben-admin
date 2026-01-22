@@ -49,17 +49,25 @@ const searchKeyword = ref('');
 const loading = ref(false);
 const components = ref<ComponentItem[]>([]);
 const recentlyUsed = ref<ComponentItem[]>([]);
-const activeKeys = ref(['llm', 'ocr', 'tool', 'retrieval', 'transform', 'recent']);
+const activeKeys = ref([
+  'llm',
+  'ocr',
+  'tool',
+  'retrieval',
+  'transform',
+  'recent',
+]);
 
 // 组件类型配置
-const typeConfig: Record<string, { label: string; color: string; icon: any }> = {
-  MODEL: { label: 'LLM 模型', color: '#1890ff', icon: RobotOutlined },
-  LLM: { label: 'LLM 模型', color: '#1890ff', icon: RobotOutlined },
-  OCR: { label: 'OCR 识别', color: '#52c41a', icon: ScanOutlined },
-  TOOL: { label: '业务工具', color: '#722ed1', icon: ToolOutlined },
-  RETRIEVAL: { label: '向量检索', color: '#fa8c16', icon: DatabaseOutlined },
-  TRANSFORM: { label: '数据转换', color: '#8c8c8c', icon: SwapOutlined },
-};
+const typeConfig: Record<string, { label: string; color: string; icon: any }> =
+  {
+    MODEL: { label: 'LLM 模型', color: '#1890ff', icon: RobotOutlined },
+    LLM: { label: 'LLM 模型', color: '#1890ff', icon: RobotOutlined },
+    OCR: { label: 'OCR 识别', color: '#52c41a', icon: ScanOutlined },
+    TOOL: { label: '业务工具', color: '#722ed1', icon: ToolOutlined },
+    RETRIEVAL: { label: '向量检索', color: '#fa8c16', icon: DatabaseOutlined },
+    TRANSFORM: { label: '数据转换', color: '#8c8c8c', icon: SwapOutlined },
+  };
 
 // 按类型分组的组件
 const groupedComponents = computed(() => {
@@ -68,7 +76,10 @@ const groupedComponents = computed(() => {
       !searchKeyword.value ||
       c.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
       c.key.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      (c.description && c.description.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+      (c.description &&
+        c.description
+          .toLowerCase()
+          .includes(searchKeyword.value.toLowerCase())),
   );
 
   const groups: Record<string, ComponentItem[]> = {
@@ -141,7 +152,10 @@ const saveRecentlyUsed = (component: ComponentItem) => {
     // 最多保留 10 个
     recentKeys = recentKeys.slice(0, 10);
 
-    localStorage.setItem('ai-studio-recent-components', JSON.stringify(recentKeys));
+    localStorage.setItem(
+      'ai-studio-recent-components',
+      JSON.stringify(recentKeys),
+    );
     loadRecentlyUsed();
   } catch {
     // ignore
@@ -191,7 +205,7 @@ watch(
       searchKeyword.value = '';
       activeKeys.value = [newType.toLowerCase()];
     }
-  }
+  },
 );
 </script>
 
@@ -231,7 +245,10 @@ watch(
                 @dragstart="handleDragStart($event, comp)"
                 @click="handleComponentClick(comp)"
               >
-                <div class="component-icon" :style="{ backgroundColor: getTypeColor(comp.type) }">
+                <div
+                  class="component-icon"
+                  :style="{ backgroundColor: getTypeColor(comp.type) }"
+                >
                   <component :is="getTypeIcon(comp.type)" />
                 </div>
                 <div class="component-info">
@@ -249,19 +266,30 @@ watch(
               <div class="panel-header">
                 <RobotOutlined :style="{ color: '#1890ff' }" />
                 <span>LLM 模型</span>
-                <Badge :count="groupedComponents.llm.length" :overflow-count="99" />
+                <Badge
+                  :count="groupedComponents.llm.length"
+                  :overflow-count="99"
+                />
               </div>
             </template>
             <div class="component-list">
               <template v-if="groupedComponents.llm.length > 0">
-                <Tooltip v-for="comp in groupedComponents.llm" :key="comp.key" :title="comp.description" placement="right">
+                <Tooltip
+                  v-for="comp in groupedComponents.llm"
+                  :key="comp.key"
+                  :title="comp.description"
+                  placement="right"
+                >
                   <div
                     class="component-item"
                     draggable="true"
                     @dragstart="handleDragStart($event, comp)"
                     @click="handleComponentClick(comp)"
                   >
-                    <div class="component-icon" :style="{ backgroundColor: '#1890ff' }">
+                    <div
+                      class="component-icon"
+                      :style="{ backgroundColor: '#1890ff' }"
+                    >
                       <RobotOutlined />
                     </div>
                     <div class="component-info">
@@ -272,7 +300,11 @@ watch(
                   </div>
                 </Tooltip>
               </template>
-              <Empty v-else description="暂无 LLM 组件" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无 LLM 组件"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </div>
           </Collapse.Panel>
 
@@ -282,19 +314,30 @@ watch(
               <div class="panel-header">
                 <ScanOutlined :style="{ color: '#52c41a' }" />
                 <span>OCR 识别</span>
-                <Badge :count="groupedComponents.ocr.length" :overflow-count="99" />
+                <Badge
+                  :count="groupedComponents.ocr.length"
+                  :overflow-count="99"
+                />
               </div>
             </template>
             <div class="component-list">
               <template v-if="groupedComponents.ocr.length > 0">
-                <Tooltip v-for="comp in groupedComponents.ocr" :key="comp.key" :title="comp.description" placement="right">
+                <Tooltip
+                  v-for="comp in groupedComponents.ocr"
+                  :key="comp.key"
+                  :title="comp.description"
+                  placement="right"
+                >
                   <div
                     class="component-item"
                     draggable="true"
                     @dragstart="handleDragStart($event, comp)"
                     @click="handleComponentClick(comp)"
                   >
-                    <div class="component-icon" :style="{ backgroundColor: '#52c41a' }">
+                    <div
+                      class="component-icon"
+                      :style="{ backgroundColor: '#52c41a' }"
+                    >
                       <ScanOutlined />
                     </div>
                     <div class="component-info">
@@ -305,7 +348,11 @@ watch(
                   </div>
                 </Tooltip>
               </template>
-              <Empty v-else description="暂无 OCR 组件" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无 OCR 组件"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </div>
           </Collapse.Panel>
 
@@ -315,19 +362,30 @@ watch(
               <div class="panel-header">
                 <ToolOutlined :style="{ color: '#722ed1' }" />
                 <span>业务工具</span>
-                <Badge :count="groupedComponents.tool.length" :overflow-count="99" />
+                <Badge
+                  :count="groupedComponents.tool.length"
+                  :overflow-count="99"
+                />
               </div>
             </template>
             <div class="component-list">
               <template v-if="groupedComponents.tool.length > 0">
-                <Tooltip v-for="comp in groupedComponents.tool" :key="comp.key" :title="comp.description" placement="right">
+                <Tooltip
+                  v-for="comp in groupedComponents.tool"
+                  :key="comp.key"
+                  :title="comp.description"
+                  placement="right"
+                >
                   <div
                     class="component-item"
                     draggable="true"
                     @dragstart="handleDragStart($event, comp)"
                     @click="handleComponentClick(comp)"
                   >
-                    <div class="component-icon" :style="{ backgroundColor: '#722ed1' }">
+                    <div
+                      class="component-icon"
+                      :style="{ backgroundColor: '#722ed1' }"
+                    >
                       <ToolOutlined />
                     </div>
                     <div class="component-info">
@@ -338,7 +396,11 @@ watch(
                   </div>
                 </Tooltip>
               </template>
-              <Empty v-else description="暂无工具组件" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无工具组件"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </div>
           </Collapse.Panel>
 
@@ -348,19 +410,30 @@ watch(
               <div class="panel-header">
                 <DatabaseOutlined :style="{ color: '#fa8c16' }" />
                 <span>向量检索</span>
-                <Badge :count="groupedComponents.retrieval.length" :overflow-count="99" />
+                <Badge
+                  :count="groupedComponents.retrieval.length"
+                  :overflow-count="99"
+                />
               </div>
             </template>
             <div class="component-list">
               <template v-if="groupedComponents.retrieval.length > 0">
-                <Tooltip v-for="comp in groupedComponents.retrieval" :key="comp.key" :title="comp.description" placement="right">
+                <Tooltip
+                  v-for="comp in groupedComponents.retrieval"
+                  :key="comp.key"
+                  :title="comp.description"
+                  placement="right"
+                >
                   <div
                     class="component-item"
                     draggable="true"
                     @dragstart="handleDragStart($event, comp)"
                     @click="handleComponentClick(comp)"
                   >
-                    <div class="component-icon" :style="{ backgroundColor: '#fa8c16' }">
+                    <div
+                      class="component-icon"
+                      :style="{ backgroundColor: '#fa8c16' }"
+                    >
                       <DatabaseOutlined />
                     </div>
                     <div class="component-info">
@@ -371,7 +444,11 @@ watch(
                   </div>
                 </Tooltip>
               </template>
-              <Empty v-else description="暂无检索组件" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无检索组件"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </div>
           </Collapse.Panel>
 
@@ -381,19 +458,30 @@ watch(
               <div class="panel-header">
                 <SwapOutlined :style="{ color: '#8c8c8c' }" />
                 <span>数据转换</span>
-                <Badge :count="groupedComponents.transform.length" :overflow-count="99" />
+                <Badge
+                  :count="groupedComponents.transform.length"
+                  :overflow-count="99"
+                />
               </div>
             </template>
             <div class="component-list">
               <template v-if="groupedComponents.transform.length > 0">
-                <Tooltip v-for="comp in groupedComponents.transform" :key="comp.key" :title="comp.description" placement="right">
+                <Tooltip
+                  v-for="comp in groupedComponents.transform"
+                  :key="comp.key"
+                  :title="comp.description"
+                  placement="right"
+                >
                   <div
                     class="component-item"
                     draggable="true"
                     @dragstart="handleDragStart($event, comp)"
                     @click="handleComponentClick(comp)"
                   >
-                    <div class="component-icon" :style="{ backgroundColor: '#8c8c8c' }">
+                    <div
+                      class="component-icon"
+                      :style="{ backgroundColor: '#8c8c8c' }"
+                    >
                       <SwapOutlined />
                     </div>
                     <div class="component-info">
@@ -404,7 +492,11 @@ watch(
                   </div>
                 </Tooltip>
               </template>
-              <Empty v-else description="暂无转换组件" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="暂无转换组件"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </div>
           </Collapse.Panel>
         </Collapse>
@@ -511,26 +603,26 @@ watch(
 
 .component-name {
   overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(0 0 0 / 85%);
-  text-overflow: ellipsis;
+  color: rgb(0 0 0 / 85%);
   white-space: nowrap;
 }
 
 .component-key {
   overflow: hidden;
+  text-overflow: ellipsis;
   font-family: 'Courier New', monospace;
   font-size: 11px;
-  color: rgba(0 0 0 / 45%);
-  text-overflow: ellipsis;
+  color: rgb(0 0 0 / 45%);
   white-space: nowrap;
 }
 
 .drag-handle {
   flex-shrink: 0;
   font-size: 14px;
-  color: rgba(0 0 0 / 25%);
+  color: rgb(0 0 0 / 25%);
   opacity: 0;
   transition: opacity 0.2s;
 }

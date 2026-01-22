@@ -88,9 +88,24 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 const interactionColumns = [
-  { title: '任务名称', dataIndex: 'momentTaskName', key: 'momentTaskName', width: 200 },
-  { title: '客户ID', dataIndex: 'externalUserid', key: 'externalUserid', width: 150 },
-  { title: '互动类型', dataIndex: 'interactionType', key: 'interactionType', width: 100 },
+  {
+    title: '任务名称',
+    dataIndex: 'momentTaskName',
+    key: 'momentTaskName',
+    width: 200,
+  },
+  {
+    title: '客户ID',
+    dataIndex: 'externalUserid',
+    key: 'externalUserid',
+    width: 150,
+  },
+  {
+    title: '互动类型',
+    dataIndex: 'interactionType',
+    key: 'interactionType',
+    width: 100,
+  },
   { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
   { title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
 ];
@@ -99,7 +114,12 @@ const topCustomerColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '客户ID', dataIndex: 'externalUserid', key: 'externalUserid' },
   { title: '点赞数', dataIndex: 'likeCount', key: 'likeCount', width: 100 },
-  { title: '评论数', dataIndex: 'commentCount', key: 'commentCount', width: 100 },
+  {
+    title: '评论数',
+    dataIndex: 'commentCount',
+    key: 'commentCount',
+    width: 100,
+  },
   { title: '总互动', key: 'total', width: 100 },
 ];
 
@@ -108,7 +128,9 @@ const topCustomerColumns = [
 async function fetchStatistics() {
   loading.value = true;
   try {
-    const res = await requestClient.get<MomentStatistics>('/moments/statistics');
+    const res = await requestClient.get<MomentStatistics>(
+      '/moments/statistics',
+    );
     statistics.value = res;
   } catch (e) {
     console.error(e);
@@ -149,9 +171,12 @@ async function fetchInteractions() {
 async function fetchTopCustomers() {
   topCustomersLoading.value = true;
   try {
-    const res = await requestClient.get<TopCustomer[]>('/moments/top-customers', {
-      params: { limit: 10 },
-    });
+    const res = await requestClient.get<TopCustomer[]>(
+      '/moments/top-customers',
+      {
+        params: { limit: 10 },
+      },
+    );
     topCustomers.value = res || [];
   } catch (e) {
     console.error(e);
@@ -168,7 +193,9 @@ async function handleRetryFailed() {
       succeeded: number;
       failed: number;
     }>('/moments/retry-failed');
-    message.success(`重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`);
+    message.success(
+      `重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`,
+    );
     fetchStatistics();
   } catch (e: any) {
     message.error(e.message || '重试失败');
@@ -366,7 +393,11 @@ onMounted(() => {
         <Table.Column title="日期" dataIndex="date" key="date" />
         <Table.Column title="任务数" dataIndex="taskCount" key="taskCount" />
         <Table.Column title="点赞数" dataIndex="likeCount" key="likeCount" />
-        <Table.Column title="评论数" dataIndex="commentCount" key="commentCount" />
+        <Table.Column
+          title="评论数"
+          dataIndex="commentCount"
+          key="commentCount"
+        />
       </Table>
     </Card>
 
@@ -386,9 +417,9 @@ onMounted(() => {
               <template v-if="column.key === 'rank'">
                 <span
                   :class="{
-                    'text-yellow-500 font-bold': index === 0,
-                    'text-gray-400 font-bold': index === 1,
-                    'text-orange-400 font-bold': index === 2,
+                    'font-bold text-yellow-500': index === 0,
+                    'font-bold text-gray-400': index === 1,
+                    'font-bold text-orange-400': index === 2,
                   }"
                 >
                   {{ index + 1 }}

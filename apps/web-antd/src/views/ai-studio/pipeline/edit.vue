@@ -77,7 +77,7 @@ onMounted(() => {
       <template #extra>
         <Space>
           <span v-if="pipeline">{{ pipeline.name }}</span>
-          <span v-if="pipeline" style=" font-size: 12px;color: #999">
+          <span v-if="pipeline" style="font-size: 12px; color: #999">
             v{{ pipeline.version }}
           </span>
         </Space>

@@ -158,12 +158,21 @@ const actionMap: Record<string, string> = {
 async function loadData() {
   loading.value = true;
   try {
-    const [overviewRes, analysisRes, effectivenessRes, listRes] = await Promise.all([
-      requestClient.get<StatisticsOverview>('/anti-harassment/statistics/overview'),
-      requestClient.get<ViolationAnalysis>('/anti-harassment/statistics/violation-analysis'),
-      requestClient.get<RuleEffectiveness>('/anti-harassment/statistics/rule-effectiveness'),
-      requestClient.get<ListStatus>('/anti-harassment/statistics/list-status'),
-    ]);
+    const [overviewRes, analysisRes, effectivenessRes, listRes] =
+      await Promise.all([
+        requestClient.get<StatisticsOverview>(
+          '/anti-harassment/statistics/overview',
+        ),
+        requestClient.get<ViolationAnalysis>(
+          '/anti-harassment/statistics/violation-analysis',
+        ),
+        requestClient.get<RuleEffectiveness>(
+          '/anti-harassment/statistics/rule-effectiveness',
+        ),
+        requestClient.get<ListStatus>(
+          '/anti-harassment/statistics/list-status',
+        ),
+      ]);
     overview.value = overviewRes;
     violationAnalysis.value = analysisRes;
     ruleEffectiveness.value = effectivenessRes;
@@ -192,16 +201,31 @@ function formatDateTime(dateStr: string | null): string {
 // ==================== 表格列定义 ====================
 
 const violatorColumns = [
-  { title: '用户ID', dataIndex: 'externalUserid', key: 'externalUserid', ellipsis: true },
+  {
+    title: '用户ID',
+    dataIndex: 'externalUserid',
+    key: 'externalUserid',
+    ellipsis: true,
+  },
   { title: '用户名称', dataIndex: 'externalName', key: 'externalName' },
-  { title: '违规次数', dataIndex: 'violationCount', key: 'violationCount', sorter: (a: any, b: any) => a.violationCount - b.violationCount },
+  {
+    title: '违规次数',
+    dataIndex: 'violationCount',
+    key: 'violationCount',
+    sorter: (a: any, b: any) => a.violationCount - b.violationCount,
+  },
   { title: '最近违规', dataIndex: 'latestViolation', key: 'latestViolation' },
 ];
 
 const ruleColumns = [
   { title: '规则名称', dataIndex: 'name', key: 'name' },
   { title: '规则类型', dataIndex: 'ruleType', key: 'ruleType' },
-  { title: '触发次数', dataIndex: 'triggerCount', key: 'triggerCount', sorter: (a: any, b: any) => a.triggerCount - b.triggerCount },
+  {
+    title: '触发次数',
+    dataIndex: 'triggerCount',
+    key: 'triggerCount',
+    sorter: (a: any, b: any) => a.triggerCount - b.triggerCount,
+  },
 ];
 
 const effectivenessColumns = [
@@ -214,7 +238,12 @@ const effectivenessColumns = [
 ];
 
 const listColumns = [
-  { title: '用户ID', dataIndex: 'externalUserid', key: 'externalUserid', ellipsis: true },
+  {
+    title: '用户ID',
+    dataIndex: 'externalUserid',
+    key: 'externalUserid',
+    ellipsis: true,
+  },
   { title: '昵称', dataIndex: 'nickname', key: 'nickname' },
   { title: '原因', dataIndex: 'reason', key: 'reason', ellipsis: true },
   { title: '过期时间', dataIndex: 'expiresAt', key: 'expiresAt' },
@@ -278,12 +307,16 @@ onMounted(loadData);
                     title="处置完成率"
                     :value="overview.processedRate"
                     suffix="%"
-                    :value-style="{ color: overview.processedRate >= 80 ? '#3f8600' : '#fa8c16' }"
+                    :value-style="{
+                      color:
+                        overview.processedRate >= 80 ? '#3f8600' : '#fa8c16',
+                    }"
                   >
                     <template #prefix><CheckCircleOutlined /></template>
                   </Statistic>
                   <div class="mt-2 text-xs text-gray-500">
-                    已处置: {{ overview.processedCount }} / 待处理: {{ overview.pendingCount }}
+                    已处置: {{ overview.processedCount }} / 待处理:
+                    {{ overview.pendingCount }}
                   </div>
                 </Card>
               </Col>
@@ -297,7 +330,8 @@ onMounted(loadData);
                     <template #prefix><SafetyOutlined /></template>
                   </Statistic>
                   <div class="mt-2 text-xs text-gray-500">
-                    敏感词: {{ overview.activeSensitiveWords }} / {{ overview.totalSensitiveWords }}
+                    敏感词: {{ overview.activeSensitiveWords }} /
+                    {{ overview.totalSensitiveWords }}
                   </div>
                 </Card>
               </Col>
@@ -310,7 +344,9 @@ onMounted(loadData);
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <SafetyOutlined class="text-2xl text-green-500" />
-                      <span class="text-2xl font-bold">{{ overview.whitelistCount }}</span>
+                      <span class="text-2xl font-bold">{{
+                        overview.whitelistCount
+                      }}</span>
                       <span class="text-gray-500">位用户</span>
                     </div>
                   </div>
@@ -321,7 +357,9 @@ onMounted(loadData);
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <StopOutlined class="text-2xl text-red-500" />
-                      <span class="text-2xl font-bold">{{ overview.blacklistCount }}</span>
+                      <span class="text-2xl font-bold">{{
+                        overview.blacklistCount
+                      }}</span>
                       <span class="text-gray-500">位用户</span>
                     </div>
                   </div>
@@ -333,21 +371,38 @@ onMounted(loadData);
             <Row :gutter="[16, 16]" class="mb-4">
               <Col :xs="24" :md="12">
                 <Card title="按规则类型分布">
-                  <div v-for="item in overview.byRuleType" :key="item.ruleType" class="mb-3">
+                  <div
+                    v-for="item in overview.byRuleType"
+                    :key="item.ruleType"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
-                      <span>{{ ruleTypeMap[item.ruleType] || item.ruleType }}</span>
+                      <span>{{
+                        ruleTypeMap[item.ruleType] || item.ruleType
+                      }}</span>
                       <span>{{ item.count }} ({{ item.percentage }}%)</span>
                     </div>
-                    <Progress :percent="item.percentage" :show-info="false" size="small" />
+                    <Progress
+                      :percent="item.percentage"
+                      :show-info="false"
+                      size="small"
+                    />
                   </div>
-                  <div v-if="overview.byRuleType.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="overview.byRuleType.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     暂无数据
                   </div>
                 </Card>
               </Col>
               <Col :xs="24" :md="12">
                 <Card title="按处置动作分布">
-                  <div v-for="item in overview.byAction" :key="item.action" class="mb-3">
+                  <div
+                    v-for="item in overview.byAction"
+                    :key="item.action"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
                       <span>{{ actionMap[item.action] || item.action }}</span>
                       <span>{{ item.count }} ({{ item.percentage }}%)</span>
@@ -356,10 +411,15 @@ onMounted(loadData);
                       :percent="item.percentage"
                       :show-info="false"
                       size="small"
-                      :stroke-color="item.action === 'KICK' ? '#ff4d4f' : '#1890ff'"
+                      :stroke-color="
+                        item.action === 'KICK' ? '#ff4d4f' : '#1890ff'
+                      "
                     />
                   </div>
-                  <div v-if="overview.byAction.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="overview.byAction.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     暂无数据
                   </div>
                 </Card>
@@ -377,7 +437,7 @@ onMounted(loadData);
                   <div
                     class="w-full rounded-t bg-red-400"
                     :style="{
-                      height: `${Math.max((item.count / Math.max(...overview.dailyTrend.map(d => d.count), 1)) * 100, 4)}px`,
+                      height: `${Math.max((item.count / Math.max(...overview.dailyTrend.map((d) => d.count), 1)) * 100, 4)}px`,
                     }"
                   ></div>
                   <div class="mt-2 text-xs text-gray-500">
@@ -434,7 +494,9 @@ onMounted(loadData);
                   >
                     <template #bodyCell="{ column, record }">
                       <template v-if="column.key === 'ruleType'">
-                        <Tag>{{ ruleTypeMap[record.ruleType] || record.ruleType }}</Tag>
+                        <Tag>{{
+                          ruleTypeMap[record.ruleType] || record.ruleType
+                        }}</Tag>
                       </template>
                       <template v-if="column.key === 'name'">
                         {{ record.ruleName || '未知规则' }}
@@ -452,13 +514,26 @@ onMounted(loadData);
                   <template #extra>
                     <TeamOutlined />
                   </template>
-                  <div v-for="(item, index) in violationAnalysis.byGroupChat.slice(0, 10)" :key="index" class="mb-2 flex items-center justify-between">
-                    <span class="truncate" :title="item.groupChatName || item.groupChatId || '私聊'">
+                  <div
+                    v-for="(item, index) in violationAnalysis.byGroupChat.slice(
+                      0,
+                      10,
+                    )"
+                    :key="index"
+                    class="mb-2 flex items-center justify-between"
+                  >
+                    <span
+                      class="truncate"
+                      :title="item.groupChatName || item.groupChatId || '私聊'"
+                    >
                       {{ item.groupChatName || item.groupChatId || '私聊' }}
                     </span>
                     <Tag color="red">{{ item.violationCount }} 次</Tag>
                   </div>
-                  <div v-if="violationAnalysis.byGroupChat.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="violationAnalysis.byGroupChat.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     暂无数据
                   </div>
                 </Card>
@@ -467,14 +542,25 @@ onMounted(loadData);
               <!-- 按消息类型统计 -->
               <Col :xs="24" :lg="12">
                 <Card title="按消息类型分布">
-                  <div v-for="(item, idx) in violationAnalysis.byMessageType" :key="idx" class="mb-3">
+                  <div
+                    v-for="(item, idx) in violationAnalysis.byMessageType"
+                    :key="idx"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
                       <span>{{ item.messageType || '文本' }}</span>
                       <span>{{ item.count }} ({{ item.percentage }}%)</span>
                     </div>
-                    <Progress :percent="item.percentage" :show-info="false" size="small" />
+                    <Progress
+                      :percent="item.percentage"
+                      :show-info="false"
+                      size="small"
+                    />
                   </div>
-                  <div v-if="violationAnalysis.byMessageType.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="violationAnalysis.byMessageType.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     暂无数据
                   </div>
                 </Card>
@@ -492,7 +578,7 @@ onMounted(loadData);
                   <div
                     class="w-full rounded-t bg-orange-400"
                     :style="{
-                      height: `${Math.max((item.count / Math.max(...violationAnalysis.hourlyDistribution.map(d => d.count), 1)) * 100, 2)}px`,
+                      height: `${Math.max((item.count / Math.max(...violationAnalysis.hourlyDistribution.map((d) => d.count), 1)) * 100, 2)}px`,
                     }"
                   ></div>
                   <div class="mt-1 text-xs text-gray-500">
@@ -515,7 +601,12 @@ onMounted(loadData);
                     title="总体成功率"
                     :value="ruleEffectiveness.overallSuccessRate"
                     suffix="%"
-                    :value-style="{ color: ruleEffectiveness.overallSuccessRate >= 80 ? '#3f8600' : '#fa8c16' }"
+                    :value-style="{
+                      color:
+                        ruleEffectiveness.overallSuccessRate >= 80
+                          ? '#3f8600'
+                          : '#fa8c16',
+                    }"
                   />
                 </Card>
               </Col>
@@ -533,7 +624,12 @@ onMounted(loadData);
                   <Statistic
                     title="未使用规则"
                     :value="ruleEffectiveness.unusedRulesCount"
-                    :value-style="{ color: ruleEffectiveness.unusedRulesCount > 0 ? '#fa8c16' : '#3f8600' }"
+                    :value-style="{
+                      color:
+                        ruleEffectiveness.unusedRulesCount > 0
+                          ? '#fa8c16'
+                          : '#3f8600',
+                    }"
                   />
                 </Card>
               </Col>
@@ -550,15 +646,26 @@ onMounted(loadData);
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'ruleType'">
-                    <Tag>{{ ruleTypeMap[record.ruleType] || record.ruleType }}</Tag>
+                    <Tag>{{
+                      ruleTypeMap[record.ruleType] || record.ruleType
+                    }}</Tag>
                   </template>
                   <template v-if="column.key === 'isActive'">
-                    <Badge :status="record.isActive ? 'success' : 'default'" :text="record.isActive ? '启用' : '禁用'" />
+                    <Badge
+                      :status="record.isActive ? 'success' : 'default'"
+                      :text="record.isActive ? '启用' : '禁用'"
+                    />
                   </template>
                   <template v-if="column.key === 'successRate'">
                     <Progress
                       :percent="record.successRate"
-                      :status="record.successRate >= 80 ? 'success' : record.successRate >= 50 ? 'normal' : 'exception'"
+                      :status="
+                        record.successRate >= 80
+                          ? 'success'
+                          : record.successRate >= 50
+                            ? 'normal'
+                            : 'exception'
+                      "
                       size="small"
                       style="width: 100px"
                     />
@@ -578,7 +685,11 @@ onMounted(loadData);
               show-icon
             >
               <template #message>
-                发现 {{ ruleEffectiveness.unusedRulesCount }} 条规则从未被触发，建议检查规则配置是否合理
+                发现
+                {{
+                  ruleEffectiveness.unusedRulesCount
+                }}
+                条规则从未被触发，建议检查规则配置是否合理
               </template>
             </Alert>
           </template>
@@ -596,19 +707,33 @@ onMounted(loadData);
                   </template>
                   <Row :gutter="16">
                     <Col :span="12">
-                      <Statistic title="总数" :value="listStatus.blacklist.total" />
+                      <Statistic
+                        title="总数"
+                        :value="listStatus.blacklist.total"
+                      />
                     </Col>
                     <Col :span="12">
-                      <Statistic title="永久" :value="listStatus.blacklist.permanent" />
+                      <Statistic
+                        title="永久"
+                        :value="listStatus.blacklist.permanent"
+                      />
                     </Col>
                     <Col :span="12">
-                      <Statistic title="临时" :value="listStatus.blacklist.temporary" />
+                      <Statistic
+                        title="临时"
+                        :value="listStatus.blacklist.temporary"
+                      />
                     </Col>
                     <Col :span="12">
                       <Statistic
                         title="即将过期"
                         :value="listStatus.blacklist.expiringSoon"
-                        :value-style="{ color: listStatus.blacklist.expiringSoon > 0 ? '#fa8c16' : undefined }"
+                        :value-style="{
+                          color:
+                            listStatus.blacklist.expiringSoon > 0
+                              ? '#fa8c16'
+                              : undefined,
+                        }"
                       />
                     </Col>
                   </Row>
@@ -623,19 +748,33 @@ onMounted(loadData);
                   </template>
                   <Row :gutter="16">
                     <Col :span="12">
-                      <Statistic title="总数" :value="listStatus.whitelist.total" />
+                      <Statistic
+                        title="总数"
+                        :value="listStatus.whitelist.total"
+                      />
                     </Col>
                     <Col :span="12">
-                      <Statistic title="永久" :value="listStatus.whitelist.permanent" />
+                      <Statistic
+                        title="永久"
+                        :value="listStatus.whitelist.permanent"
+                      />
                     </Col>
                     <Col :span="12">
-                      <Statistic title="临时" :value="listStatus.whitelist.temporary" />
+                      <Statistic
+                        title="临时"
+                        :value="listStatus.whitelist.temporary"
+                      />
                     </Col>
                     <Col :span="12">
                       <Statistic
                         title="即将过期"
                         :value="listStatus.whitelist.expiringSoon"
-                        :value-style="{ color: listStatus.whitelist.expiringSoon > 0 ? '#fa8c16' : undefined }"
+                        :value-style="{
+                          color:
+                            listStatus.whitelist.expiringSoon > 0
+                              ? '#fa8c16'
+                              : undefined,
+                        }"
                       />
                     </Col>
                   </Row>

@@ -1,6 +1,14 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Card, Button, Input, Table, Tag, Space, message } from 'ant-design-vue';
+import {
+  Card,
+  Button,
+  Input,
+  Table,
+  Tag,
+  Space,
+  message,
+} from 'ant-design-vue';
 import { SearchOutlined, FileTextOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);
@@ -9,7 +17,12 @@ const prescriptionList = ref<any[]>([]);
 
 const columns = [
   { title: '处方编号', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '学生姓名', dataIndex: 'studentName', key: 'studentName', width: 120 },
+  {
+    title: '学生姓名',
+    dataIndex: 'studentName',
+    key: 'studentName',
+    width: 120,
+  },
   { title: '诊断结果', dataIndex: 'diagnosis', key: 'diagnosis' },
   { title: '学习计划', dataIndex: 'plan', key: 'plan' },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -58,8 +71,8 @@ const handleSearch = () => {
           </template>
         </template>
         <template #emptyText>
-          <div style="padding: 40px; text-align: center; color: #999">
-            <FileTextOutlined style="font-size: 48px; margin-bottom: 16px" />
+          <div style="padding: 40px; color: #999; text-align: center">
+            <FileTextOutlined style=" margin-bottom: 16px;font-size: 48px" />
             <p>暂无学习处方</p>
             <p>完成学习诊断后，系统将自动生成个性化学习处方</p>
           </div>

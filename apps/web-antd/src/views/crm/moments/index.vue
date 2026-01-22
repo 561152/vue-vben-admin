@@ -330,7 +330,9 @@ async function handleRetryFailed() {
       succeeded: number;
       failed: number;
     }>('/moments/retry-failed');
-    message.success(`重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`);
+    message.success(
+      `重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`,
+    );
     fetchFailedCount();
     if (activeTab.value === 'history') {
       fetchMoments();
@@ -363,9 +365,7 @@ onMounted(() => {
         </p>
       </div>
       <Space>
-        <Button @click="goToStatistics">
-          <BarChartOutlined /> 数据统计
-        </Button>
+        <Button @click="goToStatistics"> <BarChartOutlined /> 数据统计 </Button>
         <Button
           v-if="failedCount > 0"
           type="primary"

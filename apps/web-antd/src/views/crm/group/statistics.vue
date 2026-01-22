@@ -239,7 +239,10 @@ onMounted(loadData);
       <Row :gutter="16" class="mb-4">
         <Col :span="8">
           <Card title="分组规模">
-            <div class="flex flex-col items-center justify-center" style="height: 140px">
+            <div
+              class="flex flex-col items-center justify-center"
+              style="height: 140px"
+            >
               <div class="text-4xl font-bold text-blue-500">
                 {{ overview?.avgMembersPerGroup || 0 }}
               </div>
@@ -269,7 +272,12 @@ onMounted(loadData);
           <Card title="成员规模分布">
             <Table
               :columns="distributionColumns"
-              :data-source="(overview?.memberDistribution || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.memberDistribution || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
               :scroll="{ y: 120 }"
@@ -284,7 +292,12 @@ onMounted(loadData);
           <Card title="成员最多分组 TOP10">
             <Table
               :columns="topGroupColumns"
-              :data-source="(overview?.topGroups || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.topGroups || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -306,20 +319,30 @@ onMounted(loadData);
         </Col>
         <Col :span="12">
           <Card title="近7日趋势">
-            <div v-if="overview?.dailyTrend?.length" class="flex items-end justify-around" style="height: 240px">
+            <div
+              v-if="overview?.dailyTrend?.length"
+              class="flex items-end justify-around"
+              style="height: 240px"
+            >
               <div
                 v-for="(item, index) in overview.dailyTrend"
                 :key="index"
                 class="flex flex-col items-center"
               >
-                <div class="mb-1 text-xs text-blue-500">{{ item.newMembers }}</div>
+                <div class="mb-1 text-xs text-blue-500">
+                  {{ item.newMembers }}
+                </div>
                 <div
                   class="w-8 rounded-t bg-blue-500"
-                  :style="{ height: `${Math.max(10, (item.newMembers / Math.max(...overview.dailyTrend.map(d => d.newMembers), 1)) * 140)}px` }"
+                  :style="{
+                    height: `${Math.max(10, (item.newMembers / Math.max(...overview.dailyTrend.map((d) => d.newMembers), 1)) * 140)}px`,
+                  }"
                 />
                 <div
                   class="w-8 bg-purple-500"
-                  :style="{ height: `${Math.max(5, (item.newGroups / Math.max(...overview.dailyTrend.map(d => d.newGroups), 1)) * 40)}px` }"
+                  :style="{
+                    height: `${Math.max(5, (item.newGroups / Math.max(...overview.dailyTrend.map((d) => d.newGroups), 1)) * 40)}px`,
+                  }"
                 />
                 <div class="mt-2 text-xs text-gray-400">
                   {{ item.date.slice(5) }}
@@ -327,10 +350,23 @@ onMounted(loadData);
               </div>
             </div>
             <div class="mt-2 flex justify-center gap-4 text-xs">
-              <span><span class="mr-1 inline-block h-2 w-2 rounded bg-blue-500"></span>新增成员</span>
-              <span><span class="mr-1 inline-block h-2 w-2 rounded bg-purple-500"></span>新建分组</span>
+              <span
+                ><span
+                  class="mr-1 inline-block h-2 w-2 rounded bg-blue-500"
+                ></span
+                >新增成员</span
+              >
+              <span
+                ><span
+                  class="mr-1 inline-block h-2 w-2 rounded bg-purple-500"
+                ></span
+                >新建分组</span
+              >
             </div>
-            <Empty v-if="!overview?.dailyTrend?.length" description="暂无数据" />
+            <Empty
+              v-if="!overview?.dailyTrend?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
       </Row>
@@ -341,13 +377,26 @@ onMounted(loadData);
           <Card title="成员类型分布">
             <Table
               :columns="memberTypeColumns"
-              :data-source="(memberAnalysis?.byMemberType || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (memberAnalysis?.byMemberType || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'type'">
-                  <Tag :color="record.type === 'CUSTOMER' ? 'blue' : record.type === 'EMPLOYEE' ? 'green' : 'orange'">
+                  <Tag
+                    :color="
+                      record.type === 'CUSTOMER'
+                        ? 'blue'
+                        : record.type === 'EMPLOYEE'
+                          ? 'green'
+                          : 'orange'
+                    "
+                  >
                     {{ memberTypeMap[record.type] || record.type }}
                   </Tag>
                 </template>
@@ -355,30 +404,46 @@ onMounted(loadData);
                   <Progress
                     :percent="record.percentage"
                     :size="60"
-                    :stroke-color="record.percentage >= 50 ? '#52c41a' : '#1890ff'"
+                    :stroke-color="
+                      record.percentage >= 50 ? '#52c41a' : '#1890ff'
+                    "
                   />
                 </template>
               </template>
             </Table>
-            <Empty v-if="!memberAnalysis?.byMemberType?.length" description="暂无数据" />
+            <Empty
+              v-if="!memberAnalysis?.byMemberType?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
         <Col :span="8">
           <Card title="最近活跃分组 (本周)">
             <Table
               :columns="activeGroupColumns"
-              :data-source="(memberAnalysis?.topActiveGroups || []).slice(0, 5).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (memberAnalysis?.topActiveGroups || [])
+                  .slice(0, 5)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             />
-            <Empty v-if="!memberAnalysis?.topActiveGroups?.length" description="暂无数据" />
+            <Empty
+              v-if="!memberAnalysis?.topActiveGroups?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
         <Col :span="8">
           <Card title="空分组列表">
             <Table
               :columns="emptyGroupColumns"
-              :data-source="emptyGroups.slice(0, 5).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                emptyGroups
+                  .slice(0, 5)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >
@@ -403,13 +468,22 @@ onMounted(loadData);
               { title: '退出', dataIndex: 'leaves', key: 'leaves' },
               { title: '净增长', key: 'netGrowth' },
             ]"
-            :data-source="memberAnalysis.memberGrowthTrend.map((item, index) => ({ ...item, key: index }))"
+            :data-source="
+              memberAnalysis.memberGrowthTrend.map((item, index) => ({
+                ...item,
+                key: index,
+              }))
+            "
             :pagination="false"
             size="small"
           >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'netGrowth'">
-                <span :class="record.netGrowth >= 0 ? 'text-green-500' : 'text-red-500'">
+                <span
+                  :class="
+                    record.netGrowth >= 0 ? 'text-green-500' : 'text-red-500'
+                  "
+                >
                   {{ record.netGrowth >= 0 ? '+' : '' }}{{ record.netGrowth }}
                 </span>
               </template>

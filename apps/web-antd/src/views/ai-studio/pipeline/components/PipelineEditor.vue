@@ -4,13 +4,7 @@ import { VueFlow, useVueFlow, Panel } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
-import {
-  Button,
-  message,
-  Space,
-  Divider,
-  Tooltip,
-} from 'ant-design-vue';
+import { Button, message, Space, Divider, Tooltip } from 'ant-design-vue';
 import {
   SaveOutlined,
   BorderOutlined,
@@ -240,9 +234,7 @@ const onNodeClick = (event: any) => {
 
 // Get dependencies for a node
 const getDependencies = (nodeId: string): string[] => {
-  return edges.value
-    .filter((e) => e.target === nodeId)
-    .map((e) => e.source);
+  return edges.value.filter((e) => e.target === nodeId).map((e) => e.source);
 };
 
 // Handle drag over for component palette
@@ -259,7 +251,9 @@ const handleDrop = (event: DragEvent) => {
   if (!event.dataTransfer) return;
 
   try {
-    const componentData = JSON.parse(event.dataTransfer.getData('application/json'));
+    const componentData = JSON.parse(
+      event.dataTransfer.getData('application/json'),
+    );
 
     // Calculate drop position relative to the flow container
     const flowContainer = (event.target as HTMLElement).closest('.vue-flow');
@@ -291,8 +285,11 @@ const handleDrop = (event: DragEvent) => {
         outputMapping: {},
       },
       style: {
-        background: nodeTypeConfig[componentData.type.toLowerCase()]?.bgColor || '#fafafa',
-        borderColor: nodeTypeConfig[componentData.type.toLowerCase()]?.color || '#d9d9d9',
+        background:
+          nodeTypeConfig[componentData.type.toLowerCase()]?.bgColor ||
+          '#fafafa',
+        borderColor:
+          nodeTypeConfig[componentData.type.toLowerCase()]?.color || '#d9d9d9',
         borderWidth: '2px',
       },
     };
@@ -327,8 +324,10 @@ const handleComponentClick = (component: any) => {
       outputMapping: {},
     },
     style: {
-      background: nodeTypeConfig[component.type.toLowerCase()]?.bgColor || '#fafafa',
-      borderColor: nodeTypeConfig[component.type.toLowerCase()]?.color || '#d9d9d9',
+      background:
+        nodeTypeConfig[component.type.toLowerCase()]?.bgColor || '#fafafa',
+      borderColor:
+        nodeTypeConfig[component.type.toLowerCase()]?.color || '#d9d9d9',
       borderWidth: '2px',
     },
   };
@@ -342,7 +341,9 @@ const handleComponentClick = (component: any) => {
 const handleNodeConfigUpdate = (nodeData: PipelineStep) => {
   if (!selectedNode.value) return;
 
-  const nodeIndex = nodes.value.findIndex((n) => n.id === selectedNode.value.id);
+  const nodeIndex = nodes.value.findIndex(
+    (n) => n.id === selectedNode.value.id,
+  );
   if (nodeIndex !== -1) {
     nodes.value[nodeIndex].data = {
       ...nodes.value[nodeIndex].data,
@@ -358,7 +359,7 @@ const handleNodeConfigUpdate = (nodeData: PipelineStep) => {
     currentDeps.forEach((dep) => {
       if (!newDeps.includes(dep)) {
         const edgeIndex = edges.value.findIndex(
-          (e) => e.source === dep && e.target === selectedNode.value.id
+          (e) => e.source === dep && e.target === selectedNode.value.id,
         );
         if (edgeIndex !== -1) {
           edges.value.splice(edgeIndex, 1);
@@ -369,13 +370,15 @@ const handleNodeConfigUpdate = (nodeData: PipelineStep) => {
     // Add new dependency edges
     newDeps.forEach((dep) => {
       if (!currentDeps.includes(dep)) {
-        addEdges([{
-          id: `${dep}-${selectedNode.value.id}`,
-          source: dep,
-          target: selectedNode.value.id,
-          type: 'smoothstep',
-          animated: true,
-        }]);
+        addEdges([
+          {
+            id: `${dep}-${selectedNode.value.id}`,
+            source: dep,
+            target: selectedNode.value.id,
+            type: 'smoothstep',
+            animated: true,
+          },
+        ]);
       }
     });
   }
@@ -731,7 +734,7 @@ onUnmounted(() => {
 
 /* Custom node styles */
 :deep(.vue-flow__node-default) {
-  border-radius: 8px;
   border-style: solid;
+  border-radius: 8px;
 }
 </style>

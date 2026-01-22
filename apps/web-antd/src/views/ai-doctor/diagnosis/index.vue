@@ -1,6 +1,15 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Card, Button, Input, Select, Table, Tag, Space, message } from 'ant-design-vue';
+import {
+  Card,
+  Button,
+  Input,
+  Select,
+  Table,
+  Tag,
+  Space,
+  message,
+} from 'ant-design-vue';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);
@@ -9,7 +18,12 @@ const diagnosisList = ref<any[]>([]);
 
 const columns = [
   { title: '诊断编号', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '学生姓名', dataIndex: 'studentName', key: 'studentName', width: 120 },
+  {
+    title: '学生姓名',
+    dataIndex: 'studentName',
+    key: 'studentName',
+    width: 120,
+  },
   { title: '诊断类型', dataIndex: 'type', key: 'type', width: 120 },
   { title: '诊断结果', dataIndex: 'result', key: 'result' },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -68,7 +82,7 @@ const handleCreate = () => {
           </template>
         </template>
         <template #emptyText>
-          <div style="padding: 40px; text-align: center; color: #999">
+          <div style="padding: 40px; color: #999; text-align: center">
             <p>暂无诊断记录</p>
             <p>点击"新建诊断"开始为学生进行学习诊断</p>
           </div>

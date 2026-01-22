@@ -153,7 +153,12 @@ const channelMap: Record<string, string> = {
 const topOwnersColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '员工', dataIndex: 'ownerName', key: 'ownerName' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
 ];
 
 const topCustomersColumns = [
@@ -182,9 +187,24 @@ const topCustomersColumns = [
 const ownerRankingColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '员工', dataIndex: 'ownerName', key: 'ownerName' },
-  { title: '客户总数', dataIndex: 'totalCustomers', key: 'totalCustomers', width: 90 },
-  { title: '本周新增', dataIndex: 'newCustomersWeek', key: 'newCustomersWeek', width: 90 },
-  { title: '高价值客户', dataIndex: 'highValueCount', key: 'highValueCount', width: 100 },
+  {
+    title: '客户总数',
+    dataIndex: 'totalCustomers',
+    key: 'totalCustomers',
+    width: 90,
+  },
+  {
+    title: '本周新增',
+    dataIndex: 'newCustomersWeek',
+    key: 'newCustomersWeek',
+    width: 90,
+  },
+  {
+    title: '高价值客户',
+    dataIndex: 'highValueCount',
+    key: 'highValueCount',
+    width: 100,
+  },
   {
     title: '资料完整度',
     dataIndex: 'avgProfileCompleteness',
@@ -375,7 +395,9 @@ onMounted(() => {
               :value-style="{ color: '#52c41a' }"
             >
               <template #suffix>
-                <span class="text-sm text-gray-400">/ {{ overview?.totalCustomers || 0 }}</span>
+                <span class="text-sm text-gray-400"
+                  >/ {{ overview?.totalCustomers || 0 }}</span
+                >
               </template>
             </Statistic>
           </Card>
@@ -449,7 +471,10 @@ onMounted(() => {
                 <span>{{ channelMap[item.channel] || item.channel }}</span>
                 <span class="font-semibold">{{ item.count }}</span>
               </div>
-              <div v-if="!overview?.channelDistribution?.length" class="text-center text-gray-400">
+              <div
+                v-if="!overview?.channelDistribution?.length"
+                class="text-center text-gray-400"
+              >
                 暂无数据
               </div>
             </div>
@@ -470,7 +495,7 @@ onMounted(() => {
             >
               <template #bodyCell="{ column, index }">
                 <template v-if="column.key === 'rank'">
-                  <span :class="{ 'text-red-500 font-bold': index < 3 }">
+                  <span :class="{ 'font-bold text-red-500': index < 3 }">
                     {{ index + 1 }}
                   </span>
                 </template>
@@ -492,7 +517,7 @@ onMounted(() => {
             >
               <template #bodyCell="{ column, index }">
                 <template v-if="column.key === 'rank'">
-                  <span :class="{ 'text-red-500 font-bold': index < 3 }">
+                  <span :class="{ 'font-bold text-red-500': index < 3 }">
                     {{ index + 1 }}
                   </span>
                 </template>
@@ -543,7 +568,7 @@ onMounted(() => {
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
-                    class="flex-1 mx-2"
+                    class="mx-2 flex-1"
                   />
                   <span class="w-16 text-right">{{ item.count }}人</span>
                 </div>
@@ -562,7 +587,7 @@ onMounted(() => {
             >
               <template #bodyCell="{ column, index }">
                 <template v-if="column.key === 'rank'">
-                  <span :class="{ 'text-red-500 font-bold': index < 3 }">
+                  <span :class="{ 'font-bold text-red-500': index < 3 }">
                     {{ index + 1 }}
                   </span>
                 </template>
@@ -593,7 +618,7 @@ onMounted(() => {
         >
           <template #bodyCell="{ column, index }">
             <template v-if="column.key === 'rank'">
-              <span :class="{ 'text-red-500 font-bold': index < 3 }">
+              <span :class="{ 'font-bold text-red-500': index < 3 }">
                 {{ index + 1 }}
               </span>
             </template>
@@ -617,8 +642,16 @@ onMounted(() => {
         <Table
           :columns="[
             { title: '日期', dataIndex: 'date', key: 'date' },
-            { title: '新增客户', dataIndex: 'newCustomers', key: 'newCustomers' },
-            { title: '累计客户', dataIndex: 'totalCustomers', key: 'totalCustomers' },
+            {
+              title: '新增客户',
+              dataIndex: 'newCustomers',
+              key: 'newCustomers',
+            },
+            {
+              title: '累计客户',
+              dataIndex: 'totalCustomers',
+              key: 'totalCustomers',
+            },
             {
               title: '增长率',
               dataIndex: 'growthRate',

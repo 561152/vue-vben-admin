@@ -89,11 +89,7 @@ const activeKeys = ref(['basic', 'input', 'output', 'config', 'condition']);
 
 // 模板语法提示
 const templateSuggestions = computed(() => {
-  const suggestions: string[] = [
-    '$.inputs.',
-    '$.tenantId',
-    '$.executionId',
-  ];
+  const suggestions: string[] = ['$.inputs.', '$.tenantId', '$.executionId'];
 
   // 添加上游步骤的输出引用
   props.availableSteps.forEach((step) => {
@@ -127,14 +123,16 @@ const inputFields = computed(() => {
   const schema = props.componentSchema?.inputSchema;
   if (!schema?.properties) return [];
 
-  return Object.entries(schema.properties).map(([key, prop]: [string, any]) => ({
-    key,
-    type: prop.type,
-    description: prop.description || '',
-    required: schema.required?.includes(key) || false,
-    enum: prop.enum,
-    default: prop.default,
-  }));
+  return Object.entries(schema.properties).map(
+    ([key, prop]: [string, any]) => ({
+      key,
+      type: prop.type,
+      description: prop.description || '',
+      required: schema.required?.includes(key) || false,
+      enum: prop.enum,
+      default: prop.default,
+    }),
+  );
 });
 
 // 从 outputSchema 获取输出字段
@@ -142,11 +140,13 @@ const outputFields = computed(() => {
   const schema = props.componentSchema?.outputSchema;
   if (!schema?.properties) return [];
 
-  return Object.entries(schema.properties).map(([key, prop]: [string, any]) => ({
-    key,
-    type: prop.type,
-    description: prop.description || '',
-  }));
+  return Object.entries(schema.properties).map(
+    ([key, prop]: [string, any]) => ({
+      key,
+      type: prop.type,
+      description: prop.description || '',
+    }),
+  );
 });
 
 // 从 configSchema 获取配置字段
@@ -154,13 +154,15 @@ const configFields = computed(() => {
   const schema = props.componentSchema?.configSchema;
   if (!schema?.properties) return [];
 
-  return Object.entries(schema.properties).map(([key, prop]: [string, any]) => ({
-    key,
-    type: prop.type,
-    description: prop.description || '',
-    enum: prop.enum,
-    default: prop.default,
-  }));
+  return Object.entries(schema.properties).map(
+    ([key, prop]: [string, any]) => ({
+      key,
+      type: prop.type,
+      description: prop.description || '',
+      enum: prop.enum,
+      default: prop.default,
+    }),
+  );
 });
 
 // 初始化表单数据
@@ -174,12 +176,18 @@ const initForm = () => {
 
   // 转换 inputMapping 为数组
   inputMappings.value = props.node.inputMapping
-    ? Object.entries(props.node.inputMapping).map(([key, value]) => ({ key, value }))
+    ? Object.entries(props.node.inputMapping).map(([key, value]) => ({
+        key,
+        value,
+      }))
     : [];
 
   // 转换 outputMapping 为数组
   outputMappings.value = props.node.outputMapping
-    ? Object.entries(props.node.outputMapping).map(([key, value]) => ({ key, value }))
+    ? Object.entries(props.node.outputMapping).map(([key, value]) => ({
+        key,
+        value,
+      }))
     : [];
 
   // 如果有 inputSchema 但没有映射，自动添加
@@ -282,7 +290,10 @@ watch(() => props.node, initForm, { immediate: true });
             </Form.Item>
 
             <Form.Item label="步骤名称" required>
-              <Input v-model:value="formState.name" placeholder="输入步骤名称" />
+              <Input
+                v-model:value="formState.name"
+                placeholder="输入步骤名称"
+              />
             </Form.Item>
 
             <Form.Item label="组件类型">
@@ -315,11 +326,7 @@ watch(() => props.node, initForm, { immediate: true });
 
         <!-- 输入映射 -->
         <Collapse.Panel key="input" header="输入映射">
-          <Alert
-            type="info"
-            show-icon
-            style="margin-bottom: 12px"
-          >
+          <Alert type="info" show-icon style="margin-bottom: 12px">
             <template #message>
               使用 <code>$.inputs.xxx</code> 引用流程输入，
               <code>$.outputs.stepKey.data</code> 引用上游输出
@@ -327,16 +334,30 @@ watch(() => props.node, initForm, { immediate: true });
           </Alert>
 
           <div class="mapping-list">
-            <div v-for="(mapping, index) in inputMappings" :key="index" class="mapping-item">
+            <div
+              v-for="(mapping, index) in inputMappings"
+              :key="index"
+              class="mapping-item"
+            >
               <div class="mapping-row">
                 <Form.Item label="参数名" style="flex: 1; margin-bottom: 8px">
                   <AutoComplete
                     v-model:value="mapping.key"
-                    :options="inputFields.map(f => ({ value: f.key, label: `${f.key}${f.required ? ' *' : ''}` }))"
+                    :options="
+                      inputFields.map((f) => ({
+                        value: f.key,
+                        label: `${f.key}${f.required ? ' *' : ''}`,
+                      }))
+                    "
                     placeholder="参数名称"
                   />
                 </Form.Item>
-                <Button type="text" danger size="small" @click="removeInputMapping(index)">
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  @click="removeInputMapping(index)"
+                >
                   <template #icon><DeleteOutlined /></template>
                 </Button>
               </div>
@@ -344,7 +365,7 @@ watch(() => props.node, initForm, { immediate: true });
               <Form.Item style="margin-bottom: 8px">
                 <AutoComplete
                   v-model:value="mapping.value"
-                  :options="templateSuggestions.map(s => ({ value: s }))"
+                  :options="templateSuggestions.map((s) => ({ value: s }))"
                   placeholder="$.inputs.xxx 或 $.outputs.stepKey.data"
                 >
                   <template #prefix><CodeOutlined /></template>
@@ -352,10 +373,22 @@ watch(() => props.node, initForm, { immediate: true });
               </Form.Item>
 
               <!-- 字段描述 -->
-              <div v-if="inputFields.find(f => f.key === mapping.key)" class="field-hint">
+              <div
+                v-if="inputFields.find((f) => f.key === mapping.key)"
+                class="field-hint"
+              >
                 <QuestionCircleOutlined />
-                {{ inputFields.find(f => f.key === mapping.key)?.description }}
-                <Tag v-if="inputFields.find(f => f.key === mapping.key)?.required" color="red" size="small">必填</Tag>
+                {{
+                  inputFields.find((f) => f.key === mapping.key)?.description
+                }}
+                <Tag
+                  v-if="
+                    inputFields.find((f) => f.key === mapping.key)?.required
+                  "
+                  color="red"
+                  size="small"
+                  >必填</Tag
+                >
               </div>
 
               <Divider style="margin: 8px 0" />
@@ -370,23 +403,31 @@ watch(() => props.node, initForm, { immediate: true });
 
         <!-- 输出映射 -->
         <Collapse.Panel key="output" header="输出映射">
-          <Alert
-            type="info"
-            show-icon
-            style="margin-bottom: 12px"
-          >
+          <Alert type="info" show-icon style="margin-bottom: 12px">
             <template #message>
               将组件输出映射到流程上下文，供下游步骤使用
             </template>
           </Alert>
 
           <div class="mapping-list">
-            <div v-for="(mapping, index) in outputMappings" :key="index" class="mapping-item">
+            <div
+              v-for="(mapping, index) in outputMappings"
+              :key="index"
+              class="mapping-item"
+            >
               <div class="mapping-row">
-                <Form.Item label="输出变量名" style="flex: 1; margin-bottom: 8px">
+                <Form.Item
+                  label="输出变量名"
+                  style="flex: 1; margin-bottom: 8px"
+                >
                   <Input v-model:value="mapping.key" placeholder="输出变量名" />
                 </Form.Item>
-                <Button type="text" danger size="small" @click="removeOutputMapping(index)">
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  @click="removeOutputMapping(index)"
+                >
                   <template #icon><DeleteOutlined /></template>
                 </Button>
               </div>
@@ -394,7 +435,9 @@ watch(() => props.node, initForm, { immediate: true });
               <Form.Item style="margin-bottom: 8px">
                 <AutoComplete
                   v-model:value="mapping.value"
-                  :options="outputFields.map(f => ({ value: `$.data.${f.key}` }))"
+                  :options="
+                    outputFields.map((f) => ({ value: `$.data.${f.key}` }))
+                  "
                   placeholder="$.data.xxx"
                 >
                   <template #prefix><CodeOutlined /></template>
@@ -412,7 +455,11 @@ watch(() => props.node, initForm, { immediate: true });
         </Collapse.Panel>
 
         <!-- 组件配置 -->
-        <Collapse.Panel v-if="configFields.length > 0" key="config" header="组件配置">
+        <Collapse.Panel
+          v-if="configFields.length > 0"
+          key="config"
+          header="组件配置"
+        >
           <Form layout="vertical" size="small">
             <Form.Item
               v-for="field in configFields"
@@ -425,7 +472,11 @@ watch(() => props.node, initForm, { immediate: true });
                 v-model:value="formState.config![field.key]"
                 :placeholder="field.description"
               >
-                <Select.Option v-for="opt in field.enum" :key="opt" :value="opt">
+                <Select.Option
+                  v-for="opt in field.enum"
+                  :key="opt"
+                  :value="opt"
+                >
                   {{ opt }}
                 </Select.Option>
               </Select>
@@ -469,8 +520,8 @@ watch(() => props.node, initForm, { immediate: true });
               />
               <div class="form-hint">
                 <QuestionCircleOutlined />
-                当条件为空或返回 true 时执行此步骤。
-                支持 <code>==</code>, <code>!=</code>, <code>&&</code>, <code>||</code> 等表达式。
+                当条件为空或返回 true 时执行此步骤。 支持 <code>==</code>,
+                <code>!=</code>, <code>&&</code>, <code>||</code> 等表达式。
               </div>
             </Form.Item>
           </Form>
@@ -544,7 +595,7 @@ watch(() => props.node, initForm, { immediate: true });
 .form-hint {
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 
   code {
     padding: 1px 4px;
@@ -580,7 +631,7 @@ watch(() => props.node, initForm, { immediate: true });
   gap: 4px;
   align-items: center;
   font-size: 12px;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 }
 
 .empty-panel {
@@ -594,7 +645,7 @@ watch(() => props.node, initForm, { immediate: true });
 }
 
 .empty-content {
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
   text-align: center;
 }
 </style>

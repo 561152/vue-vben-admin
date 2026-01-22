@@ -392,9 +392,7 @@ onMounted(() => {
           配置防骚扰规则，群客户发送的消息命中规则时，该成员将会被踢出群聊或收到警告消息
         </p>
       </div>
-      <Button @click="goToStatistics">
-        <BarChartOutlined /> 统计分析
-      </Button>
+      <Button @click="goToStatistics"> <BarChartOutlined /> 统计分析 </Button>
     </div>
 
     <!-- Quick Actions -->

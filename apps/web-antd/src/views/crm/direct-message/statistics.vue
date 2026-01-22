@@ -123,15 +123,30 @@ const trendColumns = [
 const topSendersColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '发送人', dataIndex: 'senderName', key: 'senderName' },
-  { title: '消息数', dataIndex: 'messageCount', key: 'messageCount', width: 100 },
+  {
+    title: '消息数',
+    dataIndex: 'messageCount',
+    key: 'messageCount',
+    width: 100,
+  },
 ];
 
 const senderRankingColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '发送人', dataIndex: 'senderName', key: 'senderName' },
-  { title: '总消息', dataIndex: 'totalMessages', key: 'totalMessages', width: 80 },
+  {
+    title: '总消息',
+    dataIndex: 'totalMessages',
+    key: 'totalMessages',
+    width: 80,
+  },
   { title: '成功', dataIndex: 'sentMessages', key: 'sentMessages', width: 80 },
-  { title: '失败', dataIndex: 'failedMessages', key: 'failedMessages', width: 80 },
+  {
+    title: '失败',
+    dataIndex: 'failedMessages',
+    key: 'failedMessages',
+    width: 80,
+  },
   { title: '成功率', dataIndex: 'successRate', key: 'successRate', width: 100 },
 ];
 
@@ -139,9 +154,19 @@ const historyColumns = [
   { title: '客户', dataIndex: 'customerName', key: 'customerName', width: 120 },
   { title: '类型', dataIndex: 'messageType', key: 'messageType', width: 100 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-  { title: '内容', dataIndex: 'textContent', key: 'textContent', ellipsis: true },
+  {
+    title: '内容',
+    dataIndex: 'textContent',
+    key: 'textContent',
+    ellipsis: true,
+  },
   { title: '发送时间', dataIndex: 'sentAt', key: 'sentAt', width: 160 },
-  { title: '失败原因', dataIndex: 'failReason', key: 'failReason', ellipsis: true },
+  {
+    title: '失败原因',
+    dataIndex: 'failReason',
+    key: 'failReason',
+    ellipsis: true,
+  },
 ];
 
 // ==================== 计算属性 ====================
@@ -353,7 +378,13 @@ onMounted(() => {
             <Progress
               type="circle"
               :percent="statistics.successRate"
-              :stroke-color="statistics.successRate >= 90 ? '#52c41a' : statistics.successRate >= 70 ? '#faad14' : '#ff4d4f'"
+              :stroke-color="
+                statistics.successRate >= 90
+                  ? '#52c41a'
+                  : statistics.successRate >= 70
+                    ? '#faad14'
+                    : '#ff4d4f'
+              "
             />
           </div>
         </Card>
@@ -364,7 +395,13 @@ onMounted(() => {
             <Progress
               type="circle"
               :percent="statistics.deliveryRate"
-              :stroke-color="statistics.deliveryRate >= 80 ? '#52c41a' : statistics.deliveryRate >= 50 ? '#faad14' : '#ff4d4f'"
+              :stroke-color="
+                statistics.deliveryRate >= 80
+                  ? '#52c41a'
+                  : statistics.deliveryRate >= 50
+                    ? '#faad14'
+                    : '#ff4d4f'
+              "
             />
           </div>
         </Card>
@@ -501,7 +538,13 @@ onMounted(() => {
                 <Progress
                   :percent="record.successRate"
                   size="small"
-                  :stroke-color="record.successRate >= 90 ? '#52c41a' : record.successRate >= 70 ? '#faad14' : '#ff4d4f'"
+                  :stroke-color="
+                    record.successRate >= 90
+                      ? '#52c41a'
+                      : record.successRate >= 70
+                        ? '#faad14'
+                        : '#ff4d4f'
+                  "
                   :show-info="true"
                 />
               </template>
@@ -517,7 +560,7 @@ onMounted(() => {
         <div
           v-for="item in statistics.byStatus"
           :key="item.status"
-          class="text-center p-4 rounded bg-gray-50"
+          class="rounded bg-gray-50 p-4 text-center"
         >
           <Tag :color="statusColors[item.status]" class="mb-2">
             {{ statusLabels[item.status] || item.status }}
@@ -565,7 +608,9 @@ onMounted(() => {
             </div>
           </template>
           <template v-if="column.key === 'messageType'">
-            <Tag>{{ typeLabels[record.messageType] || record.messageType }}</Tag>
+            <Tag>{{
+              typeLabels[record.messageType] || record.messageType
+            }}</Tag>
           </template>
           <template v-if="column.key === 'status'">
             <Tag :color="statusColors[record.status]">

@@ -1,6 +1,14 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Card, Table, Tag, Space, Input, DatePicker, Button } from 'ant-design-vue';
+import {
+  Card,
+  Table,
+  Tag,
+  Space,
+  Input,
+  DatePicker,
+  Button,
+} from 'ant-design-vue';
 import { SearchOutlined, CalendarOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);
@@ -9,8 +17,18 @@ const followUpList = ref<any[]>([]);
 
 const columns = [
   { title: '追踪编号', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '学生姓名', dataIndex: 'studentName', key: 'studentName', width: 120 },
-  { title: '关联处方', dataIndex: 'prescriptionId', key: 'prescriptionId', width: 120 },
+  {
+    title: '学生姓名',
+    dataIndex: 'studentName',
+    key: 'studentName',
+    width: 120,
+  },
+  {
+    title: '关联处方',
+    dataIndex: 'prescriptionId',
+    key: 'prescriptionId',
+    width: 120,
+  },
   { title: '追踪内容', dataIndex: 'content', key: 'content' },
   { title: '下次复诊', dataIndex: 'nextDate', key: 'nextDate', width: 120 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -74,8 +92,8 @@ const getStatusText = (status: string) => {
           </template>
         </template>
         <template #emptyText>
-          <div style="padding: 40px; text-align: center; color: #999">
-            <CalendarOutlined style="font-size: 48px; margin-bottom: 16px" />
+          <div style="padding: 40px; color: #999; text-align: center">
+            <CalendarOutlined style=" margin-bottom: 16px;font-size: 48px" />
             <p>暂无复诊记录</p>
             <p>学生完成学习处方后，系统将自动创建复诊追踪计划</p>
           </div>

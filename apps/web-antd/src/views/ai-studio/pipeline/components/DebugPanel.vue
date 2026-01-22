@@ -61,15 +61,21 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const isExpanded = ref(true);
-const inputJson = ref('{\n  "imageBase64": "",\n  "studentId": 1,\n  "subject": "math"\n}');
+const inputJson = ref(
+  '{\n  "imageBase64": "",\n  "studentId": 1,\n  "subject": "math"\n}',
+);
 const inputError = ref('');
 const isExecuting = ref(false);
 const executionId = ref<string | null>(null);
-const executionStatus = ref<'idle' | 'queued' | 'running' | 'completed' | 'failed'>('idle');
+const executionStatus = ref<
+  'idle' | 'queued' | 'running' | 'completed' | 'failed'
+>('idle');
 const stepProgresses = ref<Map<string, StepProgress>>(new Map());
 const executionResult = ref<any>(null);
 const socket = ref<Socket | null>(null);
-const connectionStatus = ref<'disconnected' | 'connecting' | 'connected'>('disconnected');
+const connectionStatus = ref<'disconnected' | 'connecting' | 'connected'>(
+  'disconnected',
+);
 const logs = ref<Array<{ time: string; level: string; message: string }>>([]);
 const streamingOutput = ref<string>('');
 
@@ -129,28 +135,34 @@ const connectWebSocket = () => {
     addLog('info', `已订阅执行: ${data.executionId}`);
   });
 
-  socket.value.on('step_started', (data: { stepKey: string; stepName: string }) => {
-    addLog('info', `步骤开始: ${data.stepName}`);
-    const progress = stepProgresses.value.get(data.stepKey);
-    if (progress) {
-      progress.status = 'running';
-      progress.startTime = Date.now();
-      stepProgresses.value.set(data.stepKey, { ...progress });
-    }
-    emit('step-highlight', data.stepKey);
-  });
+  socket.value.on(
+    'step_started',
+    (data: { stepKey: string; stepName: string }) => {
+      addLog('info', `步骤开始: ${data.stepName}`);
+      const progress = stepProgresses.value.get(data.stepKey);
+      if (progress) {
+        progress.status = 'running';
+        progress.startTime = Date.now();
+        stepProgresses.value.set(data.stepKey, { ...progress });
+      }
+      emit('step-highlight', data.stepKey);
+    },
+  );
 
-  socket.value.on('step_completed', (data: { stepKey: string; output: any; metrics?: any }) => {
-    addLog('info', `步骤完成: ${data.stepKey}`);
-    const progress = stepProgresses.value.get(data.stepKey);
-    if (progress) {
-      progress.status = 'completed';
-      progress.endTime = Date.now();
-      progress.output = data.output;
-      progress.metrics = data.metrics;
-      stepProgresses.value.set(data.stepKey, { ...progress });
-    }
-  });
+  socket.value.on(
+    'step_completed',
+    (data: { stepKey: string; output: any; metrics?: any }) => {
+      addLog('info', `步骤完成: ${data.stepKey}`);
+      const progress = stepProgresses.value.get(data.stepKey);
+      if (progress) {
+        progress.status = 'completed';
+        progress.endTime = Date.now();
+        progress.output = data.output;
+        progress.metrics = data.metrics;
+        stepProgresses.value.set(data.stepKey, { ...progress });
+      }
+    },
+  );
 
   socket.value.on('step_failed', (data: { stepKey: string; error: string }) => {
     addLog('error', `步骤失败: ${data.stepKey} - ${data.error}`);
@@ -163,18 +175,24 @@ const connectWebSocket = () => {
     }
   });
 
-  socket.value.on('step_skipped', (data: { stepKey: string; reason: string }) => {
-    addLog('info', `步骤跳过: ${data.stepKey} - ${data.reason}`);
-    const progress = stepProgresses.value.get(data.stepKey);
-    if (progress) {
-      progress.status = 'skipped';
-      stepProgresses.value.set(data.stepKey, { ...progress });
-    }
-  });
+  socket.value.on(
+    'step_skipped',
+    (data: { stepKey: string; reason: string }) => {
+      addLog('info', `步骤跳过: ${data.stepKey} - ${data.reason}`);
+      const progress = stepProgresses.value.get(data.stepKey);
+      if (progress) {
+        progress.status = 'skipped';
+        stepProgresses.value.set(data.stepKey, { ...progress });
+      }
+    },
+  );
 
-  socket.value.on('stream_chunk', (data: { stepKey: string; chunk: string }) => {
-    streamingOutput.value += data.chunk;
-  });
+  socket.value.on(
+    'stream_chunk',
+    (data: { stepKey: string; chunk: string }) => {
+      streamingOutput.value += data.chunk;
+    },
+  );
 
   socket.value.on('execution_completed', (data: { result: any }) => {
     addLog('info', '执行完成');
@@ -228,7 +246,7 @@ const startExecution = async () => {
     const input = JSON.parse(inputJson.value);
     const response = await requestClient.post(
       `/ai-studio/pipelines/${props.pipelineKey}/execute`,
-      { inputs: input }
+      { inputs: input },
     );
 
     executionId.value = response.executionId || response.data?.executionId;
@@ -261,7 +279,9 @@ const stopExecution = async () => {
   if (!executionId.value) return;
 
   try {
-    await requestClient.post(`/ai-studio/executions/${executionId.value}/cancel`);
+    await requestClient.post(
+      `/ai-studio/executions/${executionId.value}/cancel`,
+    );
     addLog('warn', '已取消执行');
     isExecuting.value = false;
     executionStatus.value = 'failed';
@@ -282,7 +302,7 @@ const progressPercent = computed(() => {
   if (total === 0) return 0;
 
   const completed = Array.from(stepProgresses.value.values()).filter(
-    (p) => p.status === 'completed' || p.status === 'skipped'
+    (p) => p.status === 'completed' || p.status === 'skipped',
   ).length;
 
   return Math.round((completed / total) * 100);
@@ -339,8 +359,18 @@ onUnmounted(() => {
       <div class="header-title">
         <CodeOutlined />
         <span>调试面板</span>
-        <Tag v-if="connectionStatus === 'connected'" color="success" size="small">已连接</Tag>
-        <Tag v-else-if="connectionStatus === 'connecting'" color="processing" size="small">连接中</Tag>
+        <Tag
+          v-if="connectionStatus === 'connected'"
+          color="success"
+          size="small"
+          >已连接</Tag
+        >
+        <Tag
+          v-else-if="connectionStatus === 'connecting'"
+          color="processing"
+          size="small"
+          >连接中</Tag
+        >
       </div>
       <div class="header-actions">
         <Tooltip :title="isExpanded ? '收起' : '展开'">
@@ -392,10 +422,21 @@ onUnmounted(() => {
       </Card>
 
       <!-- 执行进度 -->
-      <Card v-if="executionStatus !== 'idle'" size="small" title="执行进度" class="progress-card">
+      <Card
+        v-if="executionStatus !== 'idle'"
+        size="small"
+        title="执行进度"
+        class="progress-card"
+      >
         <Progress
           :percent="progressPercent"
-          :status="executionStatus === 'failed' ? 'exception' : executionStatus === 'completed' ? 'success' : 'active'"
+          :status="
+            executionStatus === 'failed'
+              ? 'exception'
+              : executionStatus === 'completed'
+                ? 'success'
+                : 'active'
+          "
           size="small"
         />
 
@@ -403,31 +444,77 @@ onUnmounted(() => {
           <Timeline.Item
             v-for="step in steps"
             :key="step.stepKey"
-            :color="getStatusColor(stepProgresses.get(step.stepKey)?.status || 'pending')"
+            :color="
+              getStatusColor(
+                stepProgresses.get(step.stepKey)?.status || 'pending',
+              )
+            "
           >
             <div class="step-item">
               <div class="step-header">
-                <component :is="getStatusIcon(stepProgresses.get(step.stepKey)?.status || 'pending')" />
+                <component
+                  :is="
+                    getStatusIcon(
+                      stepProgresses.get(step.stepKey)?.status || 'pending',
+                    )
+                  "
+                />
                 <span class="step-name">{{ step.name }}</span>
-                <Tag :color="getStatusColor(stepProgresses.get(step.stepKey)?.status || 'pending')" size="small">
+                <Tag
+                  :color="
+                    getStatusColor(
+                      stepProgresses.get(step.stepKey)?.status || 'pending',
+                    )
+                  "
+                  size="small"
+                >
                   {{ stepProgresses.get(step.stepKey)?.status || 'pending' }}
                 </Tag>
               </div>
 
-              <div v-if="stepProgresses.get(step.stepKey)?.metrics" class="step-metrics">
-                <span v-if="stepProgresses.get(step.stepKey)?.metrics?.latencyMs">
+              <div
+                v-if="stepProgresses.get(step.stepKey)?.metrics"
+                class="step-metrics"
+              >
+                <span
+                  v-if="stepProgresses.get(step.stepKey)?.metrics?.latencyMs"
+                >
                   <FieldTimeOutlined />
                   {{ stepProgresses.get(step.stepKey)?.metrics?.latencyMs }}ms
                 </span>
-                <span v-if="stepProgresses.get(step.stepKey)?.metrics?.tokensUsed">
-                  Tokens: {{ stepProgresses.get(step.stepKey)?.metrics?.tokensUsed }}
+                <span
+                  v-if="stepProgresses.get(step.stepKey)?.metrics?.tokensUsed"
+                >
+                  Tokens:
+                  {{ stepProgresses.get(step.stepKey)?.metrics?.tokensUsed }}
                 </span>
               </div>
 
-              <Collapse v-if="stepProgresses.get(step.stepKey)?.output || stepProgresses.get(step.stepKey)?.error" ghost size="small">
+              <Collapse
+                v-if="
+                  stepProgresses.get(step.stepKey)?.output ||
+                  stepProgresses.get(step.stepKey)?.error
+                "
+                ghost
+                size="small"
+              >
                 <Collapse.Panel key="output" header="查看详情">
-                  <pre v-if="stepProgresses.get(step.stepKey)?.output" class="output-json">{{ JSON.stringify(stepProgresses.get(step.stepKey)?.output, null, 2) }}</pre>
-                  <Alert v-if="stepProgresses.get(step.stepKey)?.error" type="error" :message="stepProgresses.get(step.stepKey)?.error" />
+                  <pre
+                    v-if="stepProgresses.get(step.stepKey)?.output"
+                    class="output-json"
+                    >{{
+                      JSON.stringify(
+                        stepProgresses.get(step.stepKey)?.output,
+                        null,
+                        2,
+                      )
+                    }}</pre
+                  >
+                  <Alert
+                    v-if="stepProgresses.get(step.stepKey)?.error"
+                    type="error"
+                    :message="stepProgresses.get(step.stepKey)?.error"
+                  />
                 </Collapse.Panel>
               </Collapse>
             </div>
@@ -436,13 +523,25 @@ onUnmounted(() => {
       </Card>
 
       <!-- 流式输出 -->
-      <Card v-if="streamingOutput" size="small" title="流式输出" class="stream-card">
+      <Card
+        v-if="streamingOutput"
+        size="small"
+        title="流式输出"
+        class="stream-card"
+      >
         <pre class="stream-output">{{ streamingOutput }}</pre>
       </Card>
 
       <!-- 执行结果 -->
-      <Card v-if="executionResult" size="small" title="执行结果" class="result-card">
-        <pre class="result-json">{{ JSON.stringify(executionResult, null, 2) }}</pre>
+      <Card
+        v-if="executionResult"
+        size="small"
+        title="执行结果"
+        class="result-card"
+      >
+        <pre class="result-json">{{
+          JSON.stringify(executionResult, null, 2)
+        }}</pre>
       </Card>
 
       <!-- 日志 -->
@@ -467,7 +566,16 @@ onUnmounted(() => {
             :class="log.level"
           >
             <span class="log-time">{{ log.time }}</span>
-            <Tag :color="log.level === 'error' ? 'error' : log.level === 'warn' ? 'warning' : 'default'" size="small">
+            <Tag
+              :color="
+                log.level === 'error'
+                  ? 'error'
+                  : log.level === 'warn'
+                    ? 'warning'
+                    : 'default'
+              "
+              size="small"
+            >
               {{ log.level }}
             </Tag>
             <span class="log-message">{{ log.message }}</span>
@@ -512,8 +620,8 @@ onUnmounted(() => {
 
 .panel-content {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
   gap: 12px;
   padding: 12px;
   overflow-y: auto;
@@ -564,7 +672,7 @@ onUnmounted(() => {
   gap: 12px;
   margin-left: 24px;
   font-size: 12px;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 }
 
 .output-json,
@@ -609,7 +717,7 @@ onUnmounted(() => {
 
 .log-time {
   flex-shrink: 0;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 }
 
 .log-message {
@@ -619,7 +727,7 @@ onUnmounted(() => {
 
 .log-empty {
   padding: 20px;
-  color: rgba(0 0 0 / 25%);
+  color: rgb(0 0 0 / 25%);
   text-align: center;
 }
 </style>

@@ -260,7 +260,7 @@ onMounted(fetchData);
         </template>
         <template #emptyText>
           <div style="padding: 40px; color: #999; text-align: center">
-            <ClockCircleOutlined style=" margin-bottom: 16px;font-size: 48px" />
+            <ClockCircleOutlined style="margin-bottom: 16px; font-size: 48px" />
             <p>暂无定时消息</p>
             <p>点击"新建定时消息"创建您的第一条定时消息</p>
           </div>

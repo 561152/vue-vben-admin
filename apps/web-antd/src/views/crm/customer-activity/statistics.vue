@@ -190,7 +190,12 @@ const channelTypeMap: Record<string, { label: string; color: string }> = {
 
 const topCustomersColumns = [
   { title: '客户ID', dataIndex: 'customerId', key: 'customerId', width: 100 },
-  { title: '活动次数', dataIndex: 'activityCount', key: 'activityCount', width: 100 },
+  {
+    title: '活动次数',
+    dataIndex: 'activityCount',
+    key: 'activityCount',
+    width: 100,
+  },
   {
     title: '最后活动',
     key: 'lastActivityAt',
@@ -384,7 +389,11 @@ onMounted(loadAllData);
                             : FallOutlined
                         "
                       />
-                      {{ Math.abs(overviewData.trends.weekOverWeekGrowth).toFixed(1) }}%
+                      {{
+                        Math.abs(
+                          overviewData.trends.weekOverWeekGrowth,
+                        ).toFixed(1)
+                      }}%
                     </div>
                   </div>
                   <div class="text-center">
@@ -399,7 +408,7 @@ onMounted(loadAllData);
               <!-- 类型分布 & 渠道分布 -->
               <div class="grid grid-cols-2 gap-4">
                 <Card title="活动类型分布" size="small">
-                  <div class="space-y-2 max-h-64 overflow-y-auto">
+                  <div class="max-h-64 space-y-2 overflow-y-auto">
                     <div
                       v-for="item in overviewData.byType.slice(0, 10)"
                       :key="item.activityType"
@@ -518,10 +527,12 @@ onMounted(loadAllData);
                   />
                   <Statistic
                     title="总互动"
-                    :value="typeAnalysisData.engagementActivities.totalEngagement"
+                    :value="
+                      typeAnalysisData.engagementActivities.totalEngagement
+                    "
                   />
                 </div>
-                <div class="grid grid-cols-3 gap-4 mt-4">
+                <div class="mt-4 grid grid-cols-3 gap-4">
                   <Statistic
                     title="点赞"
                     :value="typeAnalysisData.engagementActivities.likes"
@@ -542,17 +553,23 @@ onMounted(loadAllData);
                 <div class="grid grid-cols-3 gap-4">
                   <Statistic
                     title="创建订单"
-                    :value="typeAnalysisData.transactionActivities.ordersCreated"
+                    :value="
+                      typeAnalysisData.transactionActivities.ordersCreated
+                    "
                     :prefix="h(ShoppingOutlined)"
                   />
                   <Statistic
                     title="完成订单"
-                    :value="typeAnalysisData.transactionActivities.ordersCompleted"
+                    :value="
+                      typeAnalysisData.transactionActivities.ordersCompleted
+                    "
                     :value-style="{ color: '#52c41a' }"
                   />
                   <Statistic
                     title="转化率"
-                    :value="typeAnalysisData.transactionActivities.conversionRate"
+                    :value="
+                      typeAnalysisData.transactionActivities.conversionRate
+                    "
                     suffix="%"
                     :precision="1"
                   />
@@ -594,7 +611,7 @@ onMounted(loadAllData);
                     suffix="点"
                   />
                   <div class="text-center">
-                    <div class="text-gray-500 text-sm">高峰日</div>
+                    <div class="text-sm text-gray-500">高峰日</div>
                     <div class="text-2xl font-medium">
                       {{ engagementData.averageMetrics.peakDay }}
                     </div>
@@ -605,35 +622,35 @@ onMounted(loadAllData);
               <!-- 活跃度分布 -->
               <Card title="客户活跃度分布" size="small">
                 <div class="grid grid-cols-5 gap-4">
-                  <div class="text-center p-4 border rounded">
+                  <div class="rounded border p-4 text-center">
                     <div class="text-2xl font-bold text-green-500">
                       {{ engagementData.activityFrequency.highlyActive }}
                     </div>
                     <div class="text-sm text-gray-500">高度活跃</div>
                     <div class="text-xs text-gray-400">50+ 活动</div>
                   </div>
-                  <div class="text-center p-4 border rounded">
+                  <div class="rounded border p-4 text-center">
                     <div class="text-2xl font-bold text-blue-500">
                       {{ engagementData.activityFrequency.active }}
                     </div>
                     <div class="text-sm text-gray-500">活跃</div>
                     <div class="text-xs text-gray-400">20-49 活动</div>
                   </div>
-                  <div class="text-center p-4 border rounded">
+                  <div class="rounded border p-4 text-center">
                     <div class="text-2xl font-bold text-yellow-500">
                       {{ engagementData.activityFrequency.moderate }}
                     </div>
                     <div class="text-sm text-gray-500">中等</div>
                     <div class="text-xs text-gray-400">10-19 活动</div>
                   </div>
-                  <div class="text-center p-4 border rounded">
+                  <div class="rounded border p-4 text-center">
                     <div class="text-2xl font-bold text-orange-500">
                       {{ engagementData.activityFrequency.low }}
                     </div>
                     <div class="text-sm text-gray-500">低活跃</div>
                     <div class="text-xs text-gray-400">1-9 活动</div>
                   </div>
-                  <div class="text-center p-4 border rounded">
+                  <div class="rounded border p-4 text-center">
                     <div class="text-2xl font-bold text-gray-400">
                       {{ engagementData.activityFrequency.inactive }}
                     </div>
@@ -698,7 +715,9 @@ onMounted(loadAllData);
                   />
                   <Statistic
                     title="人均渠道数"
-                    :value="channelData.crossChannelActivity.avgChannelsPerCustomer"
+                    :value="
+                      channelData.crossChannelActivity.avgChannelsPerCustomer
+                    "
                     :precision="2"
                   />
                 </div>
@@ -721,7 +740,7 @@ onMounted(loadAllData);
                   <div
                     v-for="item in channelData.channelEffectiveness"
                     :key="item.channelType"
-                    class="border rounded p-4"
+                    class="rounded border p-4"
                   >
                     <Tag
                       :color="
@@ -745,7 +764,9 @@ onMounted(loadAllData);
                       </div>
                       <div class="flex justify-between text-sm">
                         <span class="text-gray-500">活动评分</span>
-                        <span class="font-medium">{{ item.activityScore }}</span>
+                        <span class="font-medium">{{
+                          item.activityScore
+                        }}</span>
                       </div>
                     </div>
                   </div>

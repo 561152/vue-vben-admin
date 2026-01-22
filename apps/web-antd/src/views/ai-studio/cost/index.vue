@@ -160,7 +160,8 @@ const moduleCostColumns = [
     dataIndex: 'avgTokensPerExecution',
     key: 'avgTokensPerExecution',
     width: 120,
-    customRender: ({ text }: { text: number }) => Math.round(text).toLocaleString(),
+    customRender: ({ text }: { text: number }) =>
+      Math.round(text).toLocaleString(),
   },
   {
     title: '占比',
@@ -292,7 +293,8 @@ const fetchCostData = async () => {
         timeRange: timeRange.value,
         startDate: dateRange.value[0]?.format('YYYY-MM-DD'),
         endDate: dateRange.value[1]?.format('YYYY-MM-DD'),
-        module: selectedModule.value !== 'all' ? selectedModule.value : undefined,
+        module:
+          selectedModule.value !== 'all' ? selectedModule.value : undefined,
       },
     });
 
@@ -388,17 +390,43 @@ const fetchCostData = async () => {
     ];
 
     dailyCosts.value = Array.from({ length: 7 }, (_, i) => ({
-      date: dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD'),
+      date: dayjs()
+        .subtract(6 - i, 'day')
+        .format('YYYY-MM-DD'),
       tokens: Math.round(300000 + Math.random() * 200000),
       cost: 5 + Math.random() * 10,
       executions: Math.round(100 + Math.random() * 100),
     }));
 
     userCosts.value = [
-      { userId: 1, username: 'teacher_zhang', tokens: 580000, cost: 10.5, executions: 120 },
-      { userId: 2, username: 'teacher_li', tokens: 420000, cost: 7.6, executions: 95 },
-      { userId: 3, username: 'teacher_wang', tokens: 380000, cost: 6.8, executions: 88 },
-      { userId: 4, username: 'admin', tokens: 320000, cost: 5.8, executions: 75 },
+      {
+        userId: 1,
+        username: 'teacher_zhang',
+        tokens: 580000,
+        cost: 10.5,
+        executions: 120,
+      },
+      {
+        userId: 2,
+        username: 'teacher_li',
+        tokens: 420000,
+        cost: 7.6,
+        executions: 95,
+      },
+      {
+        userId: 3,
+        username: 'teacher_wang',
+        tokens: 380000,
+        cost: 6.8,
+        executions: 88,
+      },
+      {
+        userId: 4,
+        username: 'admin',
+        tokens: 320000,
+        cost: 5.8,
+        executions: 75,
+      },
     ];
   } finally {
     loading.value = false;
@@ -471,7 +499,12 @@ onMounted(() => {
               :formatter="(value: number) => formatTokens(value)"
             >
               <template #suffix>
-                <span :class="['trend', overview.tokensTrend >= 0 ? 'trend-up' : 'trend-down']">
+                <span
+                  :class="[
+                    'trend',
+                    overview.tokensTrend >= 0 ? 'trend-up' : 'trend-down',
+                  ]"
+                >
                   <RiseOutlined v-if="overview.tokensTrend >= 0" />
                   <FallOutlined v-else />
                   {{ Math.abs(overview.tokensTrend) }}%
@@ -490,7 +523,12 @@ onMounted(() => {
               :prefix-icon="h(DollarOutlined)"
             >
               <template #suffix>
-                <span :class="['trend', overview.costTrend >= 0 ? 'trend-up' : 'trend-down']">
+                <span
+                  :class="[
+                    'trend',
+                    overview.costTrend >= 0 ? 'trend-up' : 'trend-down',
+                  ]"
+                >
                   <RiseOutlined v-if="overview.costTrend >= 0" />
                   <FallOutlined v-else />
                   {{ Math.abs(overview.costTrend) }}%
@@ -507,7 +545,12 @@ onMounted(() => {
               :formatter="(value: number) => formatTokens(value)"
             />
             <div class="stat-sub">
-              占比: {{ ((overview.promptTokens / overview.totalTokens) * 100 || 0).toFixed(1) }}%
+              占比:
+              {{
+                (
+                  (overview.promptTokens / overview.totalTokens) * 100 || 0
+                ).toFixed(1)
+              }}%
             </div>
           </Card>
         </Col>
@@ -519,7 +562,12 @@ onMounted(() => {
               :formatter="(value: number) => formatTokens(value)"
             />
             <div class="stat-sub">
-              占比: {{ ((overview.completionTokens / overview.totalTokens) * 100 || 0).toFixed(1) }}%
+              占比:
+              {{
+                (
+                  (overview.completionTokens / overview.totalTokens) * 100 || 0
+                ).toFixed(1)
+              }}%
             </div>
           </Card>
         </Col>
@@ -539,7 +587,15 @@ onMounted(() => {
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'moduleName'">
                   <Space>
-                    <Tag :color="record.module === 'ai-tutor' ? 'blue' : record.module === 'ai-doctor' ? 'green' : 'purple'">
+                    <Tag
+                      :color="
+                        record.module === 'ai-tutor'
+                          ? 'blue'
+                          : record.module === 'ai-doctor'
+                            ? 'green'
+                            : 'purple'
+                      "
+                    >
                       {{ record.moduleName }}
                     </Tag>
                   </Space>
@@ -549,7 +605,13 @@ onMounted(() => {
                     :percent="record.percentage"
                     :show-info="true"
                     size="small"
-                    :stroke-color="record.module === 'ai-tutor' ? '#1890ff' : record.module === 'ai-doctor' ? '#52c41a' : '#722ed1'"
+                    :stroke-color="
+                      record.module === 'ai-tutor'
+                        ? '#1890ff'
+                        : record.module === 'ai-doctor'
+                          ? '#52c41a'
+                          : '#722ed1'
+                    "
                   />
                 </template>
               </template>
@@ -681,7 +743,7 @@ export default {
 .stat-sub {
   margin-top: 8px;
   font-size: 12px;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 }
 
 .chart-placeholder {
@@ -690,7 +752,7 @@ export default {
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: rgba(0 0 0 / 25%);
+  color: rgb(0 0 0 / 25%);
 }
 
 .suggestions-card {
@@ -722,12 +784,12 @@ export default {
 
 .suggestion-title {
   font-weight: 500;
-  color: rgba(0 0 0 / 85%);
+  color: rgb(0 0 0 / 85%);
 }
 
 .suggestion-desc {
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(0 0 0 / 45%);
+  color: rgb(0 0 0 / 45%);
 }
 </style>

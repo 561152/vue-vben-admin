@@ -50,11 +50,27 @@ interface Session {
 
 // 咨询师人格配置
 const personaOptions = [
-  { value: 'default', label: '默认咨询师', description: '平衡、专业的学习顾问' },
+  {
+    value: 'default',
+    label: '默认咨询师',
+    description: '平衡、专业的学习顾问',
+  },
   { value: 'scholar', label: '学霸导师', description: '注重学术方法和效率' },
-  { value: 'cheerleader', label: '励志教练', description: '积极鼓励，提升信心' },
-  { value: 'stress_manager', label: '压力管理师', description: '帮助缓解学习压力' },
-  { value: 'goal_achiever', label: '目标规划师', description: '专注目标设定和达成' },
+  {
+    value: 'cheerleader',
+    label: '励志教练',
+    description: '积极鼓励，提升信心',
+  },
+  {
+    value: 'stress_manager',
+    label: '压力管理师',
+    description: '帮助缓解学习压力',
+  },
+  {
+    value: 'goal_achiever',
+    label: '目标规划师',
+    description: '专注目标设定和达成',
+  },
 ];
 
 // 情绪选项
@@ -115,7 +131,7 @@ const fetchHistorySessions = async () => {
 const loadSessionMessages = async (sessionId: string) => {
   try {
     const response = await requestClient.get(
-      `/ai-doctor/counselor/session/${sessionId}/messages`
+      `/ai-doctor/counselor/session/${sessionId}/messages`,
     );
     const data = response.data || response || [];
 
@@ -162,7 +178,9 @@ const createNewSession = async () => {
       {
         id: 'welcome',
         role: 'assistant',
-        content: data.welcomeMessage || `您好！我是您的 AI 学习咨询师。今天我们来聊聊"${sessionTopic.value}"。请随时告诉我您的想法和问题。`,
+        content:
+          data.welcomeMessage ||
+          `您好！我是您的 AI 学习咨询师。今天我们来聊聊"${sessionTopic.value}"。请随时告诉我您的想法和问题。`,
         timestamp: new Date(),
       },
     ];
@@ -179,7 +197,8 @@ const createNewSession = async () => {
 
 // 发送消息
 const sendMessage = async () => {
-  if (!inputMessage.value.trim() || isLoading.value || isStreaming.value) return;
+  if (!inputMessage.value.trim() || isLoading.value || isStreaming.value)
+    return;
 
   // 如果没有会话，先创建
   if (!currentSessionId.value) {
@@ -221,7 +240,7 @@ const sendMessage = async () => {
             scrollToBottom();
           }
         },
-      }
+      },
     );
 
     const data = response.data || response;
@@ -237,7 +256,6 @@ const sendMessage = async () => {
       suggestedActions: data.suggestedActions,
     };
     messages.value.push(assistantMessage);
-
   } catch (error: any) {
     console.error('Failed to send message:', error);
 
@@ -249,7 +267,7 @@ const sendMessage = async () => {
           {
             content: question,
             currentMood: selectedMood.value,
-          }
+          },
         );
 
         const data = response.data || response;
@@ -282,7 +300,7 @@ const endSession = async () => {
 
   try {
     await requestClient.post(
-      `/ai-doctor/counselor/session/${currentSessionId.value}/end`
+      `/ai-doctor/counselor/session/${currentSessionId.value}/end`,
     );
     message.success('会话已结束');
     currentSessionId.value = null;
@@ -293,7 +311,10 @@ const endSession = async () => {
 };
 
 // 提交反馈
-const submitFeedback = async (messageId: number | undefined, rating: 'up' | 'down') => {
+const submitFeedback = async (
+  messageId: number | undefined,
+  rating: 'up' | 'down',
+) => {
   if (!messageId) return;
 
   try {
@@ -302,7 +323,9 @@ const submitFeedback = async (messageId: number | undefined, rating: 'up' | 'dow
       messageId,
       rating,
     });
-    message.success(rating === 'up' ? '感谢您的认可！' : '感谢您的反馈，我们会改进！');
+    message.success(
+      rating === 'up' ? '感谢您的认可！' : '感谢您的反馈，我们会改进！',
+    );
   } catch (error) {
     console.error('Failed to submit feedback:', error);
   }
@@ -365,13 +388,20 @@ onMounted(() => {
       </template>
 
       <!-- 会话设置（未开始会话时显示） -->
-      <div v-if="!currentSessionId && messages.length === 0" class="session-setup">
+      <div
+        v-if="!currentSessionId && messages.length === 0"
+        class="session-setup"
+      >
         <div class="setup-title">开始新的咨询会话</div>
 
         <div class="setup-section">
           <label>选择咨询师风格</label>
           <Select v-model:value="selectedPersona" style="width: 100%">
-            <Select.Option v-for="persona in personaOptions" :key="persona.value" :value="persona.value">
+            <Select.Option
+              v-for="persona in personaOptions"
+              :key="persona.value"
+              :value="persona.value"
+            >
               <div>
                 <div>{{ persona.label }}</div>
                 <div class="option-desc">{{ persona.description }}</div>
@@ -383,7 +413,11 @@ onMounted(() => {
         <div class="setup-section">
           <label>您现在的心情</label>
           <div class="mood-selector">
-            <Tooltip v-for="mood in moodOptions" :key="mood.value" :title="mood.label">
+            <Tooltip
+              v-for="mood in moodOptions"
+              :key="mood.value"
+              :title="mood.label"
+            >
               <Button
                 :type="selectedMood === mood.value ? 'primary' : 'default'"
                 shape="circle"
@@ -405,7 +439,13 @@ onMounted(() => {
           />
         </div>
 
-        <Button type="primary" size="large" block :loading="isLoading" @click="createNewSession">
+        <Button
+          type="primary"
+          size="large"
+          block
+          :loading="isLoading"
+          @click="createNewSession"
+        >
           开始咨询
         </Button>
       </div>
@@ -416,11 +456,16 @@ onMounted(() => {
           <div
             v-for="msg in messages"
             :key="msg.id"
-            :class="['message', msg.role === 'user' ? 'user-message' : 'assistant-message']"
+            :class="[
+              'message',
+              msg.role === 'user' ? 'user-message' : 'assistant-message',
+            ]"
           >
             <Avatar
               :class="msg.role === 'user' ? 'user-avatar' : 'assistant-avatar'"
-              :style="{ backgroundColor: msg.role === 'user' ? '#1890ff' : '#52c41a' }"
+              :style="{
+                backgroundColor: msg.role === 'user' ? '#1890ff' : '#52c41a',
+              }"
             >
               <template #icon>
                 <UserOutlined v-if="msg.role === 'user'" />
@@ -433,13 +478,20 @@ onMounted(() => {
               </div>
 
               <!-- 情绪检测和建议 -->
-              <div v-if="msg.role === 'assistant' && msg.detectedMood" class="message-meta">
+              <div
+                v-if="msg.role === 'assistant' && msg.detectedMood"
+                class="message-meta"
+              >
                 <Tag color="blue">
-                  <SmileOutlined /> 检测到情绪: {{ getMoodEmoji(msg.detectedMood) }}
+                  <SmileOutlined /> 检测到情绪:
+                  {{ getMoodEmoji(msg.detectedMood) }}
                 </Tag>
               </div>
 
-              <div v-if="msg.suggestedActions && msg.suggestedActions.length > 0" class="suggested-actions">
+              <div
+                v-if="msg.suggestedActions && msg.suggestedActions.length > 0"
+                class="suggested-actions"
+              >
                 <div class="actions-label">建议行动:</div>
                 <Tag v-for="(action, idx) in msg.suggestedActions" :key="idx">
                   {{ action }}
@@ -452,14 +504,25 @@ onMounted(() => {
                 </span>
 
                 <!-- 反馈按钮（仅 AI 消息） -->
-                <Space v-if="msg.role === 'assistant' && msg.messageId" class="feedback-buttons">
+                <Space
+                  v-if="msg.role === 'assistant' && msg.messageId"
+                  class="feedback-buttons"
+                >
                   <Tooltip title="有帮助">
-                    <Button type="text" size="small" @click="submitFeedback(msg.messageId, 'up')">
+                    <Button
+                      type="text"
+                      size="small"
+                      @click="submitFeedback(msg.messageId, 'up')"
+                    >
                       <template #icon><LikeOutlined /></template>
                     </Button>
                   </Tooltip>
                   <Tooltip title="需要改进">
-                    <Button type="text" size="small" @click="submitFeedback(msg.messageId, 'down')">
+                    <Button
+                      type="text"
+                      size="small"
+                      @click="submitFeedback(msg.messageId, 'down')"
+                    >
                       <template #icon><DislikeOutlined /></template>
                     </Button>
                   </Tooltip>
@@ -469,8 +532,14 @@ onMounted(() => {
           </div>
 
           <!-- 流式输出中 -->
-          <div v-if="isStreaming && streamingContent" class="message assistant-message">
-            <Avatar class="assistant-avatar" :style="{ backgroundColor: '#52c41a' }">
+          <div
+            v-if="isStreaming && streamingContent"
+            class="message assistant-message"
+          >
+            <Avatar
+              class="assistant-avatar"
+              :style="{ backgroundColor: '#52c41a' }"
+            >
               <template #icon><RobotOutlined /></template>
             </Avatar>
             <div class="message-content">
@@ -482,8 +551,14 @@ onMounted(() => {
           </div>
 
           <!-- 加载中 -->
-          <div v-if="isLoading && !isStreaming" class="message assistant-message">
-            <Avatar class="assistant-avatar" :style="{ backgroundColor: '#52c41a' }">
+          <div
+            v-if="isLoading && !isStreaming"
+            class="message assistant-message"
+          >
+            <Avatar
+              class="assistant-avatar"
+              :style="{ backgroundColor: '#52c41a' }"
+            >
               <template #icon><RobotOutlined /></template>
             </Avatar>
             <div class="message-content">
@@ -495,8 +570,16 @@ onMounted(() => {
 
         <!-- 输入区域 -->
         <div class="input-container">
-          <Select v-model:value="selectedMood" style="width: 80px" placeholder="心情">
-            <Select.Option v-for="mood in moodOptions" :key="mood.value" :value="mood.value">
+          <Select
+            v-model:value="selectedMood"
+            style="width: 80px"
+            placeholder="心情"
+          >
+            <Select.Option
+              v-for="mood in moodOptions"
+              :key="mood.value"
+              :value="mood.value"
+            >
               {{ mood.emoji }}
             </Select.Option>
           </Select>
@@ -535,10 +618,13 @@ onMounted(() => {
             <List.Item>
               <List.Item.Meta
                 :title="item.topic"
-                :description="`${personaOptions.find(p => p.value === item.counselorPersona)?.label || '默认咨询师'} · ${item.messageCount} 条消息`"
+                :description="`${personaOptions.find((p) => p.value === item.counselorPersona)?.label || '默认咨询师'} · ${item.messageCount} 条消息`"
               />
               <template #actions>
-                <Button type="link" @click="loadSessionMessages(item.sessionId)">
+                <Button
+                  type="link"
+                  @click="loadSessionMessages(item.sessionId)"
+                >
                   继续会话
                 </Button>
               </template>
@@ -593,7 +679,7 @@ onMounted(() => {
 
 .setup-section label {
   font-weight: 500;
-  color: rgba(0 0 0 / 65%);
+  color: rgb(0 0 0 / 65%);
 }
 
 .option-desc {
@@ -603,8 +689,8 @@ onMounted(() => {
 
 .mood-selector {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .messages-container {

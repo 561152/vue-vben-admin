@@ -60,7 +60,12 @@
                     title="画像覆盖率"
                     :value="overview.profileCoverageRate"
                     suffix="%"
-                    :value-style="{ color: overview.profileCoverageRate >= 50 ? '#52c41a' : '#faad14' }"
+                    :value-style="{
+                      color:
+                        overview.profileCoverageRate >= 50
+                          ? '#52c41a'
+                          : '#faad14',
+                    }"
                   >
                     <template #prefix>
                       <PieChartOutlined />
@@ -151,7 +156,12 @@
               <Col :span="8">
                 <Card title="总标签数">
                   <Statistic
-                    :value="tagAnalysis.byCategory.reduce((sum, c) => sum + c.count, 0)"
+                    :value="
+                      tagAnalysis.byCategory.reduce(
+                        (sum, c) => sum + c.count,
+                        0,
+                      )
+                    "
                     :value-style="{ color: '#722ed1' }"
                   />
                 </Card>
@@ -226,7 +236,9 @@
                       :percent="record.avgConfidence * 100"
                       :stroke-color="getConfidenceColor(record.avgConfidence)"
                       size="small"
-                      :format="() => (record.avgConfidence * 100).toFixed(1) + '%'"
+                      :format="
+                        () => (record.avgConfidence * 100).toFixed(1) + '%'
+                      "
                     />
                   </template>
                 </template>
@@ -245,7 +257,9 @@
                     title="平均置信度"
                     :value="(quality.avgConfidence * 100).toFixed(1)"
                     suffix="%"
-                    :value-style="{ color: getConfidenceColor(quality.avgConfidence) }"
+                    :value-style="{
+                      color: getConfidenceColor(quality.avgConfidence),
+                    }"
                   >
                     <template #prefix>
                       <SafetyCertificateOutlined />
@@ -352,10 +366,16 @@
                     title="30天增长率"
                     :value="growth.growthRate"
                     suffix="%"
-                    :value-style="{ color: growth.growthRate >= 0 ? '#52c41a' : '#ff4d4f' }"
+                    :value-style="{
+                      color: growth.growthRate >= 0 ? '#52c41a' : '#ff4d4f',
+                    }"
                   >
                     <template #prefix>
-                      <component :is="growth.growthRate >= 0 ? RiseOutlined : FallOutlined" />
+                      <component
+                        :is="
+                          growth.growthRate >= 0 ? RiseOutlined : FallOutlined
+                        "
+                      />
                     </template>
                   </Statistic>
                 </Card>
@@ -382,7 +402,12 @@
                 <Card>
                   <Statistic
                     title="30天总增长"
-                    :value="growth.dailyGrowth.reduce((sum, d) => sum + d.newProfiles, 0)"
+                    :value="
+                      growth.dailyGrowth.reduce(
+                        (sum, d) => sum + d.newProfiles,
+                        0,
+                      )
+                    "
                     :value-style="{ color: '#722ed1' }"
                   />
                 </Card>
@@ -399,12 +424,21 @@
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'newProfiles'">
-                    <span :style="{ color: record.newProfiles > 0 ? '#52c41a' : '#999' }">
-                      {{ record.newProfiles > 0 ? '+' : '' }}{{ record.newProfiles }}
+                    <span
+                      :style="{
+                        color: record.newProfiles > 0 ? '#52c41a' : '#999',
+                      }"
+                    >
+                      {{ record.newProfiles > 0 ? '+' : ''
+                      }}{{ record.newProfiles }}
                     </span>
                   </template>
                   <template v-else-if="column.key === 'newTags'">
-                    <span :style="{ color: record.newTags > 0 ? '#1890ff' : '#999' }">
+                    <span
+                      :style="{
+                        color: record.newTags > 0 ? '#1890ff' : '#999',
+                      }"
+                    >
                       {{ record.newTags > 0 ? '+' : '' }}{{ record.newTags }}
                     </span>
                   </template>
@@ -547,7 +581,12 @@ const topTagColumns = [
   { title: '标签键', dataIndex: 'tagKey', key: 'tagKey' },
   { title: '标签值', dataIndex: 'tagValue', key: 'tagValue' },
   { title: '使用次数', dataIndex: 'count', key: 'count' },
-  { title: '平均置信度', dataIndex: 'avgConfidence', key: 'avgConfidence', width: 200 },
+  {
+    title: '平均置信度',
+    dataIndex: 'avgConfidence',
+    key: 'avgConfidence',
+    width: 200,
+  },
 ];
 
 const confidenceColumns = [
@@ -567,7 +606,11 @@ const growthColumns = [
   { title: '日期', dataIndex: 'date', key: 'date' },
   { title: '新增画像', dataIndex: 'newProfiles', key: 'newProfiles' },
   { title: '新增标签', dataIndex: 'newTags', key: 'newTags' },
-  { title: '累计画像', dataIndex: 'cumulativeProfiles', key: 'cumulativeProfiles' },
+  {
+    title: '累计画像',
+    dataIndex: 'cumulativeProfiles',
+    key: 'cumulativeProfiles',
+  },
 ];
 
 // 标签类别映射

@@ -110,7 +110,12 @@ const sourceMap: Record<string, string> = {
 const topTagColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '标签', key: 'tag' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
   { title: '占比', key: 'percentage', width: 100 },
 ];
 
@@ -119,7 +124,11 @@ const levelColumns = [
   { title: '已打标', dataIndex: 'taggedCount', key: 'taggedCount' },
   { title: '总数', dataIndex: 'totalCount', key: 'totalCount' },
   { title: '打标率', key: 'taggingRate' },
-  { title: '平均标签数', dataIndex: 'avgTagsPerCustomer', key: 'avgTagsPerCustomer' },
+  {
+    title: '平均标签数',
+    dataIndex: 'avgTagsPerCustomer',
+    key: 'avgTagsPerCustomer',
+  },
 ];
 
 const sourceColumns = [
@@ -131,7 +140,12 @@ const sourceColumns = [
 
 const combinationColumns = [
   { title: '标签组合', key: 'tags' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
 ];
 
 const unusedColumns = [
@@ -241,7 +255,12 @@ onMounted(loadData);
               :value="overview?.taggingRate || 0"
               suffix="%"
               :prefix="h(PercentageOutlined)"
-              :value-style="{ color: overview?.taggingRate && overview.taggingRate >= 50 ? '#52c41a' : '#faad14' }"
+              :value-style="{
+                color:
+                  overview?.taggingRate && overview.taggingRate >= 50
+                    ? '#52c41a'
+                    : '#faad14',
+              }"
             />
           </Card>
         </Col>
@@ -255,7 +274,11 @@ onMounted(loadData);
               <Progress
                 type="circle"
                 :percent="overview?.taggingRate || 0"
-                :stroke-color="overview?.taggingRate && overview.taggingRate >= 50 ? '#52c41a' : '#faad14'"
+                :stroke-color="
+                  overview?.taggingRate && overview.taggingRate >= 50
+                    ? '#52c41a'
+                    : '#faad14'
+                "
                 :size="120"
               />
             </div>
@@ -266,7 +289,10 @@ onMounted(loadData);
         </Col>
         <Col :span="8">
           <Card title="总打标次数">
-            <div class="flex flex-col items-center justify-center" style="height: 140px">
+            <div
+              class="flex flex-col items-center justify-center"
+              style="height: 140px"
+            >
               <div class="text-4xl font-bold text-blue-500">
                 {{ overview?.totalTaggings || 0 }}
               </div>
@@ -300,7 +326,12 @@ onMounted(loadData);
           <Card title="热门标签 TOP10">
             <Table
               :columns="topTagColumns"
-              :data-source="(overview?.topTags || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.topTags || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -326,7 +357,9 @@ onMounted(loadData);
                   <Progress
                     :percent="record.percentage"
                     :size="60"
-                    :stroke-color="record.percentage >= 20 ? '#52c41a' : '#1890ff'"
+                    :stroke-color="
+                      record.percentage >= 20 ? '#52c41a' : '#1890ff'
+                    "
                   />
                 </template>
               </template>
@@ -335,16 +368,24 @@ onMounted(loadData);
         </Col>
         <Col :span="12">
           <Card title="近7日打标趋势">
-            <div v-if="overview?.recentTrend?.length" class="flex items-end justify-around" style="height: 240px">
+            <div
+              v-if="overview?.recentTrend?.length"
+              class="flex items-end justify-around"
+              style="height: 240px"
+            >
               <div
                 v-for="(item, index) in overview.recentTrend"
                 :key="index"
                 class="flex flex-col items-center"
               >
-                <div class="mb-1 text-xs text-gray-500">{{ item.newTaggings }}</div>
+                <div class="mb-1 text-xs text-gray-500">
+                  {{ item.newTaggings }}
+                </div>
                 <div
                   class="w-10 rounded-t bg-blue-500"
-                  :style="{ height: `${Math.max(20, (item.newTaggings / Math.max(...overview.recentTrend.map(d => d.newTaggings), 1)) * 180)}px` }"
+                  :style="{
+                    height: `${Math.max(20, (item.newTaggings / Math.max(...overview.recentTrend.map((d) => d.newTaggings), 1)) * 180)}px`,
+                  }"
                 />
                 <div class="mt-2 text-xs text-gray-400">
                   {{ item.date.slice(5) }}
@@ -364,7 +405,12 @@ onMounted(loadData);
           <Card title="按客户等级分析">
             <Table
               :columns="levelColumns"
-              :data-source="(usageAnalysis?.byCustomerLevel || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.byCustomerLevel || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -376,7 +422,9 @@ onMounted(loadData);
                   <Progress
                     :percent="record.taggingRate"
                     :size="60"
-                    :stroke-color="record.taggingRate >= 50 ? '#52c41a' : '#faad14'"
+                    :stroke-color="
+                      record.taggingRate >= 50 ? '#52c41a' : '#faad14'
+                    "
                   />
                 </template>
               </template>
@@ -387,7 +435,12 @@ onMounted(loadData);
           <Card title="按客户来源分析">
             <Table
               :columns="sourceColumns"
-              :data-source="(usageAnalysis?.byCustomerSource || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.byCustomerSource || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -399,7 +452,9 @@ onMounted(loadData);
                   <Progress
                     :percent="record.taggingRate"
                     :size="60"
-                    :stroke-color="record.taggingRate >= 50 ? '#52c41a' : '#faad14'"
+                    :stroke-color="
+                      record.taggingRate >= 50 ? '#52c41a' : '#faad14'
+                    "
                   />
                 </template>
               </template>
@@ -414,7 +469,12 @@ onMounted(loadData);
           <Card title="常见标签组合">
             <Table
               :columns="combinationColumns"
-              :data-source="(usageAnalysis?.tagCombinations || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.tagCombinations || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -428,14 +488,19 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!usageAnalysis?.tagCombinations?.length" description="暂无数据" />
+            <Empty
+              v-if="!usageAnalysis?.tagCombinations?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
         <Col :span="12">
           <Card title="未使用的标签">
             <Table
               :columns="unusedColumns"
-              :data-source="unusedTags.map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                unusedTags.map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >

@@ -353,7 +353,11 @@
                   >
                     <template #bodyCell="{ column, record }">
                       <template v-if="column.key === 'avgLatencyMs'">
-                        <span :style="{ color: getLatencyColor(record.avgLatencyMs) }">
+                        <span
+                          :style="{
+                            color: getLatencyColor(record.avgLatencyMs),
+                          }"
+                        >
                           {{ record.avgLatencyMs }} ms
                         </span>
                       </template>
@@ -476,7 +480,12 @@ const statusColumns = [
 ];
 
 const userColumns = [
-  { title: '用户ID', dataIndex: 'externalUserId', key: 'externalUserId', ellipsis: true },
+  {
+    title: '用户ID',
+    dataIndex: 'externalUserId',
+    key: 'externalUserId',
+    ellipsis: true,
+  },
   { title: '会话数', dataIndex: 'conversationCount', key: 'conversationCount' },
   { title: '消息数', dataIndex: 'messageCount', key: 'messageCount' },
 ];
@@ -516,7 +525,9 @@ const statusColorMap: Record<string, string> = {
 const getStatusName = (status: string) => statusNameMap[status] || status;
 const getStatusColor = (status: string) => statusColorMap[status] || '#1890ff';
 
-const getLatencyStatus = (range: string): 'success' | 'normal' | 'exception' => {
+const getLatencyStatus = (
+  range: string,
+): 'success' | 'normal' | 'exception' => {
   if (range.includes('0-500') || range.includes('500ms-1s')) return 'success';
   if (range.includes('1-2s') || range.includes('2-5s')) return 'normal';
   return 'exception';

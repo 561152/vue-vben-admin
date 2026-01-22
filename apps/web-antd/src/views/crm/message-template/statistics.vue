@@ -243,12 +243,16 @@ onMounted(loadData);
       <Row :gutter="16" class="mb-4">
         <Col :span="8">
           <Card title="最常用模板">
-            <div v-if="overview?.mostUsedTemplate" class="flex flex-col items-center justify-center" style="height: 120px">
-              <TrophyOutlined class="text-4xl text-yellow-500 mb-2" />
-              <div class="text-lg font-bold text-center">
+            <div
+              v-if="overview?.mostUsedTemplate"
+              class="flex flex-col items-center justify-center"
+              style="height: 120px"
+            >
+              <TrophyOutlined class="mb-2 text-4xl text-yellow-500" />
+              <div class="text-center text-lg font-bold">
                 {{ overview.mostUsedTemplate.name }}
               </div>
-              <div class="text-gray-500 mt-1">
+              <div class="mt-1 text-gray-500">
                 使用 {{ overview.mostUsedTemplate.usageCount }} 次
               </div>
             </div>
@@ -262,7 +266,7 @@ onMounted(loadData);
                 <div class="text-3xl font-bold text-purple-500">
                   {{ overview?.newTemplatesToday || 0 }}
                 </div>
-                <div class="text-gray-500 mt-2">今日新增模板</div>
+                <div class="mt-2 text-gray-500">今日新增模板</div>
               </div>
             </div>
           </Card>
@@ -278,11 +282,13 @@ onMounted(loadData);
                 <Tag :color="item.status === '启用' ? 'success' : 'default'">
                   {{ item.status }}
                 </Tag>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
-                    :stroke-color="item.status === '启用' ? '#52c41a' : '#d9d9d9'"
+                    :stroke-color="
+                      item.status === '启用' ? '#52c41a' : '#d9d9d9'
+                    "
                   />
                 </div>
                 <span>{{ item.count }}</span>
@@ -306,13 +312,12 @@ onMounted(loadData);
                 <Tag color="blue">
                   {{ item.category || '未分类' }}
                 </Tag>
-                <div class="flex-1 mx-3">
-                  <Progress
-                    :percent="item.percentage"
-                    :show-info="false"
-                  />
+                <div class="mx-3 flex-1">
+                  <Progress :percent="item.percentage" :show-info="false" />
                 </div>
-                <span class="text-gray-500">{{ item.count }} 个 / {{ item.totalUsage }} 次使用</span>
+                <span class="text-gray-500"
+                  >{{ item.count }} 个 / {{ item.totalUsage }} 次使用</span
+                >
               </div>
             </div>
             <Empty v-else description="暂无数据" />
@@ -326,8 +331,8 @@ onMounted(loadData);
                 :key="item.range"
                 class="mb-3 flex items-center justify-between"
               >
-                <span class="text-gray-600 w-20">{{ item.range }}</span>
-                <div class="flex-1 mx-3">
+                <span class="w-20 text-gray-600">{{ item.range }}</span>
+                <div class="mx-3 flex-1">
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
@@ -348,7 +353,12 @@ onMounted(loadData);
           <Card title="使用量 TOP 10">
             <Table
               :columns="topTemplateColumns"
-              :data-source="(overview?.topTemplates || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.topTemplates || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -365,7 +375,9 @@ onMounted(loadData);
                   </span>
                 </template>
                 <template v-if="column.key === 'category'">
-                  <Tag v-if="record.category" color="blue">{{ record.category }}</Tag>
+                  <Tag v-if="record.category" color="blue">{{
+                    record.category
+                  }}</Tag>
                   <span v-else class="text-gray-400">-</span>
                 </template>
                 <template v-if="column.key === 'status'">
@@ -381,7 +393,11 @@ onMounted(loadData);
           <Card title="创建者统计">
             <Table
               :columns="creatorColumns"
-              :data-source="(usageAnalysis?.byCreator || []).slice(0, 8).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.byCreator || [])
+                  .slice(0, 8)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >
@@ -391,7 +407,10 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!usageAnalysis?.byCreator?.length" description="暂无数据" />
+            <Empty
+              v-if="!usageAnalysis?.byCreator?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
       </Row>
@@ -400,16 +419,24 @@ onMounted(loadData);
       <Row :gutter="16" class="mb-4">
         <Col :span="24">
           <Card title="近7日新增趋势">
-            <div v-if="overview?.dailyTrend?.length" class="flex items-end justify-around" style="height: 160px">
+            <div
+              v-if="overview?.dailyTrend?.length"
+              class="flex items-end justify-around"
+              style="height: 160px"
+            >
               <div
                 v-for="(item, index) in overview.dailyTrend"
                 :key="index"
                 class="flex flex-col items-center"
               >
-                <div class="mb-1 text-xs text-blue-500">{{ item.newTemplates }}</div>
+                <div class="mb-1 text-xs text-blue-500">
+                  {{ item.newTemplates }}
+                </div>
                 <div
                   class="w-12 rounded-t bg-blue-500"
-                  :style="{ height: `${Math.max(10, (item.newTemplates / Math.max(...overview.dailyTrend.map(d => d.newTemplates), 1)) * 120)}px` }"
+                  :style="{
+                    height: `${Math.max(10, (item.newTemplates / Math.max(...overview.dailyTrend.map((d) => d.newTemplates), 1)) * 120)}px`,
+                  }"
                 />
                 <div class="mt-2 text-xs text-gray-400">
                   {{ item.date.slice(5) }}
@@ -427,13 +454,20 @@ onMounted(loadData);
           <Card title="未使用模板">
             <Table
               :columns="unusedColumns"
-              :data-source="(usageAnalysis?.unusedTemplates || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.unusedTemplates || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'category'">
-                  <Tag v-if="record.category" color="blue">{{ record.category }}</Tag>
+                  <Tag v-if="record.category" color="blue">{{
+                    record.category
+                  }}</Tag>
                   <span v-else class="text-gray-400">-</span>
                 </template>
                 <template v-if="column.key === 'status'">
@@ -446,20 +480,30 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!usageAnalysis?.unusedTemplates?.length" description="没有未使用的模板" />
+            <Empty
+              v-if="!usageAnalysis?.unusedTemplates?.length"
+              description="没有未使用的模板"
+            />
           </Card>
         </Col>
         <Col :span="12">
           <Card title="低使用率模板 (使用<5次)">
             <Table
               :columns="lowUsageColumns"
-              :data-source="(usageAnalysis?.lowUsageTemplates || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (usageAnalysis?.lowUsageTemplates || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'category'">
-                  <Tag v-if="record.category" color="blue">{{ record.category }}</Tag>
+                  <Tag v-if="record.category" color="blue">{{
+                    record.category
+                  }}</Tag>
                   <span v-else class="text-gray-400">-</span>
                 </template>
                 <template v-if="column.key === 'status'">
@@ -469,7 +513,10 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!usageAnalysis?.lowUsageTemplates?.length" description="没有低使用率的模板" />
+            <Empty
+              v-if="!usageAnalysis?.lowUsageTemplates?.length"
+              description="没有低使用率的模板"
+            />
           </Card>
         </Col>
       </Row>

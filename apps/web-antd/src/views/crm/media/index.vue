@@ -159,9 +159,7 @@ onMounted(() => {
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">素材库</h2>
       <Space>
-        <Button @click="goToStatistics">
-          <BarChartOutlined /> 统计分析
-        </Button>
+        <Button @click="goToStatistics"> <BarChartOutlined /> 统计分析 </Button>
         <Button type="primary" @click="handleUpload">
           <CloudUploadOutlined /> 上传素材
         </Button>

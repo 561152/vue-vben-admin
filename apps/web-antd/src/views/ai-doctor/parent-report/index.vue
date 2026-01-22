@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { Card, Table, Tag, Space, Input, Button, Select } from 'ant-design-vue';
-import { SearchOutlined, FilePdfOutlined, MailOutlined } from '@ant-design/icons-vue';
+import {
+  SearchOutlined,
+  FilePdfOutlined,
+  MailOutlined,
+} from '@ant-design/icons-vue';
 
 const loading = ref(false);
 const searchText = ref('');
@@ -9,7 +13,12 @@ const reportList = ref<any[]>([]);
 
 const columns = [
   { title: '报告编号', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '学生姓名', dataIndex: 'studentName', key: 'studentName', width: 120 },
+  {
+    title: '学生姓名',
+    dataIndex: 'studentName',
+    key: 'studentName',
+    width: 120,
+  },
   { title: '报告类型', dataIndex: 'type', key: 'type', width: 120 },
   { title: '报告周期', dataIndex: 'period', key: 'period', width: 150 },
   { title: '生成时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
@@ -62,9 +71,7 @@ const getStatusText = (status: string) => {
             :options="reportTypes"
             allow-clear
           />
-          <Button type="primary">
-            生成报告
-          </Button>
+          <Button type="primary"> 生成报告 </Button>
         </Space>
       </template>
 
@@ -77,7 +84,10 @@ const getStatusText = (status: string) => {
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'type'">
             <Tag>
-              {{ reportTypes.find(t => t.value === record.type)?.label || record.type }}
+              {{
+                reportTypes.find((t) => t.value === record.type)?.label ||
+                record.type
+              }}
             </Tag>
           </template>
           <template v-if="column.key === 'status'">
@@ -94,8 +104,8 @@ const getStatusText = (status: string) => {
           </template>
         </template>
         <template #emptyText>
-          <div style="padding: 40px; text-align: center; color: #999">
-            <FilePdfOutlined style="font-size: 48px; margin-bottom: 16px" />
+          <div style="padding: 40px; color: #999; text-align: center">
+            <FilePdfOutlined style=" margin-bottom: 16px;font-size: 48px" />
             <p>暂无家长报告</p>
             <p>点击"生成报告"为学生创建学习情况报告</p>
           </div>

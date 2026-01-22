@@ -360,8 +360,16 @@ onMounted(() => {
         row-key="date"
       >
         <Table.Column title="日期" dataIndex="date" key="date" />
-        <Table.Column title="新增素材" dataIndex="addedCount" key="addedCount" />
-        <Table.Column title="使用次数" dataIndex="usageCount" key="usageCount" />
+        <Table.Column
+          title="新增素材"
+          dataIndex="addedCount"
+          key="addedCount"
+        />
+        <Table.Column
+          title="使用次数"
+          dataIndex="usageCount"
+          key="usageCount"
+        />
       </Table>
     </Card>
 

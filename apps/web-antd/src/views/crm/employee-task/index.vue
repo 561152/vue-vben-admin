@@ -124,7 +124,12 @@ const columns = [
     },
   },
   { title: '目标数', dataIndex: 'targetCount', key: 'targetCount', width: 80 },
-  { title: '成功数', dataIndex: 'successCount', key: 'successCount', width: 80 },
+  {
+    title: '成功数',
+    dataIndex: 'successCount',
+    key: 'successCount',
+    width: 80,
+  },
   { title: '失败数', dataIndex: 'failCount', key: 'failCount', width: 80 },
   {
     title: '创建时间',
@@ -328,9 +333,7 @@ onMounted(fetchData);
         </div>
         <div class="flex items-center">
           <span class="w-24 font-medium text-gray-500">任务类型：</span>
-          <Tag
-            :color="findOption(taskTypeOptions, detailTask.taskType)?.color"
-          >
+          <Tag :color="findOption(taskTypeOptions, detailTask.taskType)?.color">
             {{ findOption(taskTypeOptions, detailTask.taskType)?.label }}
           </Tag>
         </div>
@@ -383,8 +386,8 @@ onMounted(fetchData);
           }}</span>
         </div>
         <div v-if="detailTask.content" class="flex flex-col">
-          <span class="w-24 font-medium text-gray-500 mb-2">任务内容：</span>
-          <pre class="bg-gray-100 p-2 rounded text-sm overflow-auto">{{
+          <span class="mb-2 w-24 font-medium text-gray-500">任务内容：</span>
+          <pre class="overflow-auto rounded bg-gray-100 p-2 text-sm">{{
             JSON.stringify(detailTask.content, null, 2)
           }}</pre>
         </div>

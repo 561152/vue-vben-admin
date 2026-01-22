@@ -41,8 +41,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'CustomerActivityStatistics',
         path: 'customer-activity/statistics',
-        component: () =>
-          import('#/views/crm/customer-activity/statistics.vue'),
+        component: () => import('#/views/crm/customer-activity/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: '客户活动统计',
@@ -54,8 +53,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'CustomerChannelStatistics',
         path: 'customer-channel/statistics',
-        component: () =>
-          import('#/views/crm/customer-channel/statistics.vue'),
+        component: () => import('#/views/crm/customer-channel/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: '客户渠道统计',
@@ -79,8 +77,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MemberProfileStatistics',
         path: 'member-profile/statistics',
-        component: () =>
-          import('#/views/crm/member-profile/statistics.vue'),
+        component: () => import('#/views/crm/member-profile/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: '会员画像统计',

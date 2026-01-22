@@ -36,9 +36,23 @@ interface FollowUpOverview {
   completedCount: number;
   avgRecordsPerDay: number;
   byType: Array<{ type: string; count: number }>;
-  dailyTrend: Array<{ date: string; recordCount: number; completedCount: number }>;
-  topUsers: Array<{ userId: number; userName: string | null; recordCount: number; completedCount: number }>;
-  topCustomers: Array<{ customerId: number; customerName: string | null; recordCount: number; lastFollowUp: string | null }>;
+  dailyTrend: Array<{
+    date: string;
+    recordCount: number;
+    completedCount: number;
+  }>;
+  topUsers: Array<{
+    userId: number;
+    userName: string | null;
+    recordCount: number;
+    completedCount: number;
+  }>;
+  topCustomers: Array<{
+    customerId: number;
+    customerName: string | null;
+    recordCount: number;
+    lastFollowUp: string | null;
+  }>;
 }
 
 interface EfficiencyData {
@@ -271,12 +285,17 @@ onMounted(loadData);
               <Progress
                 type="circle"
                 :percent="Math.round(efficiency?.overdueRate || 0)"
-                :stroke-color="efficiency?.overdueRate && efficiency.overdueRate > 20 ? '#ff4d4f' : '#faad14'"
+                :stroke-color="
+                  efficiency?.overdueRate && efficiency.overdueRate > 20
+                    ? '#ff4d4f'
+                    : '#faad14'
+                "
                 :size="120"
               />
             </div>
             <div class="mt-3 text-center text-gray-500">
-              平均完成时长: {{ (efficiency?.avgCompletionTime || 0).toFixed(1) }} 小时
+              平均完成时长:
+              {{ (efficiency?.avgCompletionTime || 0).toFixed(1) }} 小时
             </div>
           </Card>
         </Col>
@@ -284,7 +303,13 @@ onMounted(loadData);
           <Card title="跟进类型分布">
             <Table
               :columns="typeColumns"
-              :data-source="(overview?.byType || []).map((item, index) => ({ ...item, key: index, type: typeMap[item.type] || item.type }))"
+              :data-source="
+                (overview?.byType || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                  type: typeMap[item.type] || item.type,
+                }))
+              "
               :pagination="false"
               size="small"
             />
@@ -304,7 +329,11 @@ onMounted(loadData);
             </template>
             <Table
               :columns="topUserColumns"
-              :data-source="(overview?.topUsers || []).slice(0, 5).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.topUsers || [])
+                  .slice(0, 5)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >
@@ -334,7 +363,15 @@ onMounted(loadData);
             </template>
             <Table
               :columns="topCustomerColumns"
-              :data-source="(overview?.topCustomers || []).slice(0, 5).map((item, index) => ({ ...item, key: index, lastFollowUp: formatDate(item.lastFollowUp) }))"
+              :data-source="
+                (overview?.topCustomers || [])
+                  .slice(0, 5)
+                  .map((item, index) => ({
+                    ...item,
+                    key: index,
+                    lastFollowUp: formatDate(item.lastFollowUp),
+                  }))
+              "
               :pagination="false"
               size="small"
             >
@@ -360,7 +397,12 @@ onMounted(loadData);
       <Card title="员工效率分析" class="mb-4">
         <Table
           :columns="efficiencyUserColumns"
-          :data-source="(efficiency?.byUser || []).map((item, index) => ({ ...item, key: index }))"
+          :data-source="
+            (efficiency?.byUser || []).map((item, index) => ({
+              ...item,
+              key: index,
+            }))
+          "
           :pagination="false"
           size="small"
         >
@@ -369,7 +411,13 @@ onMounted(loadData);
               <Progress
                 :percent="Math.round(record.completionRate)"
                 :size="80"
-                :stroke-color="record.completionRate >= 80 ? '#52c41a' : record.completionRate >= 50 ? '#faad14' : '#ff4d4f'"
+                :stroke-color="
+                  record.completionRate >= 80
+                    ? '#52c41a'
+                    : record.completionRate >= 50
+                      ? '#faad14'
+                      : '#ff4d4f'
+                "
               />
             </template>
           </template>
@@ -395,7 +443,9 @@ onMounted(loadData);
         </template>
         <Table
           :columns="rankingColumns"
-          :data-source="userRanking.map((item, index) => ({ ...item, key: index }))"
+          :data-source="
+            userRanking.map((item, index) => ({ ...item, key: index }))
+          "
           :pagination="false"
           size="small"
         >
@@ -415,7 +465,13 @@ onMounted(loadData);
               <Progress
                 :percent="Math.round(record.completionRate)"
                 :size="80"
-                :stroke-color="record.completionRate >= 80 ? '#52c41a' : record.completionRate >= 50 ? '#faad14' : '#ff4d4f'"
+                :stroke-color="
+                  record.completionRate >= 80
+                    ? '#52c41a'
+                    : record.completionRate >= 50
+                      ? '#faad14'
+                      : '#ff4d4f'
+                "
               />
             </template>
           </template>
@@ -424,7 +480,11 @@ onMounted(loadData);
 
       <!-- 每日趋势 -->
       <Card title="近7日跟进趋势">
-        <div v-if="overview?.dailyTrend?.length" class="flex items-end justify-around" style="height: 200px">
+        <div
+          v-if="overview?.dailyTrend?.length"
+          class="flex items-end justify-around"
+          style="height: 200px"
+        >
           <div
             v-for="(item, index) in overview.dailyTrend"
             :key="index"
@@ -433,7 +493,9 @@ onMounted(loadData);
             <div class="mb-1 text-xs text-gray-500">{{ item.recordCount }}</div>
             <div
               class="w-12 rounded-t bg-blue-500"
-              :style="{ height: `${Math.max(20, (item.recordCount / Math.max(...overview.dailyTrend.map(d => d.recordCount), 1)) * 150)}px` }"
+              :style="{
+                height: `${Math.max(20, (item.recordCount / Math.max(...overview.dailyTrend.map((d) => d.recordCount), 1)) * 150)}px`,
+              }"
             />
             <div class="mt-2 text-xs text-gray-400">
               {{ item.date.slice(5) }}

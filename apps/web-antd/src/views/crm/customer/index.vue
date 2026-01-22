@@ -15,7 +15,11 @@ import {
   Card,
   InputSearch,
 } from 'ant-design-vue';
-import { UserOutlined, WechatOutlined, BarChartOutlined } from '@ant-design/icons-vue';
+import {
+  UserOutlined,
+  WechatOutlined,
+  BarChartOutlined,
+} from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 
 const router = useRouter();

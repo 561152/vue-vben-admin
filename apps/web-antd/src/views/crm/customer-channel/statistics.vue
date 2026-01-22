@@ -150,7 +150,9 @@
               <Col :span="8">
                 <Card title="总渠道数">
                   <Statistic
-                    :value="typeAnalysis.byType.reduce((sum, t) => sum + t.count, 0)"
+                    :value="
+                      typeAnalysis.byType.reduce((sum, t) => sum + t.count, 0)
+                    "
                     :value-style="{ color: '#722ed1' }"
                   />
                 </Card>
@@ -243,7 +245,11 @@
                     </Tag>
                   </template>
                   <template v-else-if="column.key === 'lastMessageAt'">
-                    {{ record.lastMessageAt ? formatDate(record.lastMessageAt) : '-' }}
+                    {{
+                      record.lastMessageAt
+                        ? formatDate(record.lastMessageAt)
+                        : '-'
+                    }}
                   </template>
                 </template>
               </Table>
@@ -261,10 +267,16 @@
                     title="30天增长率"
                     :value="growth.growthRate"
                     suffix="%"
-                    :value-style="{ color: growth.growthRate >= 0 ? '#52c41a' : '#ff4d4f' }"
+                    :value-style="{
+                      color: growth.growthRate >= 0 ? '#52c41a' : '#ff4d4f',
+                    }"
                   >
                     <template #prefix>
-                      <component :is="growth.growthRate >= 0 ? RiseOutlined : FallOutlined" />
+                      <component
+                        :is="
+                          growth.growthRate >= 0 ? RiseOutlined : FallOutlined
+                        "
+                      />
                     </template>
                   </Statistic>
                 </Card>
@@ -291,7 +303,9 @@
                 <Card>
                   <Statistic
                     title="净增长"
-                    :value="growth.avgDailyNewChannels - growth.avgDailyUnfollowed"
+                    :value="
+                      growth.avgDailyNewChannels - growth.avgDailyUnfollowed
+                    "
                     :value-style="{ color: '#722ed1' }"
                   />
                 </Card>
@@ -308,8 +322,13 @@
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'netGrowth'">
-                    <span :style="{ color: record.netGrowth >= 0 ? '#52c41a' : '#ff4d4f' }">
-                      {{ record.netGrowth >= 0 ? '+' : '' }}{{ record.netGrowth }}
+                    <span
+                      :style="{
+                        color: record.netGrowth >= 0 ? '#52c41a' : '#ff4d4f',
+                      }"
+                    >
+                      {{ record.netGrowth >= 0 ? '+' : ''
+                      }}{{ record.netGrowth }}
                     </span>
                   </template>
                 </template>
@@ -500,7 +519,9 @@ const handleTabChange = (key: Key) => {
 const loadOverview = async () => {
   loading.value.overview = true;
   try {
-    const res = await requestClient.get('/customer-channels/statistics/overview');
+    const res = await requestClient.get(
+      '/customer-channels/statistics/overview',
+    );
     overview.value = res;
   } catch (error) {
     message.error('加载统计概览失败');
@@ -512,7 +533,9 @@ const loadOverview = async () => {
 const loadTypeAnalysis = async () => {
   loading.value.type = true;
   try {
-    const res = await requestClient.get('/customer-channels/statistics/type-analysis');
+    const res = await requestClient.get(
+      '/customer-channels/statistics/type-analysis',
+    );
     typeAnalysis.value = res;
   } catch (error) {
     message.error('加载类型分析失败');
@@ -524,7 +547,9 @@ const loadTypeAnalysis = async () => {
 const loadInteraction = async () => {
   loading.value.interaction = true;
   try {
-    const res = await requestClient.get('/customer-channels/statistics/interaction');
+    const res = await requestClient.get(
+      '/customer-channels/statistics/interaction',
+    );
     interaction.value = res;
   } catch (error) {
     message.error('加载互动分析失败');

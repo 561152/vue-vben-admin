@@ -116,8 +116,18 @@ function getActionColor(action: string): string {
 
 // Table columns
 const columns = [
-  { title: '违规用户', dataIndex: 'externalName', key: 'externalName', width: 120 },
-  { title: '群聊', dataIndex: 'groupChatName', key: 'groupChatName', width: 120 },
+  {
+    title: '违规用户',
+    dataIndex: 'externalName',
+    key: 'externalName',
+    width: 120,
+  },
+  {
+    title: '群聊',
+    dataIndex: 'groupChatName',
+    key: 'groupChatName',
+    width: 120,
+  },
   { title: '触发规则', dataIndex: 'ruleName', key: 'ruleName', width: 140 },
   {
     title: '违规类型',
@@ -228,7 +238,9 @@ async function handleRetryFailed() {
       succeeded: number;
       failed: number;
     }>('/anti-harassment/violations/retry-failed');
-    message.success(`重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`);
+    message.success(
+      `重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`,
+    );
     fetchRecords();
     fetchStatistics();
   } catch (e: any) {

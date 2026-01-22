@@ -115,7 +115,12 @@
                     title="文案生成率"
                     :value="overview.copyGenerationRate"
                     suffix="%"
-                    :value-style="{ color: overview.copyGenerationRate >= 80 ? '#52c41a' : '#faad14' }"
+                    :value-style="{
+                      color:
+                        overview.copyGenerationRate >= 80
+                          ? '#52c41a'
+                          : '#faad14',
+                    }"
                   >
                     <template #prefix>
                       <PercentageOutlined />
@@ -643,9 +648,9 @@ const copyStatusColors: Record<string, string> = {
 
 // RFM颜色
 const rfmColors: Record<string, string> = {
-  '高价值': '#52c41a',
-  '中价值': '#1890ff',
-  '低价值': '#faad14',
+  高价值: '#52c41a',
+  中价值: '#1890ff',
+  低价值: '#faad14',
 };
 
 // 方法
@@ -654,7 +659,8 @@ const getStatusColor = (status: string) => statusColors[status] || '#1890ff';
 const getTypeName = (type: string) => typeMap[type] || type;
 const getTypeColor = (type: string) => typeColors[type] || '#1890ff';
 const getCopyStatusName = (status: string) => copyStatusMap[status] || status;
-const getCopyStatusColor = (status: string) => copyStatusColors[status] || '#1890ff';
+const getCopyStatusColor = (status: string) =>
+  copyStatusColors[status] || '#1890ff';
 const getRfmColor = (segment: string) => rfmColors[segment] || '#1890ff';
 
 const formatDate = (date: Date | string) => {
@@ -676,7 +682,9 @@ const handleTabChange = (key: Key) => {
 const loadOverview = async () => {
   loading.value.overview = true;
   try {
-    const res = await requestClient.get('/targeted-marketing/statistics/overview');
+    const res = await requestClient.get(
+      '/targeted-marketing/statistics/overview',
+    );
     overview.value = res;
   } catch (error) {
     message.error('加载统计概览失败');
@@ -688,7 +696,9 @@ const loadOverview = async () => {
 const loadCampaignAnalysis = async () => {
   loading.value.campaigns = true;
   try {
-    const res = await requestClient.get('/targeted-marketing/statistics/campaigns');
+    const res = await requestClient.get(
+      '/targeted-marketing/statistics/campaigns',
+    );
     campaignAnalysis.value = res;
   } catch (error) {
     message.error('加载活动分析失败');
@@ -700,7 +710,9 @@ const loadCampaignAnalysis = async () => {
 const loadAudienceAnalysis = async () => {
   loading.value.audience = true;
   try {
-    const res = await requestClient.get('/targeted-marketing/statistics/audience');
+    const res = await requestClient.get(
+      '/targeted-marketing/statistics/audience',
+    );
     audienceAnalysis.value = res;
   } catch (error) {
     message.error('加载人群匹配分析失败');
@@ -712,7 +724,9 @@ const loadAudienceAnalysis = async () => {
 const loadCopyPerformance = async () => {
   loading.value.copies = true;
   try {
-    const res = await requestClient.get('/targeted-marketing/statistics/copies');
+    const res = await requestClient.get(
+      '/targeted-marketing/statistics/copies',
+    );
     copyPerformance.value = res;
   } catch (error) {
     message.error('加载文案效果分析失败');

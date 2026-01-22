@@ -115,7 +115,10 @@
                     title="同步成功率"
                     :value="overview.syncSuccessRate"
                     suffix="%"
-                    :value-style="{ color: overview.syncSuccessRate >= 90 ? '#52c41a' : '#ff4d4f' }"
+                    :value-style="{
+                      color:
+                        overview.syncSuccessRate >= 90 ? '#52c41a' : '#ff4d4f',
+                    }"
                   >
                     <template #prefix>
                       <CheckCircleOutlined />

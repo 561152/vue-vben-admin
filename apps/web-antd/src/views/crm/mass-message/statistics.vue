@@ -268,7 +268,12 @@ onMounted(loadData);
               :value="overview?.deliveryRate || 0"
               suffix="%"
               :prefix="h(RiseOutlined)"
-              :value-style="{ color: overview?.deliveryRate && overview.deliveryRate >= 80 ? '#52c41a' : '#faad14' }"
+              :value-style="{
+                color:
+                  overview?.deliveryRate && overview.deliveryRate >= 80
+                    ? '#52c41a'
+                    : '#faad14',
+              }"
             />
           </Card>
         </Col>
@@ -330,7 +335,10 @@ onMounted(loadData);
         </Col>
         <Col :span="8">
           <Card title="平均绩效">
-            <div class="flex flex-col items-center justify-center" style="height: 120px">
+            <div
+              class="flex flex-col items-center justify-center"
+              style="height: 120px"
+            >
               <div class="text-4xl font-bold text-blue-500">
                 {{ campaignPerformance?.avgDeliveryRate || 0 }}%
               </div>
@@ -353,11 +361,15 @@ onMounted(loadData);
                 <Tag :color="statusMap[item.status]?.color || 'default'">
                   {{ statusMap[item.status]?.label || item.status }}
                 </Tag>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
-                    :stroke-color="statusMap[item.status]?.color === 'success' ? '#52c41a' : '#1890ff'"
+                    :stroke-color="
+                      statusMap[item.status]?.color === 'success'
+                        ? '#52c41a'
+                        : '#1890ff'
+                    "
                   />
                 </div>
                 <span>{{ item.count }}</span>
@@ -377,11 +389,13 @@ onMounted(loadData);
                 <Tag :color="resultStatusMap[item.status]?.color || 'default'">
                   {{ resultStatusMap[item.status]?.label || item.status }}
                 </Tag>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
-                    :stroke-color="item.status === 'SENT' ? '#52c41a' : '#ff4d4f'"
+                    :stroke-color="
+                      item.status === 'SENT' ? '#52c41a' : '#ff4d4f'
+                    "
                   />
                 </div>
                 <span>{{ item.count }}</span>
@@ -401,11 +415,8 @@ onMounted(loadData);
                 <Tag color="blue">
                   {{ chatTypeMap[item.chatType] || item.chatType }}
                 </Tag>
-                <div class="flex-1 mx-3">
-                  <Progress
-                    :percent="item.percentage"
-                    :show-info="false"
-                  />
+                <div class="mx-3 flex-1">
+                  <Progress :percent="item.percentage" :show-info="false" />
                 </div>
                 <span>{{ item.count }}</span>
               </div>
@@ -421,7 +432,12 @@ onMounted(loadData);
           <Card title="热门活动 TOP10">
             <Table
               :columns="topCampaignColumns"
-              :data-source="(overview?.topCampaigns || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.topCampaigns || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -441,7 +457,9 @@ onMounted(loadData);
                   <Progress
                     :percent="record.deliveryRate"
                     :size="60"
-                    :stroke-color="record.deliveryRate >= 80 ? '#52c41a' : '#faad14'"
+                    :stroke-color="
+                      record.deliveryRate >= 80 ? '#52c41a' : '#faad14'
+                    "
                   />
                 </template>
               </template>
@@ -450,20 +468,30 @@ onMounted(loadData);
         </Col>
         <Col :span="12">
           <Card title="近7日趋势">
-            <div v-if="overview?.dailyTrend?.length" class="flex items-end justify-around" style="height: 240px">
+            <div
+              v-if="overview?.dailyTrend?.length"
+              class="flex items-end justify-around"
+              style="height: 240px"
+            >
               <div
                 v-for="(item, index) in overview.dailyTrend"
                 :key="index"
                 class="flex flex-col items-center"
               >
-                <div class="mb-1 text-xs text-green-500">{{ item.deliveredCount }}</div>
+                <div class="mb-1 text-xs text-green-500">
+                  {{ item.deliveredCount }}
+                </div>
                 <div
                   class="w-8 rounded-t bg-green-500"
-                  :style="{ height: `${Math.max(10, (item.deliveredCount / Math.max(...overview.dailyTrend.map(d => d.deliveredCount), 1)) * 140)}px` }"
+                  :style="{
+                    height: `${Math.max(10, (item.deliveredCount / Math.max(...overview.dailyTrend.map((d) => d.deliveredCount), 1)) * 140)}px`,
+                  }"
                 />
                 <div
                   class="w-8 bg-blue-500"
-                  :style="{ height: `${Math.max(5, (item.sentCount / Math.max(...overview.dailyTrend.map(d => d.sentCount), 1)) * 40)}px` }"
+                  :style="{
+                    height: `${Math.max(5, (item.sentCount / Math.max(...overview.dailyTrend.map((d) => d.sentCount), 1)) * 40)}px`,
+                  }"
                 />
                 <div class="mt-2 text-xs text-gray-400">
                   {{ item.date.slice(5) }}
@@ -471,10 +499,23 @@ onMounted(loadData);
               </div>
             </div>
             <div class="mt-2 flex justify-center gap-4 text-xs">
-              <span><span class="mr-1 inline-block h-2 w-2 rounded bg-green-500"></span>送达数</span>
-              <span><span class="mr-1 inline-block h-2 w-2 rounded bg-blue-500"></span>发送数</span>
+              <span
+                ><span
+                  class="mr-1 inline-block h-2 w-2 rounded bg-green-500"
+                ></span
+                >送达数</span
+              >
+              <span
+                ><span
+                  class="mr-1 inline-block h-2 w-2 rounded bg-blue-500"
+                ></span
+                >发送数</span
+              >
             </div>
-            <Empty v-if="!overview?.dailyTrend?.length" description="暂无数据" />
+            <Empty
+              v-if="!overview?.dailyTrend?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
       </Row>
@@ -485,7 +526,11 @@ onMounted(loadData);
           <Card title="发送者统计">
             <Table
               :columns="senderColumns"
-              :data-source="(sendAnalysis?.bySender || []).slice(0, 10).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (sendAnalysis?.bySender || [])
+                  .slice(0, 10)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >
@@ -497,17 +542,26 @@ onMounted(loadData);
                   <Progress
                     :percent="record.deliveryRate"
                     :size="60"
-                    :stroke-color="record.deliveryRate >= 80 ? '#52c41a' : '#faad14'"
+                    :stroke-color="
+                      record.deliveryRate >= 80 ? '#52c41a' : '#faad14'
+                    "
                   />
                 </template>
               </template>
             </Table>
-            <Empty v-if="!sendAnalysis?.bySender?.length" description="暂无数据" />
+            <Empty
+              v-if="!sendAnalysis?.bySender?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
         <Col :span="12">
           <Card title="发送时段分布">
-            <div v-if="sendAnalysis?.byHour?.length" class="flex items-end justify-around" style="height: 200px">
+            <div
+              v-if="sendAnalysis?.byHour?.length"
+              class="flex items-end justify-around"
+              style="height: 200px"
+            >
               <div
                 v-for="item in sendAnalysis.byHour"
                 :key="item.hour"
@@ -516,7 +570,9 @@ onMounted(loadData);
               >
                 <div
                   class="w-3 rounded-t bg-blue-400"
-                  :style="{ height: `${Math.max(5, (item.count / Math.max(...sendAnalysis.byHour.map(h => h.count), 1)) * 160)}px` }"
+                  :style="{
+                    height: `${Math.max(5, (item.count / Math.max(...sendAnalysis.byHour.map((h) => h.count), 1)) * 160)}px`,
+                  }"
                 />
                 <div class="mt-1 text-xs text-gray-400">{{ item.hour }}</div>
               </div>
@@ -542,20 +598,28 @@ onMounted(loadData);
                 :key="item.status"
                 :color="campaignStatusMap[item.status]?.color || 'default'"
               >
-                {{ campaignStatusMap[item.status]?.label || item.status }}: {{ item.count }}
+                {{ campaignStatusMap[item.status]?.label || item.status }}:
+                {{ item.count }}
               </Tag>
             </div>
           </Col>
         </Row>
         <Table
           :columns="campaignColumns"
-          :data-source="(campaignPerformance?.campaigns || []).map((item, index) => ({ ...item, key: index }))"
+          :data-source="
+            (campaignPerformance?.campaigns || []).map((item, index) => ({
+              ...item,
+              key: index,
+            }))
+          "
           :pagination="{ pageSize: 10 }"
           size="small"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'status'">
-              <Tag :color="campaignStatusMap[record.status]?.color || 'default'">
+              <Tag
+                :color="campaignStatusMap[record.status]?.color || 'default'"
+              >
                 {{ campaignStatusMap[record.status]?.label || record.status }}
               </Tag>
             </template>
@@ -563,7 +627,9 @@ onMounted(loadData);
               <Progress
                 :percent="record.deliveryRate"
                 :size="60"
-                :stroke-color="record.deliveryRate >= 80 ? '#52c41a' : '#faad14'"
+                :stroke-color="
+                  record.deliveryRate >= 80 ? '#52c41a' : '#faad14'
+                "
               />
             </template>
           </template>

@@ -245,7 +245,9 @@ const urgentTasksColumns = [
 
 async function loadOverview() {
   try {
-    overviewData.value = await requestClient.get('/crm/employee-tasks/statistics/overview');
+    overviewData.value = await requestClient.get(
+      '/crm/employee-tasks/statistics/overview',
+    );
   } catch (error) {
     console.error('Failed to load overview:', error);
   }
@@ -656,7 +658,7 @@ onMounted(loadAllData);
 
               <!-- 待处理任务告警 -->
               <Card title="待处理任务告警" size="small">
-                <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="mb-4 grid grid-cols-3 gap-4">
                   <Statistic
                     title="超过24小时"
                     :value="timelinessData.pendingTasksAlert.pendingOver24h"
@@ -777,7 +779,7 @@ onMounted(loadAllData);
                     </div>
                   </div>
                   <div>
-                    <div class="font-medium mb-2">按类型分布：</div>
+                    <div class="mb-2 font-medium">按类型分布：</div>
                     <div class="space-y-2">
                       <div
                         v-for="item in timelinessData.expirationAnalysis

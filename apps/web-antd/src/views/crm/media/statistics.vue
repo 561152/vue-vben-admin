@@ -138,7 +138,12 @@ const largestMediaColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true },
   { title: '类型', key: 'type', width: 80 },
-  { title: '大小', dataIndex: 'fileSizeFormatted', key: 'fileSize', width: 100 },
+  {
+    title: '大小',
+    dataIndex: 'fileSizeFormatted',
+    key: 'fileSize',
+    width: 100,
+  },
   { title: '创建时间', key: 'createdAt', width: 120 },
 ];
 
@@ -167,7 +172,9 @@ async function loadData() {
   try {
     const [overviewRes, storageRes, syncRes] = await Promise.all([
       requestClient.get<MediaOverview>('/crm/media/statistics/overview'),
-      requestClient.get<StorageAnalysis>('/crm/media/statistics/storage-analysis'),
+      requestClient.get<StorageAnalysis>(
+        '/crm/media/statistics/storage-analysis',
+      ),
       requestClient.get<SyncStatus>('/crm/media/statistics/sync-status'),
     ]);
     overview.value = overviewRes;
@@ -268,7 +275,12 @@ onMounted(loadData);
       </Row>
 
       <!-- 同步状态警告 -->
-      <div v-if="syncStatus && (syncStatus.expired > 0 || syncStatus.notSynced > 0)" class="mb-4">
+      <div
+        v-if="
+          syncStatus && (syncStatus.expired > 0 || syncStatus.notSynced > 0)
+        "
+        class="mb-4"
+      >
         <Alert
           v-if="syncStatus.expired > 0"
           type="warning"
@@ -294,9 +306,15 @@ onMounted(loadData);
                   <CheckCircleOutlined class="text-green-500" />
                   已同步
                 </span>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
-                    :percent="syncStatus?.total ? Math.round((syncStatus.synced / syncStatus.total) * 100) : 0"
+                    :percent="
+                      syncStatus?.total
+                        ? Math.round(
+                            (syncStatus.synced / syncStatus.total) * 100,
+                          )
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#52c41a"
                   />
@@ -308,9 +326,15 @@ onMounted(loadData);
                   <WarningOutlined class="text-yellow-500" />
                   已过期
                 </span>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
-                    :percent="syncStatus?.total ? Math.round((syncStatus.expired / syncStatus.total) * 100) : 0"
+                    :percent="
+                      syncStatus?.total
+                        ? Math.round(
+                            (syncStatus.expired / syncStatus.total) * 100,
+                          )
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#faad14"
                   />
@@ -322,9 +346,15 @@ onMounted(loadData);
                   <SyncOutlined class="text-gray-400" />
                   未同步
                 </span>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
-                    :percent="syncStatus?.total ? Math.round((syncStatus.notSynced / syncStatus.total) * 100) : 0"
+                    :percent="
+                      syncStatus?.total
+                        ? Math.round(
+                            (syncStatus.notSynced / syncStatus.total) * 100,
+                          )
+                        : 0
+                    "
                     :show-info="false"
                     stroke-color="#d9d9d9"
                   />
@@ -345,11 +375,8 @@ onMounted(loadData);
                 <Tag :color="typeMap[item.type]?.color || 'default'">
                   {{ typeMap[item.type]?.label || item.type }}
                 </Tag>
-                <div class="flex-1 mx-3">
-                  <Progress
-                    :percent="item.percentage"
-                    :show-info="false"
-                  />
+                <div class="mx-3 flex-1">
+                  <Progress :percent="item.percentage" :show-info="false" />
                 </div>
                 <span class="text-gray-500">{{ item.count }} 个</span>
               </div>
@@ -359,13 +386,17 @@ onMounted(loadData);
         </Col>
         <Col :span="8">
           <Card title="存储分析">
-            <div class="flex flex-col items-center justify-center" style="height: 140px">
+            <div
+              class="flex flex-col items-center justify-center"
+              style="height: 140px"
+            >
               <div class="text-3xl font-bold text-blue-500">
                 {{ storageAnalysis?.totalStorageFormatted || '0 B' }}
               </div>
-              <div class="text-gray-500 mt-2">总存储空间</div>
-              <div class="text-gray-400 mt-1">
-                平均文件大小: {{ storageAnalysis?.avgFileSizeFormatted || '0 B' }}
+              <div class="mt-2 text-gray-500">总存储空间</div>
+              <div class="mt-1 text-gray-400">
+                平均文件大小:
+                {{ storageAnalysis?.avgFileSizeFormatted || '0 B' }}
               </div>
             </div>
           </Card>
@@ -385,11 +416,17 @@ onMounted(loadData);
                 <Tag :color="typeMap[item.type]?.color || 'default'">
                   {{ typeMap[item.type]?.label || item.type }}
                 </Tag>
-                <div class="flex-1 mx-3">
+                <div class="mx-3 flex-1">
                   <Progress
                     :percent="item.percentage"
                     :show-info="false"
-                    :stroke-color="typeMap[item.type]?.color === 'blue' ? '#1890ff' : typeMap[item.type]?.color === 'purple' ? '#722ed1' : '#fa8c16'"
+                    :stroke-color="
+                      typeMap[item.type]?.color === 'blue'
+                        ? '#1890ff'
+                        : typeMap[item.type]?.color === 'purple'
+                          ? '#722ed1'
+                          : '#fa8c16'
+                    "
                   />
                 </div>
                 <span class="text-gray-500">{{ item.totalSizeFormatted }}</span>
@@ -406,12 +443,9 @@ onMounted(loadData);
                 :key="item.range"
                 class="mb-3 flex items-center justify-between"
               >
-                <span class="text-gray-600 w-28">{{ item.range }}</span>
-                <div class="flex-1 mx-3">
-                  <Progress
-                    :percent="item.percentage"
-                    :show-info="false"
-                  />
+                <span class="w-28 text-gray-600">{{ item.range }}</span>
+                <div class="mx-3 flex-1">
+                  <Progress :percent="item.percentage" :show-info="false" />
                 </div>
                 <span>{{ item.count }}</span>
               </div>
@@ -427,7 +461,12 @@ onMounted(loadData);
           <Card title="最大文件 TOP 10">
             <Table
               :columns="largestMediaColumns"
-              :data-source="(overview?.largestMedia || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (overview?.largestMedia || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -459,7 +498,11 @@ onMounted(loadData);
           <Card title="创建者统计">
             <Table
               :columns="creatorColumns"
-              :data-source="(storageAnalysis?.byCreator || []).slice(0, 8).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (storageAnalysis?.byCreator || [])
+                  .slice(0, 8)
+                  .map((item, index) => ({ ...item, key: index }))
+              "
               :pagination="false"
               size="small"
             >
@@ -469,7 +512,10 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!storageAnalysis?.byCreator?.length" description="暂无数据" />
+            <Empty
+              v-if="!storageAnalysis?.byCreator?.length"
+              description="暂无数据"
+            />
           </Card>
         </Col>
       </Row>
@@ -478,7 +524,11 @@ onMounted(loadData);
       <Row :gutter="16" class="mb-4">
         <Col :span="24">
           <Card title="近7日上传趋势">
-            <div v-if="overview?.dailyTrend?.length" class="flex items-end justify-around" style="height: 160px">
+            <div
+              v-if="overview?.dailyTrend?.length"
+              class="flex items-end justify-around"
+              style="height: 160px"
+            >
               <div
                 v-for="(item, index) in overview.dailyTrend"
                 :key="index"
@@ -487,7 +537,9 @@ onMounted(loadData);
                 <div class="mb-1 text-xs text-blue-500">{{ item.count }}</div>
                 <div
                   class="w-12 rounded-t bg-blue-500"
-                  :style="{ height: `${Math.max(10, (item.count / Math.max(...overview.dailyTrend.map(d => d.count), 1)) * 120)}px` }"
+                  :style="{
+                    height: `${Math.max(10, (item.count / Math.max(...overview.dailyTrend.map((d) => d.count), 1)) * 120)}px`,
+                  }"
                 />
                 <div class="mt-2 text-xs text-gray-400">
                   {{ item.date.slice(5) }}
@@ -505,7 +557,12 @@ onMounted(loadData);
           <Card title="即将过期 (24小时内)">
             <Table
               :columns="needRefreshColumns"
-              :data-source="(syncStatus?.needRefresh || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (syncStatus?.needRefresh || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -520,14 +577,22 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!syncStatus?.needRefresh?.length" description="没有即将过期的素材" />
+            <Empty
+              v-if="!syncStatus?.needRefresh?.length"
+              description="没有即将过期的素材"
+            />
           </Card>
         </Col>
         <Col :span="12">
           <Card title="从未同步">
             <Table
               :columns="neverSyncedColumns"
-              :data-source="(syncStatus?.neverSynced || []).map((item, index) => ({ ...item, key: index }))"
+              :data-source="
+                (syncStatus?.neverSynced || []).map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))
+              "
               :pagination="false"
               size="small"
             >
@@ -542,7 +607,10 @@ onMounted(loadData);
                 </template>
               </template>
             </Table>
-            <Empty v-if="!syncStatus?.neverSynced?.length" description="所有素材都已同步" />
+            <Empty
+              v-if="!syncStatus?.neverSynced?.length"
+              description="所有素材都已同步"
+            />
           </Card>
         </Col>
       </Row>

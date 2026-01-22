@@ -45,7 +45,12 @@ interface StatisticsOverview {
   computedToday: number;
   wecomCoverageRate: number;
   byStatus: Array<{ status: string; count: number; percentage: number }>;
-  byComputeType: Array<{ computeType: string; count: number; memberCount: number; percentage: number }>;
+  byComputeType: Array<{
+    computeType: string;
+    count: number;
+    memberCount: number;
+    percentage: number;
+  }>;
   dailyTrend: Array<{ date: string; created: number; computed: number }>;
 }
 
@@ -149,8 +154,12 @@ async function loadData() {
   loading.value = true;
   try {
     const [overviewRes, sizeRes, usageRes, healthRes] = await Promise.all([
-      requestClient.get<StatisticsOverview>('/crm/audiences/statistics/overview'),
-      requestClient.get<SizeAnalysis>('/crm/audiences/statistics/size-analysis'),
+      requestClient.get<StatisticsOverview>(
+        '/crm/audiences/statistics/overview',
+      ),
+      requestClient.get<SizeAnalysis>(
+        '/crm/audiences/statistics/size-analysis',
+      ),
       requestClient.get<UsageAnalysis>('/crm/audiences/statistics/usage'),
       requestClient.get<HealthStatus>('/crm/audiences/statistics/health'),
     ]);
@@ -180,14 +189,24 @@ const largestColumns = [
   { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true },
   { title: '类型', dataIndex: 'computeType', key: 'computeType' },
   { title: '状态', dataIndex: 'status', key: 'status' },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', sorter: (a: any, b: any) => a.customerCount - b.customerCount },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    sorter: (a: any, b: any) => a.customerCount - b.customerCount,
+  },
   { title: '企微数', dataIndex: 'wecomCount', key: 'wecomCount' },
   { title: '最后计算', dataIndex: 'lastComputedAt', key: 'lastComputedAt' },
 ];
 
 const usedColumns = [
   { title: '名称', dataIndex: 'name', key: 'name', ellipsis: true },
-  { title: '使用次数', dataIndex: 'campaignCount', key: 'campaignCount', sorter: (a: any, b: any) => a.campaignCount - b.campaignCount },
+  {
+    title: '使用次数',
+    dataIndex: 'campaignCount',
+    key: 'campaignCount',
+    sorter: (a: any, b: any) => a.campaignCount - b.campaignCount,
+  },
   { title: '最后使用', dataIndex: 'lastUsedAt', key: 'lastUsedAt' },
 ];
 
@@ -228,16 +247,14 @@ onMounted(loadData);
                     <template #prefix><TeamOutlined /></template>
                   </Statistic>
                   <div class="mt-2 text-xs text-gray-500">
-                    静态: {{ overview.staticCount }} / 动态: {{ overview.dynamicCount }}
+                    静态: {{ overview.staticCount }} / 动态:
+                    {{ overview.dynamicCount }}
                   </div>
                 </Card>
               </Col>
               <Col :xs="24" :sm="12" :md="6">
                 <Card>
-                  <Statistic
-                    title="总成员数"
-                    :value="overview.totalMembers"
-                  >
+                  <Statistic title="总成员数" :value="overview.totalMembers">
                     <template #prefix><DatabaseOutlined /></template>
                   </Statistic>
                   <div class="mt-2 text-xs text-gray-500">
@@ -251,7 +268,12 @@ onMounted(loadData);
                     title="企微覆盖率"
                     :value="overview.wecomCoverageRate"
                     suffix="%"
-                    :value-style="{ color: overview.wecomCoverageRate >= 80 ? '#3f8600' : '#fa8c16' }"
+                    :value-style="{
+                      color:
+                        overview.wecomCoverageRate >= 80
+                          ? '#3f8600'
+                          : '#fa8c16',
+                    }"
                   />
                 </Card>
               </Col>
@@ -265,7 +287,8 @@ onMounted(loadData);
                     <template #prefix><CheckCircleOutlined /></template>
                   </Statistic>
                   <div class="mt-2 text-xs text-gray-500">
-                    草稿: {{ overview.draftCount }} / 计算中: {{ overview.computingCount }}
+                    草稿: {{ overview.draftCount }} / 计算中:
+                    {{ overview.computingCount }}
                   </div>
                 </Card>
               </Col>
@@ -280,7 +303,10 @@ onMounted(loadData);
               </Col>
               <Col :xs="24" :sm="8">
                 <Card>
-                  <Statistic title="本周创建" :value="overview.createdThisWeek" />
+                  <Statistic
+                    title="本周创建"
+                    :value="overview.createdThisWeek"
+                  />
                 </Card>
               </Col>
               <Col :xs="24" :sm="8">
@@ -294,7 +320,11 @@ onMounted(loadData);
             <Row :gutter="[16, 16]" class="mb-4">
               <Col :xs="24" :md="12">
                 <Card title="按状态分布">
-                  <div v-for="item in overview.byStatus" :key="item.status" class="mb-3">
+                  <div
+                    v-for="item in overview.byStatus"
+                    :key="item.status"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
                       <span>
                         <Badge :status="statusMap[item.status]?.color as any" />
@@ -302,18 +332,35 @@ onMounted(loadData);
                       </span>
                       <span>{{ item.count }} ({{ item.percentage }}%)</span>
                     </div>
-                    <Progress :percent="item.percentage" :show-info="false" size="small" />
+                    <Progress
+                      :percent="item.percentage"
+                      :show-info="false"
+                      size="small"
+                    />
                   </div>
                 </Card>
               </Col>
               <Col :xs="24" :md="12">
                 <Card title="按类型分布">
-                  <div v-for="item in overview.byComputeType" :key="item.computeType" class="mb-3">
+                  <div
+                    v-for="item in overview.byComputeType"
+                    :key="item.computeType"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
-                      <span>{{ computeTypeMap[item.computeType] || item.computeType }}</span>
-                      <span>{{ item.count }} 个 / {{ item.memberCount }} 成员</span>
+                      <span>{{
+                        computeTypeMap[item.computeType] || item.computeType
+                      }}</span>
+                      <span
+                        >{{ item.count }} 个 / {{ item.memberCount }} 成员</span
+                      >
                     </div>
-                    <Progress :percent="item.percentage" :show-info="false" size="small" stroke-color="#1890ff" />
+                    <Progress
+                      :percent="item.percentage"
+                      :show-info="false"
+                      size="small"
+                      stroke-color="#1890ff"
+                    />
                   </div>
                 </Card>
               </Col>
@@ -330,7 +377,7 @@ onMounted(loadData);
                   <div
                     class="w-full rounded-t bg-blue-400"
                     :style="{
-                      height: `${Math.max((item.created / Math.max(...overview.dailyTrend.map(d => d.created), 1)) * 100, 4)}px`,
+                      height: `${Math.max((item.created / Math.max(...overview.dailyTrend.map((d) => d.created), 1)) * 100, 4)}px`,
                     }"
                   ></div>
                   <div class="mt-2 text-xs text-gray-500">
@@ -350,17 +397,26 @@ onMounted(loadData);
             <Row :gutter="[16, 16]" class="mb-4">
               <Col :xs="24" :sm="8">
                 <Card>
-                  <Statistic title="平均客户数" :value="sizeAnalysis.avgCustomerCount" />
+                  <Statistic
+                    title="平均客户数"
+                    :value="sizeAnalysis.avgCustomerCount"
+                  />
                 </Card>
               </Col>
               <Col :xs="24" :sm="8">
                 <Card>
-                  <Statistic title="平均企微数" :value="sizeAnalysis.avgWecomCount" />
+                  <Statistic
+                    title="平均企微数"
+                    :value="sizeAnalysis.avgWecomCount"
+                  />
                 </Card>
               </Col>
               <Col :xs="24" :sm="8">
                 <Card>
-                  <Statistic title="覆盖独立客户" :value="sizeAnalysis.uniqueCustomerCount" />
+                  <Statistic
+                    title="覆盖独立客户"
+                    :value="sizeAnalysis.uniqueCustomerCount"
+                  />
                 </Card>
               </Col>
             </Row>
@@ -369,12 +425,20 @@ onMounted(loadData);
               <!-- 规模分布 -->
               <Col :xs="24" :md="12">
                 <Card title="人群规模分布">
-                  <div v-for="item in sizeAnalysis.sizeDistribution" :key="item.range" class="mb-3">
+                  <div
+                    v-for="item in sizeAnalysis.sizeDistribution"
+                    :key="item.range"
+                    class="mb-3"
+                  >
                     <div class="mb-1 flex justify-between">
                       <span>{{ item.range }} 人</span>
                       <span>{{ item.count }} ({{ item.percentage }}%)</span>
                     </div>
-                    <Progress :percent="item.percentage" :show-info="false" size="small" />
+                    <Progress
+                      :percent="item.percentage"
+                      :show-info="false"
+                      size="small"
+                    />
                   </div>
                 </Card>
               </Col>
@@ -392,11 +456,18 @@ onMounted(loadData);
                       发现 {{ sizeAnalysis.emptyAudiences.length }} 个空人群包
                     </template>
                   </Alert>
-                  <div v-for="item in sizeAnalysis.emptyAudiences.slice(0, 10)" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in sizeAnalysis.emptyAudiences.slice(0, 10)"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
                     <Tag>{{ statusMap[item.status]?.text || item.status }}</Tag>
                   </div>
-                  <div v-if="sizeAnalysis.emptyAudiences.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="sizeAnalysis.emptyAudiences.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     没有空人群包
                   </div>
                 </Card>
@@ -414,10 +485,15 @@ onMounted(loadData);
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'computeType'">
-                    <Tag>{{ computeTypeMap[record.computeType] || record.computeType }}</Tag>
+                    <Tag>{{
+                      computeTypeMap[record.computeType] || record.computeType
+                    }}</Tag>
                   </template>
                   <template v-if="column.key === 'status'">
-                    <Badge :status="statusMap[record.status]?.color as any" :text="statusMap[record.status]?.text || record.status" />
+                    <Badge
+                      :status="statusMap[record.status]?.color as any"
+                      :text="statusMap[record.status]?.text || record.status"
+                    />
                   </template>
                   <template v-if="column.key === 'lastComputedAt'">
                     {{ formatDateTime(record.lastComputedAt) }}
@@ -447,7 +523,10 @@ onMounted(loadData);
                   <Statistic
                     title="未使用"
                     :value="usageAnalysis.unusedCount"
-                    :value-style="{ color: usageAnalysis.unusedCount > 0 ? '#fa8c16' : undefined }"
+                    :value-style="{
+                      color:
+                        usageAnalysis.unusedCount > 0 ? '#fa8c16' : undefined,
+                    }"
                   />
                 </Card>
               </Col>
@@ -476,11 +555,20 @@ onMounted(loadData);
               <!-- 从未使用 -->
               <Col :xs="24" :lg="12">
                 <Card title="从未使用的人群包">
-                  <div v-for="item in usageAnalysis.neverUsed.slice(0, 10)" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in usageAnalysis.neverUsed.slice(0, 10)"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
-                    <span class="text-gray-500">{{ item.customerCount }} 人</span>
+                    <span class="text-gray-500"
+                      >{{ item.customerCount }} 人</span
+                    >
                   </div>
-                  <div v-if="usageAnalysis.neverUsed.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="usageAnalysis.neverUsed.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     所有人群包都已使用
                   </div>
                 </Card>
@@ -536,11 +624,20 @@ onMounted(loadData);
                   <template #extra>
                     <FieldTimeOutlined class="text-orange-500" />
                   </template>
-                  <div v-for="item in healthStatus.expiringSoon" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in healthStatus.expiringSoon"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
-                    <Tag color="orange">{{ item.daysUntilExpiry }} 天后过期</Tag>
+                    <Tag color="orange"
+                      >{{ item.daysUntilExpiry }} 天后过期</Tag
+                    >
                   </div>
-                  <div v-if="healthStatus.expiringSoon.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="healthStatus.expiringSoon.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     无即将过期
                   </div>
                 </Card>
@@ -552,11 +649,18 @@ onMounted(loadData);
                   <template #extra>
                     <CloseCircleOutlined class="text-red-500" />
                   </template>
-                  <div v-for="item in healthStatus.expired.slice(0, 10)" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in healthStatus.expired.slice(0, 10)"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
                     <Tag color="red">已过期 {{ item.daysSinceExpiry }} 天</Tag>
                   </div>
-                  <div v-if="healthStatus.expired.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="healthStatus.expired.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     无已过期
                   </div>
                 </Card>
@@ -567,11 +671,18 @@ onMounted(loadData);
               <!-- 长时间未更新 -->
               <Col :xs="24" :md="12">
                 <Card title="长时间未更新（30天以上）">
-                  <div v-for="item in healthStatus.stale.slice(0, 10)" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in healthStatus.stale.slice(0, 10)"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
                     <Tag>{{ item.daysSinceCompute }} 天未更新</Tag>
                   </div>
-                  <div v-if="healthStatus.stale.length === 0" class="text-center text-gray-400">
+                  <div
+                    v-if="healthStatus.stale.length === 0"
+                    class="text-center text-gray-400"
+                  >
                     无长期未更新
                   </div>
                 </Card>
@@ -590,11 +701,18 @@ onMounted(loadData);
                       发现 {{ healthStatus.stuck.length }} 个人群包计算卡住
                     </template>
                   </Alert>
-                  <div v-for="item in healthStatus.stuck" :key="item.id" class="mb-2 flex items-center justify-between">
+                  <div
+                    v-for="item in healthStatus.stuck"
+                    :key="item.id"
+                    class="mb-2 flex items-center justify-between"
+                  >
                     <span class="truncate">{{ item.name }}</span>
                     <Tag color="red">计算中</Tag>
                   </div>
-                  <div v-if="healthStatus.stuck.length === 0" class="text-center text-green-500">
+                  <div
+                    v-if="healthStatus.stuck.length === 0"
+                    class="text-center text-green-500"
+                  >
                     <CheckCircleOutlined /> 无卡住任务
                   </div>
                 </Card>

@@ -113,7 +113,11 @@ const historyColumns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(campaignTypeOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
   {
@@ -123,13 +127,32 @@ const historyColumns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(campaignStatusOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
-  { title: '人群包', dataIndex: 'audienceName', key: 'audienceName', width: 120 },
-  { title: '目标人数', dataIndex: 'totalTarget', key: 'totalTarget', width: 100 },
+  {
+    title: '人群包',
+    dataIndex: 'audienceName',
+    key: 'audienceName',
+    width: 120,
+  },
+  {
+    title: '目标人数',
+    dataIndex: 'totalTarget',
+    key: 'totalTarget',
+    width: 100,
+  },
   { title: '已发送', dataIndex: 'totalSent', key: 'totalSent', width: 80 },
-  { title: '已送达', dataIndex: 'totalDelivered', key: 'totalDelivered', width: 80 },
+  {
+    title: '已送达',
+    dataIndex: 'totalDelivered',
+    key: 'totalDelivered',
+    width: 80,
+  },
   {
     title: '送达率',
     dataIndex: 'deliveryRate',
@@ -150,8 +173,18 @@ const historyColumns = [
 const topCampaignsColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '活动名称', dataIndex: 'name', key: 'name' },
-  { title: '目标人数', dataIndex: 'totalTarget', key: 'totalTarget', width: 100 },
-  { title: '已送达', dataIndex: 'totalDelivered', key: 'totalDelivered', width: 100 },
+  {
+    title: '目标人数',
+    dataIndex: 'totalTarget',
+    key: 'totalTarget',
+    width: 100,
+  },
+  {
+    title: '已送达',
+    dataIndex: 'totalDelivered',
+    key: 'totalDelivered',
+    width: 100,
+  },
   {
     title: '送达率',
     dataIndex: 'deliveryRate',
@@ -171,9 +204,24 @@ const topCampaignsColumns = [
 
 const audienceColumns = [
   { title: '人群包名称', dataIndex: 'audienceName', key: 'audienceName' },
-  { title: '活动数', dataIndex: 'campaignCount', key: 'campaignCount', width: 80 },
-  { title: '目标总人数', dataIndex: 'totalTarget', key: 'totalTarget', width: 100 },
-  { title: '送达总人数', dataIndex: 'totalDelivered', key: 'totalDelivered', width: 100 },
+  {
+    title: '活动数',
+    dataIndex: 'campaignCount',
+    key: 'campaignCount',
+    width: 80,
+  },
+  {
+    title: '目标总人数',
+    dataIndex: 'totalTarget',
+    key: 'totalTarget',
+    width: 100,
+  },
+  {
+    title: '送达总人数',
+    dataIndex: 'totalDelivered',
+    key: 'totalDelivered',
+    width: 100,
+  },
   {
     title: '平均送达率',
     dataIndex: 'avgDeliveryRate',
@@ -239,9 +287,10 @@ async function fetchAudiencePerformance() {
 
 async function retryFailed() {
   try {
-    const result = await requestClient.post<{ retried: number; failed: number }>(
-      '/crm/campaigns/statistics/retry-failed',
-    );
+    const result = await requestClient.post<{
+      retried: number;
+      failed: number;
+    }>('/crm/campaigns/statistics/retry-failed');
     if (result.retried > 0) {
       message.success(`已重试 ${result.retried} 个活动`);
       fetchOverview();
@@ -422,7 +471,8 @@ onMounted(() => {
               </Progress>
             </div>
             <div class="mt-4 text-center text-gray-500">
-              已送达 {{ overview?.totalDelivered || 0 }} / 已发送 {{ overview?.totalSent || 0 }}
+              已送达 {{ overview?.totalDelivered || 0 }} / 已发送
+              {{ overview?.totalSent || 0 }}
             </div>
           </Card>
         </Col>
@@ -444,7 +494,9 @@ onMounted(() => {
               </Progress>
             </div>
             <div class="mt-4 text-center text-gray-500">
-              成功发送 {{ (overview?.totalSent || 0) - (overview?.totalFailed || 0) }} / 目标 {{ overview?.totalTarget || 0 }}
+              成功发送
+              {{ (overview?.totalSent || 0) - (overview?.totalFailed || 0) }} /
+              目标 {{ overview?.totalTarget || 0 }}
             </div>
           </Card>
         </Col>
@@ -465,7 +517,7 @@ onMounted(() => {
                 <template v-if="column.key === 'rank'">
                   <span
                     :class="{
-                      'text-red-500 font-bold': index < 3,
+                      'font-bold text-red-500': index < 3,
                     }"
                   >
                     {{ index + 1 }}
@@ -504,8 +556,16 @@ onMounted(() => {
         <Table
           :columns="[
             { title: '日期', dataIndex: 'date', key: 'date' },
-            { title: '新建活动数', dataIndex: 'createdCount', key: 'createdCount' },
-            { title: '完成活动数', dataIndex: 'completedCount', key: 'completedCount' },
+            {
+              title: '新建活动数',
+              dataIndex: 'createdCount',
+              key: 'createdCount',
+            },
+            {
+              title: '完成活动数',
+              dataIndex: 'completedCount',
+              key: 'completedCount',
+            },
             { title: '发送消息数', dataIndex: 'sentCount', key: 'sentCount' },
           ]"
           :data-source="overview?.dailyTrend || []"

@@ -20,7 +20,10 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:file-search-outlined',
           title: '诊断中心',
           appModule: 'AI_DOCTOR',
-          permissions: ['AI_DOCTOR:DIAGNOSIS:VIEW', 'AI_DOCTOR:DIAGNOSIS:CREATE'],
+          permissions: [
+            'AI_DOCTOR:DIAGNOSIS:VIEW',
+            'AI_DOCTOR:DIAGNOSIS:CREATE',
+          ],
         },
       },
       {
@@ -31,7 +34,10 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:solution-outlined',
           title: '学习处方',
           appModule: 'AI_DOCTOR',
-          permissions: ['AI_DOCTOR:PRESCRIPTION:LIST', 'AI_DOCTOR:PRESCRIPTION:VIEW'],
+          permissions: [
+            'AI_DOCTOR:PRESCRIPTION:LIST',
+            'AI_DOCTOR:PRESCRIPTION:VIEW',
+          ],
         },
       },
       {
