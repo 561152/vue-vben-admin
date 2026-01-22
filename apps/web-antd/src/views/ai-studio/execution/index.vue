@@ -203,7 +203,8 @@ const showDetail = async (record: ExecutionItem) => {
     const pipelineResponse = await requestClient.get(
       `/ai-studio/pipelines/${record.pipelineId}`,
     );
-    pipelineSteps.value = pipelineResponse.data?.steps || pipelineResponse.steps || [];
+    pipelineSteps.value =
+      pipelineResponse.data?.steps || pipelineResponse.steps || [];
   } catch (error) {
     console.error('Failed to fetch pipeline steps:', error);
     pipelineSteps.value = [];

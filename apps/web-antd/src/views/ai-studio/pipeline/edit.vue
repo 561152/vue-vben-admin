@@ -77,7 +77,7 @@ onMounted(() => {
       <template #extra>
         <Space>
           <span v-if="pipeline">{{ pipeline.name }}</span>
-          <span v-if="pipeline" style="color: #999; font-size: 12px">
+          <span v-if="pipeline" style=" font-size: 12px;color: #999">
             v{{ pipeline.version }}
           </span>
         </Space>
@@ -105,8 +105,8 @@ onMounted(() => {
 }
 
 .empty-state {
-  text-align: center;
   padding: 80px 0;
   color: #999;
+  text-align: center;
 }
 </style>

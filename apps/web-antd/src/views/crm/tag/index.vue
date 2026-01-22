@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -10,8 +11,11 @@ import {
   Tag,
   Popconfirm,
 } from 'ant-design-vue';
+import { BarChartOutlined } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
+
+const router = useRouter();
 
 // ==================== 类型定义 ====================
 
@@ -91,6 +95,10 @@ function handleEdit(record: TagItem) {
   });
 }
 
+function goToStatistics() {
+  router.push('/crm/tag/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(fetchData);
@@ -100,7 +108,13 @@ onMounted(fetchData);
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">标签管理</h2>
-      <Button type="primary" @click="openCreate">新增标签</Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <template #icon><BarChartOutlined /></template>
+          统计分析
+        </Button>
+        <Button type="primary" @click="openCreate">新增标签</Button>
+      </Space>
     </div>
 
     <!-- 表格区 -->

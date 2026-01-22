@@ -30,6 +30,16 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'WecomSyncStatistics',
+        path: 'wecom-sync/statistics',
+        component: () => import('#/views/system/wecom-sync/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '同步统计',
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'WecomUsers',
         path: 'wecom-users',
         component: () => import('#/views/system/wecom-users/index.vue'),

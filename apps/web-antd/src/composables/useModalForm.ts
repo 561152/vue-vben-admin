@@ -143,8 +143,7 @@ export function useModalForm<T>(
       close();
       afterSubmit?.();
     } catch (e: unknown) {
-      const errorMessage =
-        e instanceof Error ? e.message : '操作失败';
+      const errorMessage = e instanceof Error ? e.message : '操作失败';
       message.error(errorMessage);
     } finally {
       loading.value = false;

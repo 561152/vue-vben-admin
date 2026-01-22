@@ -27,6 +27,82 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'CustomerStatistics',
+        path: 'customer/statistics',
+        component: () => import('#/views/crm/customer/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '客户统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CUSTOMER:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'CustomerActivityStatistics',
+        path: 'customer-activity/statistics',
+        component: () =>
+          import('#/views/crm/customer-activity/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '客户活动统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CUSTOMER:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'CustomerChannelStatistics',
+        path: 'customer-channel/statistics',
+        component: () =>
+          import('#/views/crm/customer-channel/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '客户渠道统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CUSTOMER:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'DifyStatistics',
+        path: 'dify/statistics',
+        component: () => import('#/views/crm/dify/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: 'AI 对话统计',
+          appModule: 'CRM',
+          permissions: ['CRM:DIFY:VIEW'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'MemberProfileStatistics',
+        path: 'member-profile/statistics',
+        component: () =>
+          import('#/views/crm/member-profile/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '会员画像统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CUSTOMER:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'TargetedMarketingStatistics',
+        path: 'targeted-marketing/statistics',
+        component: () =>
+          import('#/views/crm/targeted-marketing/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: 'AI定向营销统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CAMPAIGN:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'CampaignList',
         path: 'campaign',
         component: () => import('#/views/crm/campaign/index.vue'),
@@ -35,6 +111,30 @@ const routes: RouteRecordRaw[] = [
           title: '营销活动',
           appModule: 'CRM',
           permissions: ['CRM:CAMPAIGN:LIST'],
+        },
+      },
+      {
+        name: 'CampaignStatistics',
+        path: 'campaign/statistics',
+        component: () => import('#/views/crm/campaign/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '营销活动统计',
+          appModule: 'CRM',
+          permissions: ['CRM:CAMPAIGN:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
+        name: 'AudienceStatistics',
+        path: 'audience/statistics',
+        component: () => import('#/views/crm/audience/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '人群包统计',
+          appModule: 'CRM',
+          permissions: ['CRM:AUDIENCE:LIST'],
+          hideInMenu: true,
         },
       },
       {
@@ -49,6 +149,18 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'TagStatistics',
+        path: 'tag/statistics',
+        component: () => import('#/views/crm/tag/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '标签统计',
+          appModule: 'CRM',
+          permissions: ['CRM:TAG:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'FollowUp',
         path: 'follow-up',
         component: () => import('#/views/crm/follow-up/index.vue'),
@@ -57,6 +169,18 @@ const routes: RouteRecordRaw[] = [
           title: '跟进记录',
           appModule: 'CRM',
           permissions: ['CRM:FOLLOW_UP:LIST'],
+        },
+      },
+      {
+        name: 'FollowUpStatistics',
+        path: 'follow-up/statistics',
+        component: () => import('#/views/crm/follow-up/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '跟进统计',
+          appModule: 'CRM',
+          permissions: ['CRM:FOLLOW_UP:LIST'],
+          hideInMenu: true,
         },
       },
       {
@@ -71,6 +195,18 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'GroupStatistics',
+        path: 'group/statistics',
+        component: () => import('#/views/crm/group/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '分组统计',
+          appModule: 'CRM',
+          permissions: ['CRM:GROUP:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'DirectMessage',
         path: 'direct-message',
         component: () => import('#/views/crm/direct-message/index.vue'),
@@ -79,6 +215,18 @@ const routes: RouteRecordRaw[] = [
           title: '消息推送',
           appModule: 'CRM',
           permissions: ['CRM:DIRECT_MESSAGE:LIST'],
+        },
+      },
+      {
+        name: 'DirectMessageStatistics',
+        path: 'direct-message/statistics',
+        component: () => import('#/views/crm/direct-message/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '消息推送统计',
+          appModule: 'CRM',
+          permissions: ['CRM:DIRECT_MESSAGE:LIST'],
+          hideInMenu: true,
         },
       },
       {
@@ -93,6 +241,18 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'MessageTemplateStatistics',
+        path: 'message-template/statistics',
+        component: () => import('#/views/crm/message-template/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '模板统计',
+          appModule: 'CRM',
+          permissions: ['CRM:MESSAGE_TEMPLATE:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'MediaLibrary',
         path: 'media',
         component: () => import('#/views/crm/media/index.vue'),
@@ -101,6 +261,18 @@ const routes: RouteRecordRaw[] = [
           title: '素材库',
           appModule: 'CRM',
           permissions: ['CRM:MEDIA:LIST'],
+        },
+      },
+      {
+        name: 'MediaStatistics',
+        path: 'media/statistics',
+        component: () => import('#/views/crm/media/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '素材统计',
+          appModule: 'CRM',
+          permissions: ['CRM:MEDIA:LIST'],
+          hideInMenu: true,
         },
       },
       {
@@ -115,6 +287,18 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'MassMessageStatistics',
+        path: 'mass-message/statistics',
+        component: () => import('#/views/crm/mass-message/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '群发统计',
+          appModule: 'CRM',
+          permissions: ['CRM:MASS_MESSAGE:LIST'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'RetailDashboard',
         path: 'retail',
         component: () => import('#/views/crm/retail/index.vue'),
@@ -123,6 +307,30 @@ const routes: RouteRecordRaw[] = [
           title: '零售营销',
           appModule: 'CRM',
           permissions: ['CRM:RETAIL:VIEW'],
+        },
+      },
+      // 员工任务
+      {
+        name: 'EmployeeTask',
+        path: 'employee-task',
+        component: () => import('#/views/crm/employee-task/index.vue'),
+        meta: {
+          icon: 'ant-design:solution-outlined',
+          title: '员工任务',
+          appModule: 'CRM',
+          permissions: ['CRM:EMPLOYEE_TASK:VIEW'],
+        },
+      },
+      {
+        name: 'EmployeeTaskStatistics',
+        path: 'employee-task/statistics',
+        component: () => import('#/views/crm/employee-task/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '员工任务统计',
+          appModule: 'CRM',
+          permissions: ['CRM:EMPLOYEE_TASK:VIEW'],
+          hideInMenu: true,
         },
       },
       // 群发工具
@@ -162,6 +370,18 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'AntiHarassmentStatistics',
+        path: 'anti-harassment/statistics',
+        component: () => import('#/views/crm/anti-harassment/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '安全管控统计',
+          appModule: 'CRM',
+          permissions: ['CRM:ANTI_HARASSMENT:VIEW'],
+          hideInMenu: true,
+        },
+      },
+      {
         name: 'AntiHarassmentWhitelist',
         path: 'anti-harassment/whitelist',
         component: () => import('#/views/crm/anti-harassment/whitelist.vue'),
@@ -185,6 +405,18 @@ const routes: RouteRecordRaw[] = [
           hideInMenu: true,
         },
       },
+      {
+        name: 'AntiHarassmentViolations',
+        path: 'anti-harassment/violations',
+        component: () => import('#/views/crm/anti-harassment/violations.vue'),
+        meta: {
+          icon: 'ant-design:warning-outlined',
+          title: '违规记录',
+          appModule: 'CRM',
+          permissions: ['CRM:ANTI_HARASSMENT:VIEW'],
+          hideInMenu: true,
+        },
+      },
       // 朋友圈
       {
         name: 'Moments',
@@ -197,6 +429,18 @@ const routes: RouteRecordRaw[] = [
           permissions: ['CRM:MOMENTS:VIEW'],
         },
       },
+      {
+        name: 'MomentsStatistics',
+        path: 'moments/statistics',
+        component: () => import('#/views/crm/moments/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '朋友圈统计',
+          appModule: 'CRM',
+          permissions: ['CRM:MOMENTS:VIEW'],
+          hideInMenu: true,
+        },
+      },
       // 素材库
       {
         name: 'MaterialLibrary',
@@ -207,6 +451,42 @@ const routes: RouteRecordRaw[] = [
           title: '营销素材库',
           appModule: 'CRM',
           permissions: ['CRM:MEDIA:LIST'],
+        },
+      },
+      {
+        name: 'MaterialLibraryStatistics',
+        path: 'material-library/statistics',
+        component: () => import('#/views/crm/material-library/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '素材库统计',
+          appModule: 'CRM',
+          permissions: ['CRM:MEDIA:LIST'],
+          hideInMenu: true,
+        },
+      },
+      // 定时消息
+      {
+        name: 'ScheduledMessage',
+        path: 'scheduled-message',
+        component: () => import('#/views/crm/scheduled-message/index.vue'),
+        meta: {
+          icon: 'ant-design:clock-circle-outlined',
+          title: '定时消息',
+          appModule: 'CRM',
+          permissions: ['CRM:SCHEDULED_MESSAGE:LIST'],
+        },
+      },
+      {
+        name: 'ScheduledMessageStatistics',
+        path: 'scheduled-message/statistics',
+        component: () => import('#/views/crm/scheduled-message/statistics.vue'),
+        meta: {
+          icon: 'ant-design:bar-chart-outlined',
+          title: '定时消息统计',
+          appModule: 'CRM',
+          permissions: ['CRM:SCHEDULED_MESSAGE:LIST'],
+          hideInMenu: true,
         },
       },
     ],

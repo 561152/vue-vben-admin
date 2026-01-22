@@ -5,22 +5,26 @@ import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
 import {
-  Drawer,
   Button,
-  Form,
-  Input,
-  Select,
   message,
   Space,
   Divider,
+  Tooltip,
 } from 'ant-design-vue';
 import {
   SaveOutlined,
   BorderOutlined,
   UndoOutlined,
   RedoOutlined,
-  DeleteOutlined,
+  BugOutlined,
+  AppstoreOutlined,
+  SettingOutlined,
 } from '@ant-design/icons-vue';
+
+// Import custom components
+import ComponentPalette from './ComponentPalette.vue';
+import DebugPanel from './DebugPanel.vue';
+import NodeConfigPanel from './NodeConfigPanel.vue';
 
 // Import Vue Flow styles
 import '@vue-flow/core/dist/style.css';
@@ -37,6 +41,9 @@ interface PipelineStep {
     key: string;
   };
   config?: Record<string, any>;
+  inputMapping?: Record<string, string>;
+  outputMapping?: Record<string, string>;
+  condition?: string;
   dependencies?: string[];
 }
 
@@ -64,36 +71,42 @@ const {
   fitView,
 } = useVueFlow();
 
-// Drawer state
-const drawerVisible = ref(false);
+// Panel visibility states
+const showComponentPalette = ref(true);
+const showDebugPanel = ref(false);
+const showNodeConfigPanel = ref(true);
+
+// Selected node for config panel
 const selectedNode = ref<any>(null);
+const selectedNodeData = ref<PipelineStep | null>(null);
 
-// Form state
-const nodeForm = ref({
-  name: '',
-  type: 'llm',
-  componentKey: '',
-  prompt: '',
-});
+// Highlighted step (from debug panel)
+const highlightedStepKey = ref<string | null>(null);
 
-// Node types
-const nodeTypes = [
-  { value: 'llm', label: 'LLM 节点', description: '大语言模型调用' },
-  { value: 'ocr', label: 'OCR 节点', description: '图像文字识别' },
-  { value: 'transform', label: '转换节点', description: '数据转换映射' },
-  { value: 'condition', label: '条件节点', description: '条件分支判断' },
-];
-
-// Component options (models)
-const componentOptions = [
-  { value: 'qwen-vl-plus', label: 'Qwen-VL-Plus' },
-  { value: 'gpt-4o', label: 'GPT-4o' },
-  { value: 'claude-opus', label: 'Claude Opus' },
-];
+// Node types with colors
+const nodeTypeConfig: Record<string, { color: string; bgColor: string }> = {
+  llm: { color: '#1890ff', bgColor: '#e6f7ff' },
+  ocr: { color: '#52c41a', bgColor: '#f6ffed' },
+  tool: { color: '#722ed1', bgColor: '#f9f0ff' },
+  retrieval: { color: '#fa8c16', bgColor: '#fff7e6' },
+  transform: { color: '#8c8c8c', bgColor: '#fafafa' },
+  start: { color: '#13c2c2', bgColor: '#e6fffb' },
+};
 
 // History for undo/redo
 const history = ref<{ nodes: any[]; edges: any[] }[]>([]);
 const historyIndex = ref(-1);
+
+// Available steps for node config panel
+const availableSteps = computed(() => {
+  return nodes.value
+    .filter((node) => node.data.type !== 'start')
+    .map((node) => ({
+      stepKey: node.data.stepKey || node.id,
+      name: node.data.name || node.data.label,
+      outputSchema: node.data.outputSchema,
+    }));
+});
 
 // Convert pipeline steps to Vue Flow nodes and edges
 const initializeFlow = () => {
@@ -209,46 +222,192 @@ const canRedo = computed(() => historyIndex.value < history.value.length - 1);
 const onNodeClick = (event: any) => {
   selectedNode.value = event.node;
 
-  // Populate form with node data
-  nodeForm.value = {
-    name: event.node.data.name || '',
-    type: event.node.data.type || 'llm',
-    componentKey: event.node.data.componentRef?.key || '',
-    prompt: event.node.data.config?.prompt || '',
+  // Populate node data for config panel
+  selectedNodeData.value = {
+    stepKey: event.node.data.stepKey || event.node.id,
+    name: event.node.data.name || event.node.data.label,
+    type: event.node.data.type || 'tool',
+    componentRef: event.node.data.componentRef,
+    config: event.node.data.config || {},
+    inputMapping: event.node.data.inputMapping || {},
+    outputMapping: event.node.data.outputMapping || {},
+    condition: event.node.data.condition,
+    dependencies: getDependencies(event.node.id),
   };
 
-  drawerVisible.value = true;
+  showNodeConfigPanel.value = true;
 };
 
-// Save node configuration
-const saveNodeConfig = () => {
+// Get dependencies for a node
+const getDependencies = (nodeId: string): string[] => {
+  return edges.value
+    .filter((e) => e.target === nodeId)
+    .map((e) => e.source);
+};
+
+// Handle drag over for component palette
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'copy';
+  }
+};
+
+// Handle drop from component palette
+const handleDrop = (event: DragEvent) => {
+  event.preventDefault();
+  if (!event.dataTransfer) return;
+
+  try {
+    const componentData = JSON.parse(event.dataTransfer.getData('application/json'));
+
+    // Calculate drop position relative to the flow container
+    const flowContainer = (event.target as HTMLElement).closest('.vue-flow');
+    if (!flowContainer) return;
+
+    const rect = flowContainer.getBoundingClientRect();
+    const position = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+
+    // Create new node from dropped component
+    const newId = `${componentData.key}_${Date.now()}`;
+    const newNode = {
+      id: newId,
+      type: 'default',
+      position,
+      data: {
+        label: componentData.name,
+        stepKey: newId,
+        name: componentData.name,
+        type: componentData.type.toLowerCase(),
+        componentRef: {
+          type: componentData.type,
+          key: componentData.key,
+        },
+        config: {},
+        inputMapping: {},
+        outputMapping: {},
+      },
+      style: {
+        background: nodeTypeConfig[componentData.type.toLowerCase()]?.bgColor || '#fafafa',
+        borderColor: nodeTypeConfig[componentData.type.toLowerCase()]?.color || '#d9d9d9',
+        borderWidth: '2px',
+      },
+    };
+
+    addNodes([newNode]);
+    saveHistory();
+    message.success(`已添加组件: ${componentData.name}`);
+  } catch (e) {
+    console.error('Failed to parse dropped component:', e);
+  }
+};
+
+// Handle component click from palette
+const handleComponentClick = (component: any) => {
+  // Add node at center of canvas
+  const newId = `${component.key}_${Date.now()}`;
+  const newNode = {
+    id: newId,
+    type: 'default',
+    position: { x: 300, y: 200 },
+    data: {
+      label: component.name,
+      stepKey: newId,
+      name: component.name,
+      type: component.type.toLowerCase(),
+      componentRef: {
+        type: component.type,
+        key: component.key,
+      },
+      config: {},
+      inputMapping: {},
+      outputMapping: {},
+    },
+    style: {
+      background: nodeTypeConfig[component.type.toLowerCase()]?.bgColor || '#fafafa',
+      borderColor: nodeTypeConfig[component.type.toLowerCase()]?.color || '#d9d9d9',
+      borderWidth: '2px',
+    },
+  };
+
+  addNodes([newNode]);
+  saveHistory();
+  message.success(`已添加组件: ${component.name}`);
+};
+
+// Handle node config update
+const handleNodeConfigUpdate = (nodeData: PipelineStep) => {
   if (!selectedNode.value) return;
 
-  // Update node data
-  const nodeIndex = nodes.value.findIndex(
-    (n) => n.id === selectedNode.value.id,
-  );
+  const nodeIndex = nodes.value.findIndex((n) => n.id === selectedNode.value.id);
   if (nodeIndex !== -1) {
     nodes.value[nodeIndex].data = {
       ...nodes.value[nodeIndex].data,
-      name: nodeForm.value.name,
-      label: nodeForm.value.name,
-      type: nodeForm.value.type,
-      componentRef: nodeForm.value.componentKey
-        ? {
-            type: 'MODEL',
-            key: nodeForm.value.componentKey,
-          }
-        : undefined,
-      config: {
-        prompt: nodeForm.value.prompt,
-      },
+      ...nodeData,
+      label: nodeData.name,
     };
+
+    // Update edges based on dependencies
+    const currentDeps = getDependencies(selectedNode.value.id);
+    const newDeps = nodeData.dependencies || [];
+
+    // Remove edges that are no longer dependencies
+    currentDeps.forEach((dep) => {
+      if (!newDeps.includes(dep)) {
+        const edgeIndex = edges.value.findIndex(
+          (e) => e.source === dep && e.target === selectedNode.value.id
+        );
+        if (edgeIndex !== -1) {
+          edges.value.splice(edgeIndex, 1);
+        }
+      }
+    });
+
+    // Add new dependency edges
+    newDeps.forEach((dep) => {
+      if (!currentDeps.includes(dep)) {
+        addEdges([{
+          id: `${dep}-${selectedNode.value.id}`,
+          source: dep,
+          target: selectedNode.value.id,
+          type: 'smoothstep',
+          animated: true,
+        }]);
+      }
+    });
   }
 
   saveHistory();
-  drawerVisible.value = false;
   message.success('节点配置已保存');
+};
+
+// Handle node delete from config panel
+const handleNodeConfigDelete = () => {
+  if (!selectedNode.value) return;
+  deleteSelectedNode();
+};
+
+// Handle step highlight from debug panel
+const handleStepHighlight = (stepKey: string | null) => {
+  highlightedStepKey.value = stepKey;
+
+  // Update node styles based on highlight
+  nodes.value.forEach((node) => {
+    if (stepKey && node.data.stepKey === stepKey) {
+      node.style = {
+        ...node.style,
+        boxShadow: '0 0 10px 3px #1890ff',
+      };
+    } else {
+      node.style = {
+        ...node.style,
+        boxShadow: 'none',
+      };
+    }
+  });
 };
 
 // Delete selected node
@@ -265,8 +424,10 @@ const deleteSelectedNode = () => {
   // Remove node
   removeNodes([selectedNode.value]);
 
+  selectedNode.value = null;
+  selectedNodeData.value = null;
+
   saveHistory();
-  drawerVisible.value = false;
   message.success('节点已删除');
 };
 
@@ -342,7 +503,7 @@ const autoLayout = () => {
   message.success('已自动整理布局');
 };
 
-// Add new node
+// Add new node (generic)
 const addNewNode = () => {
   const newId = `node_${Date.now()}`;
   const newNode = {
@@ -353,7 +514,15 @@ const addNewNode = () => {
       label: '新节点',
       stepKey: newId,
       name: '新节点',
-      type: 'llm',
+      type: 'tool',
+      config: {},
+      inputMapping: {},
+      outputMapping: {},
+    },
+    style: {
+      background: nodeTypeConfig.tool.bgColor,
+      borderColor: nodeTypeConfig.tool.color,
+      borderWidth: '2px',
     },
   };
 
@@ -375,9 +544,12 @@ const exportSteps = (): PipelineStep[] => {
       return {
         stepKey: node.data.stepKey || node.id,
         name: node.data.name || node.data.label,
-        type: node.data.type || 'llm',
+        type: node.data.type || 'tool',
         componentRef: node.data.componentRef,
         config: node.data.config || {},
+        inputMapping: node.data.inputMapping || {},
+        outputMapping: node.data.outputMapping || {},
+        condition: node.data.condition,
         dependencies: dependencies.length > 0 ? dependencies : undefined,
       };
     });
@@ -435,138 +607,131 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="pipeline-editor">
-    <VueFlow
-      :nodes="nodes"
-      :edges="edges"
-      @node-click="onNodeClick"
-      @connect="handleConnect"
-      fit-view-on-init
-    >
-      <Background />
-      <Controls />
-      <MiniMap />
+  <div class="pipeline-editor-container">
+    <!-- Left: Component Palette -->
+    <ComponentPalette
+      v-if="showComponentPalette"
+      @component-click="handleComponentClick"
+    />
 
-      <Panel position="top-center" class="controls-panel">
-        <Space>
-          <Button @click="addNewNode" type="primary"> 添加节点 </Button>
-          <Button @click="autoLayout">
-            <template #icon><BorderOutlined /></template>
-            自动整理
-          </Button>
-          <Button @click="undo" :disabled="!canUndo">
-            <template #icon><UndoOutlined /></template>
-            撤销
-          </Button>
-          <Button @click="redo" :disabled="!canRedo">
-            <template #icon><RedoOutlined /></template>
-            重做
-          </Button>
-          <Divider type="vertical" />
-          <Button type="primary" @click="savePipeline">
-            <template #icon><SaveOutlined /></template>
-            保存流程
-          </Button>
-        </Space>
-      </Panel>
-    </VueFlow>
+    <!-- Center: Flow Editor -->
+    <div class="pipeline-editor">
+      <VueFlow
+        :nodes="nodes"
+        :edges="edges"
+        @node-click="onNodeClick"
+        @connect="handleConnect"
+        @dragover="handleDragOver"
+        @drop="handleDrop"
+        fit-view-on-init
+      >
+        <Background />
+        <Controls />
+        <MiniMap />
 
-    <!-- Node Configuration Drawer -->
-    <Drawer
-      v-model:open="drawerVisible"
-      title="节点配置"
-      width="450"
-      placement="right"
-      :footer-style="{ textAlign: 'right' }"
-    >
-      <Form v-if="selectedNode" :model="nodeForm" layout="vertical">
-        <Form.Item label="节点名称" required>
-          <Input v-model:value="nodeForm.name" placeholder="输入节点名称" />
-        </Form.Item>
+        <Panel position="top-center" class="controls-panel">
+          <Space>
+            <Tooltip title="组件面板">
+              <Button
+                :type="showComponentPalette ? 'primary' : 'default'"
+                @click="showComponentPalette = !showComponentPalette"
+              >
+                <template #icon><AppstoreOutlined /></template>
+              </Button>
+            </Tooltip>
+            <Button @click="autoLayout">
+              <template #icon><BorderOutlined /></template>
+              自动整理
+            </Button>
+            <Button @click="undo" :disabled="!canUndo">
+              <template #icon><UndoOutlined /></template>
+            </Button>
+            <Button @click="redo" :disabled="!canRedo">
+              <template #icon><RedoOutlined /></template>
+            </Button>
+            <Divider type="vertical" />
+            <Tooltip title="调试面板">
+              <Button
+                :type="showDebugPanel ? 'primary' : 'default'"
+                @click="showDebugPanel = !showDebugPanel"
+              >
+                <template #icon><BugOutlined /></template>
+              </Button>
+            </Tooltip>
+            <Tooltip title="配置面板">
+              <Button
+                :type="showNodeConfigPanel ? 'primary' : 'default'"
+                @click="showNodeConfigPanel = !showNodeConfigPanel"
+              >
+                <template #icon><SettingOutlined /></template>
+              </Button>
+            </Tooltip>
+            <Divider type="vertical" />
+            <Button type="primary" @click="savePipeline">
+              <template #icon><SaveOutlined /></template>
+              保存流程
+            </Button>
+          </Space>
+        </Panel>
+      </VueFlow>
+    </div>
 
-        <Form.Item label="节点类型" required>
-          <Select v-model:value="nodeForm.type" placeholder="选择节点类型">
-            <Select.Option
-              v-for="type in nodeTypes"
-              :key="type.value"
-              :value="type.value"
-            >
-              <div>
-                <div>{{ type.label }}</div>
-                <div style="font-size: 12px; color: #999">
-                  {{ type.description }}
-                </div>
-              </div>
-            </Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item v-if="nodeForm.type === 'llm'" label="模型选择" required>
-          <Select v-model:value="nodeForm.componentKey" placeholder="选择模型">
-            <Select.Option
-              v-for="comp in componentOptions"
-              :key="comp.value"
-              :value="comp.value"
-            >
-              {{ comp.label }}
-            </Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item v-if="nodeForm.type === 'llm'" label="Prompt 模板">
-          <Input.TextArea
-            v-model:value="nodeForm.prompt"
-            placeholder="输入 Prompt，可使用 {{ 变量名 }} 引用上游节点输出"
-            :rows="10"
-          />
-          <div class="form-hint">
-            使用 <code v-pre>{{ stepKey.output }}</code> 引用上游节点输出
-          </div>
-        </Form.Item>
-      </Form>
-
-      <template #footer>
-        <Space>
-          <Button danger @click="deleteSelectedNode">
-            <template #icon><DeleteOutlined /></template>
-            删除节点
-          </Button>
-          <Button @click="drawerVisible = false">取消</Button>
-          <Button type="primary" @click="saveNodeConfig">确定</Button>
-        </Space>
-      </template>
-    </Drawer>
+    <!-- Right: Debug Panel or Node Config Panel -->
+    <DebugPanel
+      v-if="showDebugPanel"
+      :pipeline-key="pipelineKey"
+      :steps="availableSteps"
+      @step-highlight="handleStepHighlight"
+    />
+    <NodeConfigPanel
+      v-else-if="showNodeConfigPanel"
+      :node="selectedNodeData"
+      :available-steps="availableSteps"
+      @update="handleNodeConfigUpdate"
+      @delete="handleNodeConfigDelete"
+      @close="selectedNodeData = null"
+    />
   </div>
 </template>
 
 <style scoped>
-.pipeline-editor {
-  position: relative;
+.pipeline-editor-container {
+  display: flex;
   width: 100%;
   height: calc(100vh - 200px);
   min-height: 600px;
+  overflow: hidden;
   background: #f5f5f5;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
 }
 
+.pipeline-editor {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: #f5f5f5;
+}
+
 .controls-panel {
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
 }
 
-.form-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #999;
+/* Node highlighting animation */
+:deep(.vue-flow__node) {
+  transition: box-shadow 0.3s ease;
 }
 
-.form-hint code {
-  padding: 2px 6px;
-  font-family: 'Courier New', monospace;
-  background: #f5f5f5;
-  border-radius: 3px;
+:deep(.vue-flow__node.selected) {
+  box-shadow: 0 0 0 2px #1890ff;
+}
+
+/* Custom node styles */
+:deep(.vue-flow__node-default) {
+  border-radius: 8px;
+  border-style: solid;
 }
 </style>

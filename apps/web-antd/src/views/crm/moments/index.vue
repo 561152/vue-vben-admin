@@ -33,10 +33,12 @@ import {
   AppstoreOutlined,
   BellOutlined,
   ExportOutlined,
+  BarChartOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable } from '#/composables';
-import dayjs from 'dayjs';
 
 // ==================== 类型定义 ====================
 
@@ -80,9 +82,15 @@ interface MomentFilters {
   minViews?: number;
 }
 
+// ==================== Router ====================
+
+const router = useRouter();
+
 // ==================== 状态 ====================
 
 const activeTab = ref('create');
+const failedCount = ref(0);
+const retryLoading = ref(false);
 const materials = ref<MaterialItem[]>([]);
 const materialsLoading = ref(false);
 const materialsTotal = ref(0);
@@ -127,9 +135,27 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const historyColumns = [
   { title: '内容', dataIndex: 'text', key: 'text', ellipsis: true, width: 300 },
-  { title: '点赞', dataIndex: 'likeCount', key: 'likeCount', width: 80, sorter: true },
-  { title: '评论', dataIndex: 'commentCount', key: 'commentCount', width: 80, sorter: true },
-  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', width: 80, sorter: true },
+  {
+    title: '点赞',
+    dataIndex: 'likeCount',
+    key: 'likeCount',
+    width: 80,
+    sorter: true,
+  },
+  {
+    title: '评论',
+    dataIndex: 'commentCount',
+    key: 'commentCount',
+    width: 80,
+    sorter: true,
+  },
+  {
+    title: '浏览',
+    dataIndex: 'viewCount',
+    key: 'viewCount',
+    width: 80,
+    sorter: true,
+  },
   { title: '创建人', dataIndex: 'createdBy', key: 'createdBy', width: 100 },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
   { title: '发表情况', dataIndex: 'status', key: 'status', width: 120 },
@@ -139,7 +165,12 @@ const historyColumns = [
 const materialColumns = [
   { title: '内容', dataIndex: 'title', key: 'title', ellipsis: true },
   { title: '点赞', dataIndex: 'likeCount', key: 'likeCount', sorter: true },
-  { title: '评论', dataIndex: 'commentCount', key: 'commentCount', sorter: true },
+  {
+    title: '评论',
+    dataIndex: 'commentCount',
+    key: 'commentCount',
+    sorter: true,
+  },
   { title: '收藏', key: 'favoriteCount' },
   { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', sorter: true },
   { title: '使用次数', key: 'usageCount' },
@@ -150,43 +181,49 @@ const materialColumns = [
 
 // ==================== History 表格逻辑 ====================
 
-const { tableProps: historyTableProps, filters, search: searchHistory, fetchData: fetchMoments } =
-  useCrudTable<MomentTask, MomentFilters>({
-    fetchApi: async (params) => {
-      const apiParams: Record<string, unknown> = {
-        page: params.page,
-        pageSize: params.pageSize,
-      };
-      if (params.createdBy) apiParams.createdBy = params.createdBy;
-      if (params.status) apiParams.status = params.status;
-      if (dateRange.value) {
-        apiParams.startDate = dateRange.value[0];
-        apiParams.endDate = dateRange.value[1];
-      }
-      if (params.minLikes) apiParams.minLikes = params.minLikes;
-      if (params.minComments) apiParams.minComments = params.minComments;
-      if (params.minViews) apiParams.minViews = params.minViews;
+const {
+  tableProps: historyTableProps,
+  filters,
+  search: searchHistory,
+  fetchData: fetchMoments,
+} = useCrudTable<MomentTask, MomentFilters>({
+  fetchApi: async (params) => {
+    const apiParams: Record<string, unknown> = {
+      page: params.page,
+      pageSize: params.pageSize,
+    };
+    if (params.createdBy) apiParams.createdBy = params.createdBy;
+    if (params.status) apiParams.status = params.status;
+    if (dateRange.value) {
+      apiParams.startDate = dateRange.value[0];
+      apiParams.endDate = dateRange.value[1];
+    }
+    if (params.minLikes) apiParams.minLikes = params.minLikes;
+    if (params.minComments) apiParams.minComments = params.minComments;
+    if (params.minViews) apiParams.minViews = params.minViews;
 
-      const res = await requestClient.get<{ items: MomentTask[]; total: number }>(
-        '/moments',
-        { params: apiParams },
-      );
-      return { items: res.items || [], total: res.total || 0 };
-    },
-    deleteApi: async (id) => {
-      await requestClient.delete(`/moments/${id}`);
-    },
-  });
+    const res = await requestClient.get<{ items: MomentTask[]; total: number }>(
+      '/moments',
+      { params: apiParams },
+    );
+    return { items: res.items || [], total: res.total || 0 };
+  },
+  deleteApi: async (id) => {
+    await requestClient.delete(`/moments/${id}`);
+  },
+});
 
 // ==================== Materials 表格加载 ====================
 
 async function fetchMaterials() {
   materialsLoading.value = true;
   try {
-    const res = await requestClient.get<{ items: MaterialItem[]; total: number }>(
-      '/moments/materials',
-      { params: { page: materialsPage.value, pageSize: 10 } },
-    );
+    const res = await requestClient.get<{
+      items: MaterialItem[];
+      total: number;
+    }>('/moments/materials', {
+      params: { page: materialsPage.value, pageSize: 10 },
+    });
     materials.value = res.items || [];
     materialsTotal.value = res.total || 0;
   } catch (e) {
@@ -271,20 +308,74 @@ function handleSelectCustomers() {
   customerSelectVisible.value = true;
 }
 
+// ==================== 统计与重试 ====================
+
+async function fetchFailedCount() {
+  try {
+    const res = await requestClient.get<{
+      totalTasks: number;
+      failedTasks: number;
+    }>('/moments/statistics');
+    failedCount.value = res.failedTasks || 0;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function handleRetryFailed() {
+  retryLoading.value = true;
+  try {
+    const res = await requestClient.post<{
+      total: number;
+      succeeded: number;
+      failed: number;
+    }>('/moments/retry-failed');
+    message.success(`重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`);
+    fetchFailedCount();
+    if (activeTab.value === 'history') {
+      fetchMoments();
+    }
+  } catch (e: any) {
+    message.error(e.message || '重试失败');
+  } finally {
+    retryLoading.value = false;
+  }
+}
+
+function goToStatistics() {
+  router.push('/crm/moments/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  // Default to create tab, no data fetch needed
+  fetchFailedCount();
 });
 </script>
 
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <h2 class="text-xl font-bold">企业发表到客户的朋友圈</h2>
-      <p class="text-gray-500">
-        管理员或负责人编辑内容，选择可见的客户，成员确认后发表到客户的朋友圈
-      </p>
+    <div class="mb-4 flex items-start justify-between">
+      <div>
+        <h2 class="text-xl font-bold">企业发表到客户的朋友圈</h2>
+        <p class="text-gray-500">
+          管理员或负责人编辑内容，选择可见的客户，成员确认后发表到客户的朋友圈
+        </p>
+      </div>
+      <Space>
+        <Button @click="goToStatistics">
+          <BarChartOutlined /> 数据统计
+        </Button>
+        <Button
+          v-if="failedCount > 0"
+          type="primary"
+          danger
+          :loading="retryLoading"
+          @click="handleRetryFailed"
+        >
+          <ReloadOutlined /> 重试失败 ({{ failedCount }})
+        </Button>
+      </Space>
     </div>
 
     <Card>

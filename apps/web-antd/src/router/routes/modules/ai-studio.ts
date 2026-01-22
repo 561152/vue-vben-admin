@@ -67,6 +67,17 @@ const routes: RouteRecordRaw[] = [
           permissions: ['AI_STUDIO:METRICS:DASHBOARD'],
         },
       },
+      {
+        name: 'AICost',
+        path: 'cost',
+        component: () => import('#/views/ai-studio/cost/index.vue'),
+        meta: {
+          icon: 'ant-design:dollar-outlined',
+          title: '成本看板',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:COST:VIEW'],
+        },
+      },
     ],
   },
 ];

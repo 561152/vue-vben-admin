@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -13,8 +14,11 @@ import {
   Popconfirm,
   Drawer,
 } from 'ant-design-vue';
+import { BarChartOutlined } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
+
+const router = useRouter();
 
 // ==================== 类型定义 ====================
 
@@ -62,7 +66,12 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const columns = [
   { title: '群名称', dataIndex: 'name', key: 'name' },
-  { title: '群成员数', dataIndex: 'memberCount', key: 'memberCount', width: 100 },
+  {
+    title: '群成员数',
+    dataIndex: 'memberCount',
+    key: 'memberCount',
+    width: 100,
+  },
   {
     title: '状态',
     dataIndex: 'status',
@@ -140,7 +149,9 @@ const selectedCustomerId = ref<number | undefined>(undefined);
 
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers');
+    const res = await requestClient.get<{ items: CustomerItem[] }>(
+      '/customers',
+    );
     customers.value = res.items;
   } catch (e) {
     console.error(e);
@@ -150,7 +161,9 @@ async function fetchCustomers() {
 async function fetchMembers(groupId: number) {
   membersLoading.value = true;
   try {
-    members.value = await requestClient.get<MemberItem[]>(`/groups/${groupId}/members`);
+    members.value = await requestClient.get<MemberItem[]>(
+      `/groups/${groupId}/members`,
+    );
   } catch (e) {
     console.error(e);
   } finally {
@@ -188,13 +201,19 @@ async function handleAddMemberSubmit() {
 async function handleRemoveMember(memberId: number) {
   if (!currentGroup.value) return;
   try {
-    await requestClient.delete(`/groups/${currentGroup.value.id}/members/${memberId}`);
+    await requestClient.delete(
+      `/groups/${currentGroup.value.id}/members/${memberId}`,
+    );
     message.success('移除成功');
     await fetchMembers(currentGroup.value.id);
     fetchData();
   } catch (e) {
     message.error('移除失败');
   }
+}
+
+function goToStatistics() {
+  router.push('/crm/group/statistics');
 }
 
 // ==================== 生命周期 ====================
@@ -209,7 +228,13 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">群管理</h2>
-      <Button type="primary" @click="openCreate">新建群</Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <template #icon><BarChartOutlined /></template>
+          统计分析
+        </Button>
+        <Button type="primary" @click="openCreate">新建群</Button>
+      </Space>
     </div>
 
     <!-- 表格区 -->
@@ -224,7 +249,11 @@ onMounted(() => {
             >
               成员
             </Button>
-            <Button type="link" size="small" @click="handleEdit(record as GroupItem)">
+            <Button
+              type="link"
+              size="small"
+              @click="handleEdit(record as GroupItem)"
+            >
               编辑
             </Button>
             <Popconfirm

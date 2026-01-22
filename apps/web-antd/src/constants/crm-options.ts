@@ -178,20 +178,14 @@ export function findOption(
 /**
  * 获取选项的标签
  */
-export function getOptionLabel(
-  options: SelectOption[],
-  value: string,
-): string {
+export function getOptionLabel(options: SelectOption[], value: string): string {
   return findOption(options, value)?.label || value;
 }
 
 /**
  * 获取选项的颜色
  */
-export function getOptionColor(
-  options: SelectOption[],
-  value: string,
-): string {
+export function getOptionColor(options: SelectOption[], value: string): string {
   return findOption(options, value)?.color || 'default';
 }
 

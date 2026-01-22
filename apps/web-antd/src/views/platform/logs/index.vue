@@ -1,6 +1,20 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
-import { Table, Button, Space, Form, Input, message, Select, Tag, DatePicker, Card, Statistic, Row, Col } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Space,
+  Form,
+  Input,
+  message,
+  Select,
+  Tag,
+  DatePicker,
+  Card,
+  Statistic,
+  Row,
+  Col,
+} from 'ant-design-vue';
 import { requestClient } from '#/api/request';
 import type { Dayjs } from 'dayjs';
 
@@ -34,7 +48,12 @@ interface StatsData {
 const loading = ref(false);
 const dataSource = ref<AuditLogItem[]>([]);
 const pagination = ref({ current: 1, pageSize: 20, total: 0 });
-const statsData = ref<StatsData>({ total: 0, byModule: [], byAction: [], byStatus: [] });
+const statsData = ref<StatsData>({
+  total: 0,
+  byModule: [],
+  byAction: [],
+  byStatus: [],
+});
 const filterForm = ref({
   module: undefined,
   action: undefined,
@@ -51,7 +70,7 @@ const columns = [
     width: 160,
     customRender: ({ text }: { text: string }) => {
       return new Date(text).toLocaleString('zh-CN');
-    }
+    },
   },
   {
     title: '用户',
@@ -84,7 +103,7 @@ const columns = [
       };
       const action = actionMap[text] || { color: 'default', label: text };
       return h(Tag, { color: action.color }, () => action.label);
-    }
+    },
   },
   {
     title: '资源',
@@ -118,7 +137,7 @@ const columns = [
       };
       const status = statusMap[text] || { color: 'default', label: text };
       return h(Tag, { color: status.color }, () => status.label);
-    }
+    },
   },
   {
     title: '耗时(ms)',
@@ -127,7 +146,7 @@ const columns = [
     width: 90,
     customRender: ({ text }: { text: number | null }) => {
       return text !== null && text !== undefined ? text : '-';
-    }
+    },
   },
 ];
 
@@ -148,8 +167,11 @@ async function fetchData() {
       params.endDate = filterForm.value.dateRange[1].format('YYYY-MM-DD');
     }
 
-    const res = await requestClient.get<{ data: AuditLogItem[]; total: number }>('/platform/audit-logs', {
-      params
+    const res = await requestClient.get<{
+      data: AuditLogItem[];
+      total: number;
+    }>('/platform/audit-logs', {
+      params,
     });
     dataSource.value = res.data;
     pagination.value.total = res.total;
@@ -169,7 +191,10 @@ async function fetchStats() {
       params.endDate = filterForm.value.dateRange[1].format('YYYY-MM-DD');
     }
 
-    const res = await requestClient.get<StatsData>('/platform/audit-logs/stats', { params });
+    const res = await requestClient.get<StatsData>(
+      '/platform/audit-logs/stats',
+      { params },
+    );
     statsData.value = res;
   } catch (e: any) {
     console.error(e);
@@ -211,7 +236,7 @@ onMounted(() => {
 <template>
   <div class="p-5">
     <div class="mb-4">
-      <h2 class="text-xl font-bold mb-4">审计日志</h2>
+      <h2 class="mb-4 text-xl font-bold">审计日志</h2>
 
       <!-- Statistics Cards -->
       <Row :gutter="16" class="mb-4">
@@ -224,7 +249,10 @@ onMounted(() => {
           <Card>
             <Statistic
               title="成功操作"
-              :value="statsData.byStatus.find(s => s.status === 'SUCCESS')?.count || 0"
+              :value="
+                statsData.byStatus.find((s) => s.status === 'SUCCESS')?.count ||
+                0
+              "
               :value-style="{ color: '#3f8600' }"
             />
           </Card>
@@ -233,17 +261,17 @@ onMounted(() => {
           <Card>
             <Statistic
               title="失败操作"
-              :value="statsData.byStatus.find(s => s.status === 'FAILED')?.count || 0"
+              :value="
+                statsData.byStatus.find((s) => s.status === 'FAILED')?.count ||
+                0
+              "
               :value-style="{ color: '#cf1322' }"
             />
           </Card>
         </Col>
         <Col :span="6">
           <Card>
-            <Statistic
-              title="操作模块数"
-              :value="statsData.byModule.length"
-            />
+            <Statistic title="操作模块数" :value="statsData.byModule.length" />
           </Card>
         </Col>
       </Row>

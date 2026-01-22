@@ -27,7 +27,9 @@ import {
   InboxOutlined,
   CloudUploadOutlined,
   EyeOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import type { UploadProps } from 'ant-design-vue';
 import {
   getMediaList,
@@ -37,6 +39,7 @@ import {
 } from '#/api/crm';
 import dayjs from 'dayjs';
 
+const router = useRouter();
 const loading = ref(false);
 const uploading = ref(false);
 const dataSource = ref<WecomMedia[]>([]);
@@ -142,6 +145,10 @@ function getTypeInfo(type: string) {
   return typeOptions.find((t) => t.value === type) || typeOptions[2];
 }
 
+function goToStatistics() {
+  router.push('/crm/media/statistics');
+}
+
 onMounted(() => {
   fetchData();
 });
@@ -151,9 +158,14 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">素材库</h2>
-      <Button type="primary" @click="handleUpload">
-        <CloudUploadOutlined /> 上传素材
-      </Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <BarChartOutlined /> 统计分析
+        </Button>
+        <Button type="primary" @click="handleUpload">
+          <CloudUploadOutlined /> 上传素材
+        </Button>
+      </Space>
     </div>
 
     <!-- Filters -->

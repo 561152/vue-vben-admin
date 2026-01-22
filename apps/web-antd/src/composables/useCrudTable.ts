@@ -134,8 +134,7 @@ export function useCrudTable<
       dataSource.value = res.items || res.data || [];
       pagination.total = res.total || 0;
     } catch (e: unknown) {
-      const errorMessage =
-        e instanceof Error ? e.message : '获取数据失败';
+      const errorMessage = e instanceof Error ? e.message : '获取数据失败';
       message.error(errorMessage);
     } finally {
       loading.value = false;
@@ -167,8 +166,7 @@ export function useCrudTable<
       message.success('删除成功');
       fetchData();
     } catch (e: unknown) {
-      const errorMessage =
-        e instanceof Error ? e.message : '删除失败';
+      const errorMessage = e instanceof Error ? e.message : '删除失败';
       message.error(errorMessage);
     }
   }

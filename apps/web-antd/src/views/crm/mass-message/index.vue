@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Button,
   Space,
@@ -29,6 +30,7 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   EyeOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
 import {
   quickSendMassMessage,
@@ -252,6 +254,12 @@ watch(
   { deep: true },
 );
 
+const router = useRouter();
+
+function goToStatistics() {
+  router.push('/crm/mass-message/statistics');
+}
+
 onMounted(() => {
   fetchTags();
   fetchUsers();
@@ -261,9 +269,15 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <h2 class="text-xl font-bold">群发消息</h2>
-      <p class="text-gray-500">选择目标客户群，快速发送营销消息</p>
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold">群发消息</h2>
+        <p class="text-gray-500">选择目标客户群，快速发送营销消息</p>
+      </div>
+      <Button @click="goToStatistics">
+        <template #icon><BarChartOutlined /></template>
+        统计分析
+      </Button>
     </div>
 
     <!-- Steps -->

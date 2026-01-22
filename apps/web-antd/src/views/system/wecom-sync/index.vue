@@ -160,7 +160,13 @@
         </div>
         <Progress
           :percent="syncProgress.percent"
-          :status="syncProgress.status === 'failed' ? 'exception' : syncProgress.status === 'completed' ? 'success' : 'active'"
+          :status="
+            syncProgress.status === 'failed'
+              ? 'exception'
+              : syncProgress.status === 'completed'
+                ? 'success'
+                : 'active'
+          "
           :stroke-color="{ from: '#108ee9', to: '#87d068' }"
         />
         <div class="progress-info">
@@ -353,7 +359,10 @@ const pollJobStatus = async (
           title,
           percent: 100,
           status: 'completed',
-          total: status.total || status.result?.totalUsers || status.result?.totalCustomers,
+          total:
+            status.total ||
+            status.result?.totalUsers ||
+            status.result?.totalCustomers,
           processed: status.processed || status.total,
         };
 
@@ -416,7 +425,10 @@ const handleSyncUsers = async () => {
   stopPolling();
 
   try {
-    const res = await requestClient.post<AsyncSyncResponse>('/wecom/sync/users', {});
+    const res = await requestClient.post<AsyncSyncResponse>(
+      '/wecom/sync/users',
+      {},
+    );
 
     if (res.async && res.jobId) {
       // 异步模式：显示初始进度并开始轮询
@@ -479,7 +491,10 @@ const handleSyncCustomers = async () => {
   stopPolling();
 
   try {
-    const res = await requestClient.post<AsyncSyncResponse>('/wecom/sync/customers', {});
+    const res = await requestClient.post<AsyncSyncResponse>(
+      '/wecom/sync/customers',
+      {},
+    );
 
     if (res.async && res.jobId) {
       // 异步模式：显示初始进度并开始轮询

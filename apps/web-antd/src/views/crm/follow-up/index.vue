@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -35,6 +36,7 @@ import {
   ExclamationCircleOutlined,
   UserOutlined,
   CalendarOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import { useCrudTable } from '#/composables';
@@ -50,6 +52,8 @@ import 'dayjs/locale/zh-cn';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
+
+const router = useRouter();
 
 // ==================== 类型定义 ====================
 
@@ -124,7 +128,11 @@ const columns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(followUpTypeOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
   { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
@@ -134,7 +142,11 @@ const columns = [
     width: 100,
     customRender: ({ record }: { record: FollowUpItem }) => {
       const opt = findOption(followUpStatusOptions, record.status);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || record.status);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || record.status,
+      );
     },
   },
   {
@@ -151,20 +163,18 @@ const columns = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 140,
-    customRender: ({ text }: { text: string }) => dayjs(text).format('MM-DD HH:mm'),
+    customRender: ({ text }: { text: string }) =>
+      dayjs(text).format('MM-DD HH:mm'),
   },
   { title: '操作', key: 'action', width: 140, fixed: 'right' as const },
 ];
 
 // ==================== 表格逻辑 ====================
 
-const {
-  tableProps,
-  filters,
-  search,
-  resetFilters,
-  fetchData,
-} = useCrudTable<FollowUpItem, FollowUpFilters>({
+const { tableProps, filters, search, resetFilters, fetchData } = useCrudTable<
+  FollowUpItem,
+  FollowUpFilters
+>({
   fetchApi: async (params) => {
     const apiParams: Record<string, unknown> = {
       page: params.page,
@@ -195,7 +205,8 @@ async function fetchStats() {
 
 async function fetchTodayData() {
   try {
-    todayData.value = await requestClient.get<TodayFollowUp>('/follow-ups/today');
+    todayData.value =
+      await requestClient.get<TodayFollowUp>('/follow-ups/today');
   } catch (e) {
     console.error(e);
   }
@@ -214,9 +225,12 @@ const formState = ref({
 
 async function fetchCustomers() {
   try {
-    const res = await requestClient.get<{ items: CustomerItem[] }>('/customers', {
-      params: { pageSize: 100 },
-    });
+    const res = await requestClient.get<{ items: CustomerItem[] }>(
+      '/customers',
+      {
+        params: { pageSize: 100 },
+      },
+    );
     customers.value = res.items;
   } catch (e) {
     console.error(e);
@@ -299,6 +313,10 @@ function formatRelativeTime(time: string | null) {
   return time ? dayjs(time).fromNow() : '-';
 }
 
+function goToStatistics() {
+  router.push('/crm/follow-up/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(() => {
@@ -313,7 +331,13 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">跟进管理</h2>
-      <Button type="primary" @click="handleAdd">新增跟进</Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <template #icon><BarChartOutlined /></template>
+          统计分析
+        </Button>
+        <Button type="primary" @click="handleAdd">新增跟进</Button>
+      </Space>
     </div>
 
     <!-- 统计卡片 -->
@@ -386,7 +410,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#ff4d4f' }" :size="32">
+                        <Avatar
+                          :style="{ backgroundColor: '#ff4d4f' }"
+                          :size="32"
+                        >
                           <template #icon>
                             <component :is="getTypeIcon(item.type)" />
                           </template>
@@ -415,7 +442,11 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty v-else description="无逾期任务" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="无逾期任务"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </Col>
 
@@ -437,7 +468,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#1890ff' }" :size="32">
+                        <Avatar
+                          :style="{ backgroundColor: '#1890ff' }"
+                          :size="32"
+                        >
                           <template #icon>
                             <component :is="getTypeIcon(item.type)" />
                           </template>
@@ -466,13 +500,21 @@ onMounted(() => {
                   </ListItem>
                 </template>
               </List>
-              <Empty v-else description="今日无待办" :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+              <Empty
+                v-else
+                description="今日无待办"
+                :image="Empty.PRESENTED_IMAGE_SIMPLE"
+              />
             </Card>
           </Col>
 
           <!-- 即将到来 -->
           <Col :span="8">
-            <Card title="即将到来 (3天内)" size="small" class="h-96 overflow-auto">
+            <Card
+              title="即将到来 (3天内)"
+              size="small"
+              class="h-96 overflow-auto"
+            >
               <template #extra>
                 <Badge
                   :count="todayData?.stats.upcomingCount || 0"
@@ -488,7 +530,10 @@ onMounted(() => {
                   <ListItem>
                     <ListItemMeta>
                       <template #avatar>
-                        <Avatar :style="{ backgroundColor: '#52c41a' }" :size="32">
+                        <Avatar
+                          :style="{ backgroundColor: '#52c41a' }"
+                          :size="32"
+                        >
                           <template #icon>
                             <component :is="getTypeIcon(item.type)" />
                           </template>
@@ -551,7 +596,10 @@ onMounted(() => {
                 </Avatar>
                 <div>
                   <div class="font-medium">{{ record.customerName }}</div>
-                  <div v-if="record.customerPhone" class="text-xs text-gray-400">
+                  <div
+                    v-if="record.customerPhone"
+                    class="text-xs text-gray-400"
+                  >
                     {{ record.customerPhone }}
                   </div>
                 </div>
@@ -595,7 +643,10 @@ onMounted(() => {
           />
         </Form.Item>
         <Form.Item label="跟进方式">
-          <Select v-model:value="formState.type" :options="followUpTypeOptions" />
+          <Select
+            v-model:value="formState.type"
+            :options="followUpTypeOptions"
+          />
         </Form.Item>
         <Form.Item label="跟进内容" required>
           <Input.TextArea

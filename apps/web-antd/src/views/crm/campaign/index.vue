@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -13,6 +14,7 @@ import {
   Card,
   Drawer,
 } from 'ant-design-vue';
+import { BarChartOutlined, TeamOutlined } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
 import {
@@ -21,6 +23,8 @@ import {
   findOption,
 } from '#/constants/crm-options';
 import dayjs from 'dayjs';
+
+const router = useRouter();
 
 // ==================== 类型定义 ====================
 
@@ -56,7 +60,11 @@ const columns = [
     width: 120,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(campaignTypeOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
   {
@@ -66,12 +74,26 @@ const columns = [
     width: 120,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(campaignStatusOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
-  { title: '目标人数', dataIndex: 'totalTarget', key: 'totalTarget', width: 100 },
+  {
+    title: '目标人数',
+    dataIndex: 'totalTarget',
+    key: 'totalTarget',
+    width: 100,
+  },
   { title: '已发送', dataIndex: 'totalSent', key: 'totalSent', width: 100 },
-  { title: '已送达', dataIndex: 'totalDelivered', key: 'totalDelivered', width: 100 },
+  {
+    title: '已送达',
+    dataIndex: 'totalDelivered',
+    key: 'totalDelivered',
+    width: 100,
+  },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
@@ -136,6 +158,14 @@ function showDetail(record: CampaignItem) {
   detailVisible.value = true;
 }
 
+function goToStatistics() {
+  router.push('/crm/campaign/statistics');
+}
+
+function goToAudienceStatistics() {
+  router.push('/crm/audience/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(fetchData);
@@ -145,7 +175,17 @@ onMounted(fetchData);
   <div class="p-5">
     <Card title="营销活动管理">
       <template #extra>
-        <Button type="primary" @click="openCreate">新增活动</Button>
+        <Space>
+          <Button @click="goToAudienceStatistics">
+            <template #icon><TeamOutlined /></template>
+            人群包统计
+          </Button>
+          <Button @click="goToStatistics">
+            <template #icon><BarChartOutlined /></template>
+            统计分析
+          </Button>
+          <Button type="primary" @click="openCreate">新增活动</Button>
+        </Space>
       </template>
 
       <!-- 表格区 -->
@@ -193,7 +233,10 @@ onMounted(fetchData);
           <Input v-model:value="formState.name" placeholder="请输入活动名称" />
         </Form.Item>
         <Form.Item label="活动类型">
-          <Select v-model:value="formState.type" :options="campaignTypeOptions" />
+          <Select
+            v-model:value="formState.type"
+            :options="campaignTypeOptions"
+          />
         </Form.Item>
         <Form.Item label="活动描述">
           <Input.TextArea
@@ -232,9 +275,13 @@ onMounted(fetchData);
         <div class="flex items-center">
           <span class="w-24 font-medium text-gray-500">活动状态：</span>
           <Tag
-            :color="findOption(campaignStatusOptions, detailCampaign.status)?.color"
+            :color="
+              findOption(campaignStatusOptions, detailCampaign.status)?.color
+            "
           >
-            {{ findOption(campaignStatusOptions, detailCampaign.status)?.label }}
+            {{
+              findOption(campaignStatusOptions, detailCampaign.status)?.label
+            }}
           </Tag>
         </div>
         <div class="flex">
@@ -255,7 +302,9 @@ onMounted(fetchData);
         </div>
         <div class="flex">
           <span class="w-24 font-medium text-gray-500">创建时间：</span>
-          <span>{{ dayjs(detailCampaign.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</span>
+          <span>{{
+            dayjs(detailCampaign.createdAt).format('YYYY-MM-DD HH:mm:ss')
+          }}</span>
         </div>
       </div>
     </Drawer>

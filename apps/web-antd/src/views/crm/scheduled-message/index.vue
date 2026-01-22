@@ -21,7 +21,9 @@ import {
   SendOutlined,
   DeleteOutlined,
   EditOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
 import dayjs from 'dayjs';
@@ -52,8 +54,18 @@ interface FormState {
 const columns = [
   { title: '任务名称', dataIndex: 'name', key: 'name', width: 150 },
   { title: '消息内容', dataIndex: 'content', key: 'content', ellipsis: true },
-  { title: '计划发送时间', dataIndex: 'scheduledAt', key: 'scheduledAt', width: 180 },
-  { title: '目标数量', dataIndex: 'targetCount', key: 'targetCount', width: 100 },
+  {
+    title: '计划发送时间',
+    dataIndex: 'scheduledAt',
+    key: 'scheduledAt',
+    width: 180,
+  },
+  {
+    title: '目标数量',
+    dataIndex: 'targetCount',
+    key: 'targetCount',
+    width: 100,
+  },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
   { title: '操作', key: 'action', width: 200 },
 ];
@@ -76,10 +88,12 @@ const targetTypeOptions = [
 
 const { tableProps, fetchData } = useCrudTable<ScheduledMessage>({
   fetchApi: async (params) => {
-    const res = await requestClient.get<{ data: ScheduledMessage[]; total?: number }>(
-      '/scheduled-messages',
-      { params: { page: params.page, pageSize: params.pageSize } },
-    );
+    const res = await requestClient.get<{
+      data: ScheduledMessage[];
+      total?: number;
+    }>('/scheduled-messages', {
+      params: { page: params.page, pageSize: params.pageSize },
+    });
     return { items: res.data || [], total: res.total || res.data?.length || 0 };
   },
 });
@@ -156,6 +170,14 @@ function formatDate(date: string) {
   return dayjs(date).format('YYYY-MM-DD HH:mm');
 }
 
+// ==================== 路由 ====================
+
+const router = useRouter();
+
+function goToStatistics() {
+  router.push('/crm/scheduled-message/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(fetchData);
@@ -165,10 +187,16 @@ onMounted(fetchData);
   <div class="scheduled-message-container">
     <Card title="定时消息" :bordered="false">
       <template #extra>
-        <Button type="primary" @click="openCreate">
-          <template #icon><PlusOutlined /></template>
-          新建定时消息
-        </Button>
+        <Space>
+          <Button @click="goToStatistics">
+            <template #icon><BarChartOutlined /></template>
+            数据统计
+          </Button>
+          <Button type="primary" @click="openCreate">
+            <template #icon><PlusOutlined /></template>
+            新建定时消息
+          </Button>
+        </Space>
       </template>
 
       <Table v-bind="tableProps" :columns="columns">
@@ -203,7 +231,11 @@ onMounted(fetchData);
                 <SendOutlined /> 立即发送
               </Button>
               <Button
-                v-if="['PENDING', 'CONFIRMED'].includes((record as ScheduledMessage).status)"
+                v-if="
+                  ['PENDING', 'CONFIRMED'].includes(
+                    (record as ScheduledMessage).status,
+                  )
+                "
                 type="link"
                 size="small"
                 @click="handleEdit(record as ScheduledMessage)"
@@ -211,7 +243,11 @@ onMounted(fetchData);
                 <EditOutlined /> 编辑
               </Button>
               <Popconfirm
-                v-if="['PENDING', 'CONFIRMED'].includes((record as ScheduledMessage).status)"
+                v-if="
+                  ['PENDING', 'CONFIRMED'].includes(
+                    (record as ScheduledMessage).status,
+                  )
+                "
                 title="确定要删除这条定时消息吗？"
                 @confirm="handleDelete((record as ScheduledMessage).id)"
               >
@@ -223,8 +259,8 @@ onMounted(fetchData);
           </template>
         </template>
         <template #emptyText>
-          <div style="padding: 40px; text-align: center; color: #999">
-            <ClockCircleOutlined style="font-size: 48px; margin-bottom: 16px" />
+          <div style="padding: 40px; color: #999; text-align: center">
+            <ClockCircleOutlined style=" margin-bottom: 16px;font-size: 48px" />
             <p>暂无定时消息</p>
             <p>点击"新建定时消息"创建您的第一条定时消息</p>
           </div>

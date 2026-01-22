@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -18,6 +19,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   CopyOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
 import {
   getMessageTemplates,
@@ -96,27 +98,21 @@ interface TemplateFilters {
   isActive?: string; // 使用 string 以匹配 Select 组件的 value 类型
 }
 
-const {
-  tableProps,
-  filters,
-  search,
-  resetFilters,
-  fetchData,
-  handleDelete,
-} = useCrudTable<MessageTemplate, TemplateFilters>({
-  fetchApi: async (params) => {
-    const apiParams: Record<string, unknown> = {
-      page: params.page,
-      pageSize: params.pageSize,
-    };
-    if (params.category) apiParams.category = params.category;
-    if (params.isActive) apiParams.isActive = params.isActive === 'true';
-    return getMessageTemplates(apiParams);
-  },
-  deleteApi: async (id) => {
-    await deleteMessageTemplate(id as number);
-  },
-});
+const { tableProps, filters, search, resetFilters, fetchData, handleDelete } =
+  useCrudTable<MessageTemplate, TemplateFilters>({
+    fetchApi: async (params) => {
+      const apiParams: Record<string, unknown> = {
+        page: params.page,
+        pageSize: params.pageSize,
+      };
+      if (params.category) apiParams.category = params.category;
+      if (params.isActive) apiParams.isActive = params.isActive === 'true';
+      return getMessageTemplates(apiParams);
+    },
+    deleteApi: async (id) => {
+      await deleteMessageTemplate(id as number);
+    },
+  });
 
 // ==================== Modal 逻辑 ====================
 
@@ -127,37 +123,31 @@ interface TemplateFormState {
   isActive: boolean;
 }
 
-const {
-  visible,
-  formState,
-  isEditing,
-  openCreate,
-  openEdit,
-  submit,
-} = useModalForm<TemplateFormState>({
-  createApi: async (data) => {
-    await createMessageTemplate({
-      name: data.name,
-      category: data.category || undefined,
-      content: { text: data.text },
-    });
-  },
-  updateApi: async (id, data) => {
-    await updateMessageTemplate(id as number, {
-      name: data.name,
-      category: data.category || undefined,
-      content: { text: data.text },
-      isActive: data.isActive,
-    });
-  },
-  initialValues: () => ({
-    name: '',
-    category: '',
-    text: '',
-    isActive: true,
-  }),
-  afterSubmit: fetchData,
-});
+const { visible, formState, isEditing, openCreate, openEdit, submit } =
+  useModalForm<TemplateFormState>({
+    createApi: async (data) => {
+      await createMessageTemplate({
+        name: data.name,
+        category: data.category || undefined,
+        content: { text: data.text },
+      });
+    },
+    updateApi: async (id, data) => {
+      await updateMessageTemplate(id as number, {
+        name: data.name,
+        category: data.category || undefined,
+        content: { text: data.text },
+        isActive: data.isActive,
+      });
+    },
+    initialValues: () => ({
+      name: '',
+      category: '',
+      text: '',
+      isActive: true,
+    }),
+    afterSubmit: fetchData,
+  });
 
 // ==================== 事件处理 ====================
 
@@ -189,6 +179,12 @@ function handleReset() {
   resetFilters();
 }
 
+const router = useRouter();
+
+function goToStatistics() {
+  router.push('/crm/message-template/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(fetchData);
@@ -198,9 +194,15 @@ onMounted(fetchData);
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">消息模板</h2>
-      <Button type="primary" @click="openCreate">
-        <PlusOutlined /> 新建模板
-      </Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <template #icon><BarChartOutlined /></template>
+          统计分析
+        </Button>
+        <Button type="primary" @click="openCreate">
+          <PlusOutlined /> 新建模板
+        </Button>
+      </Space>
     </div>
 
     <!-- 筛选区 -->
@@ -231,10 +233,18 @@ onMounted(fetchData);
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record as MessageTemplate)">
+            <Button
+              type="link"
+              size="small"
+              @click="handleEdit(record as MessageTemplate)"
+            >
               <EditOutlined /> 编辑
             </Button>
-            <Button type="link" size="small" @click="handleCopy(record as MessageTemplate)">
+            <Button
+              type="link"
+              size="small"
+              @click="handleCopy(record as MessageTemplate)"
+            >
               <CopyOutlined /> 复制
             </Button>
             <Popconfirm

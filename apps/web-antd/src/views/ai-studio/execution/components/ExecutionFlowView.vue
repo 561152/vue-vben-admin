@@ -153,12 +153,12 @@ onMounted(() => {
 
 <style scoped>
 .execution-flow-view {
+  position: relative;
   width: 100%;
   height: 400px;
-  position: relative;
+  background: #f5f5f5;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
-  background: #f5f5f5;
 }
 
 .legend {
@@ -171,7 +171,7 @@ onMounted(() => {
   padding: 8px 12px;
   background: white;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
 }
 
 .legend-item {

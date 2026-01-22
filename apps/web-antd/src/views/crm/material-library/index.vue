@@ -27,7 +27,9 @@ import {
   EyeOutlined,
   SendOutlined,
   FolderOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
 
@@ -85,6 +87,8 @@ interface MaterialFilters {
 }
 
 // ==================== 分类状态 ====================
+
+const router = useRouter();
 
 const categories = ref<CategoryItem[]>([]);
 const selectedCategoryId = ref<number | null>(null);
@@ -322,6 +326,10 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleString('zh-CN');
 }
 
+function goToStatistics() {
+  router.push('/crm/material-library/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(() => {
@@ -352,9 +360,14 @@ onMounted(() => {
     <!-- Right: Material List -->
     <Card class="flex-1" title="素材列表">
       <template #extra>
-        <Button type="primary" @click="openCreate">
-          <PlusOutlined /> 添加素材
-        </Button>
+        <Space>
+          <Button @click="goToStatistics">
+            <BarChartOutlined /> 数据统计
+          </Button>
+          <Button type="primary" @click="openCreate">
+            <PlusOutlined /> 添加素材
+          </Button>
+        </Space>
       </template>
 
       <!-- Filters -->

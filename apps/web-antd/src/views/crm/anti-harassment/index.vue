@@ -27,6 +27,7 @@ import {
   SafetyOutlined,
   StopOutlined,
   WarningOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
@@ -368,6 +369,10 @@ function goToViolations() {
   router.push('/crm/anti-harassment/violations');
 }
 
+function goToStatistics() {
+  router.push('/crm/anti-harassment/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(() => {
@@ -380,11 +385,16 @@ onMounted(() => {
 
 <template>
   <div class="p-5">
-    <div class="mb-4">
-      <h2 class="text-xl font-bold">安全管控</h2>
-      <p class="text-gray-500">
-        配置防骚扰规则，群客户发送的消息命中规则时，该成员将会被踢出群聊或收到警告消息
-      </p>
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold">安全管控</h2>
+        <p class="text-gray-500">
+          配置防骚扰规则，群客户发送的消息命中规则时，该成员将会被踢出群聊或收到警告消息
+        </p>
+      </div>
+      <Button @click="goToStatistics">
+        <BarChartOutlined /> 统计分析
+      </Button>
     </div>
 
     <!-- Quick Actions -->

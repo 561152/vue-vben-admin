@@ -28,7 +28,9 @@ import {
   ReloadOutlined,
   TeamOutlined,
   ExperimentOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons-vue';
+import { useRouter } from 'vue-router';
 import {
   getDirectMessages,
   sendDirectMessage,
@@ -64,7 +66,12 @@ interface MessageFilters {
 
 const columns = [
   { title: '客户', key: 'customer', width: 200 },
-  { title: '消息内容', dataIndex: ['content', 'text'], key: 'content', ellipsis: true },
+  {
+    title: '消息内容',
+    dataIndex: ['content', 'text'],
+    key: 'content',
+    ellipsis: true,
+  },
   {
     title: '类型',
     dataIndex: 'messageType',
@@ -72,7 +79,11 @@ const columns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(messageTypeOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
   {
@@ -82,7 +93,11 @@ const columns = [
     width: 100,
     customRender: ({ text }: { text: string }) => {
       const opt = findOption(messageStatusOptions, text);
-      return h(Tag, { color: opt?.color || 'default' }, () => opt?.label || text);
+      return h(
+        Tag,
+        { color: opt?.color || 'default' },
+        () => opt?.label || text,
+      );
     },
   },
   {
@@ -98,7 +113,10 @@ const columns = [
 
 // ==================== 表格逻辑 ====================
 
-const { tableProps, filters, fetchData } = useCrudTable<DirectMessage, MessageFilters>({
+const { tableProps, filters, fetchData } = useCrudTable<
+  DirectMessage,
+  MessageFilters
+>({
   fetchApi: async (params) => {
     const apiParams: Record<string, unknown> = {
       page: params.page,
@@ -379,6 +397,14 @@ watch(
   },
 );
 
+// ==================== 路由 ====================
+
+const router = useRouter();
+
+function goToStatistics() {
+  router.push('/crm/direct-message/statistics');
+}
+
 // ==================== 生命周期 ====================
 
 onMounted(() => {
@@ -393,9 +419,14 @@ onMounted(() => {
   <div class="p-5">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-xl font-bold">消息推送</h2>
-      <Button type="primary" @click="handleOpenSendModal">
-        <SendOutlined /> 发送消息
-      </Button>
+      <Space>
+        <Button @click="goToStatistics">
+          <BarChartOutlined /> 数据统计
+        </Button>
+        <Button type="primary" @click="handleOpenSendModal">
+          <SendOutlined /> 发送消息
+        </Button>
+      </Space>
     </div>
 
     <!-- 筛选区 -->
@@ -425,8 +456,12 @@ onMounted(() => {
               <template #icon><UserOutlined /></template>
             </Avatar>
             <div>
-              <div class="font-medium">{{ record.customerName || '未知客户' }}</div>
-              <div class="text-xs text-gray-400">{{ record.externalUserid }}</div>
+              <div class="font-medium">
+                {{ record.customerName || '未知客户' }}
+              </div>
+              <div class="text-xs text-gray-400">
+                {{ record.externalUserid }}
+              </div>
             </div>
           </div>
         </template>
@@ -561,7 +596,8 @@ onMounted(() => {
             class="mb-4 rounded bg-blue-50 p-3"
           >
             <span class="text-blue-600">
-              预计发送给 <strong>{{ selectedEmployeesCustomerCount }}</strong> 个客户
+              预计发送给
+              <strong>{{ selectedEmployeesCustomerCount }}</strong> 个客户
             </span>
           </div>
           <Form.Item label="选择模板">
@@ -660,19 +696,26 @@ onMounted(() => {
         <div class="space-y-4">
           <div>
             <div class="text-sm text-gray-500">客户</div>
-            <div class="font-medium">{{ selectedMessage.customerName || '未知客户' }}</div>
+            <div class="font-medium">
+              {{ selectedMessage.customerName || '未知客户' }}
+            </div>
           </div>
           <div>
             <div class="text-sm text-gray-500">消息类型</div>
             <div>
-              {{ findOption(messageTypeOptions, selectedMessage.messageType)?.label || selectedMessage.messageType }}
+              {{
+                findOption(messageTypeOptions, selectedMessage.messageType)
+                  ?.label || selectedMessage.messageType
+              }}
             </div>
           </div>
           <div>
             <div class="text-sm text-gray-500">状态</div>
             <div class="flex items-center gap-2">
               <component :is="() => getStatusIcon(selectedMessage!.status)" />
-              <span>{{ findOption(messageStatusOptions, selectedMessage.status)?.label }}</span>
+              <span>{{
+                findOption(messageStatusOptions, selectedMessage.status)?.label
+              }}</span>
             </div>
           </div>
           <div>
@@ -687,11 +730,17 @@ onMounted(() => {
           </div>
           <div>
             <div class="text-sm text-gray-500">创建时间</div>
-            <div>{{ dayjs(selectedMessage.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
+            <div>
+              {{
+                dayjs(selectedMessage.createdAt).format('YYYY-MM-DD HH:mm:ss')
+              }}
+            </div>
           </div>
           <div v-if="selectedMessage.sentAt">
             <div class="text-sm text-gray-500">发送时间</div>
-            <div>{{ dayjs(selectedMessage.sentAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
+            <div>
+              {{ dayjs(selectedMessage.sentAt).format('YYYY-MM-DD HH:mm:ss') }}
+            </div>
           </div>
         </div>
       </template>
