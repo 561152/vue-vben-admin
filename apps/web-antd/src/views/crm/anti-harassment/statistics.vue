@@ -686,9 +686,7 @@ onMounted(loadData);
             >
               <template #message>
                 发现
-                {{
-                  ruleEffectiveness.unusedRulesCount
-                }}
+                {{ ruleEffectiveness.unusedRulesCount }}
                 条规则从未被触发，建议检查规则配置是否合理
               </template>
             </Alert>

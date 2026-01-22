@@ -105,7 +105,7 @@ const getStatusText = (status: string) => {
         </template>
         <template #emptyText>
           <div style="padding: 40px; color: #999; text-align: center">
-            <FilePdfOutlined style=" margin-bottom: 16px;font-size: 48px" />
+            <FilePdfOutlined style="margin-bottom: 16px; font-size: 48px" />
             <p>暂无家长报告</p>
             <p>点击"生成报告"为学生创建学习情况报告</p>
           </div>

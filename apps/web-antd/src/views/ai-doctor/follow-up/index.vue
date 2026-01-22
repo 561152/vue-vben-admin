@@ -93,7 +93,7 @@ const getStatusText = (status: string) => {
         </template>
         <template #emptyText>
           <div style="padding: 40px; color: #999; text-align: center">
-            <CalendarOutlined style=" margin-bottom: 16px;font-size: 48px" />
+            <CalendarOutlined style="margin-bottom: 16px; font-size: 48px" />
             <p>暂无复诊记录</p>
             <p>学生完成学习处方后，系统将自动创建复诊追踪计划</p>
           </div>

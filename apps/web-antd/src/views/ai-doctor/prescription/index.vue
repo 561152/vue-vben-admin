@@ -72,7 +72,7 @@ const handleSearch = () => {
         </template>
         <template #emptyText>
           <div style="padding: 40px; color: #999; text-align: center">
-            <FileTextOutlined style=" margin-bottom: 16px;font-size: 48px" />
+            <FileTextOutlined style="margin-bottom: 16px; font-size: 48px" />
             <p>暂无学习处方</p>
             <p>完成学习诊断后，系统将自动生成个性化学习处方</p>
           </div>
