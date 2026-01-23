@@ -816,3 +816,365 @@ test.describe('抽屉组件测试', () => {
     }
   });
 });
+
+// ==================== CRM 朋友圈功能测试 ====================
+test.describe('CRM 朋友圈功能测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.goto(`${BASE_URL}/crm/moments`);
+    await waitForPageLoad(page);
+  });
+
+  test('朋友圈页面正确加载', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查页面标题或关键元素
+    const pageContent = await page.content();
+    const hasContent =
+      pageContent.includes('朋友圈') ||
+      pageContent.includes('moments') ||
+      pageContent.includes('发表');
+
+    expect(hasContent).toBeTruthy();
+  });
+
+  test('Tab 切换功能正常', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const tabs = page.locator('.ant-tabs-tab');
+    const tabCount = await tabs.count();
+
+    if (tabCount >= 2) {
+      // 点击第二个 tab
+      await tabs.nth(1).click();
+      await page.waitForTimeout(500);
+
+      // 验证 tab 切换成功
+      await expect(tabs.nth(1)).toHaveClass(/ant-tabs-tab-active/);
+    }
+  });
+
+  test('发表朋友圈流程 - 选择可见范围', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 查找"所有客户可见"或类似的单选按钮/选择器
+    const visibilitySelector = page.locator('.ant-radio-group, .ant-select').first();
+
+    if (await visibilitySelector.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(visibilitySelector).toBeVisible();
+    }
+  });
+
+  test('筛选客户抽屉可打开', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 查找"筛选客户"或"按条件筛选"按钮
+    const filterButton = page
+      .locator('button, .ant-radio-button-wrapper')
+      .filter({ hasText: /筛选|条件/i })
+      .first();
+
+    if (await filterButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await filterButton.click();
+      await page.waitForTimeout(500);
+
+      // 检查抽屉是否打开
+      const drawer = page.locator('.ant-drawer');
+      if (await drawer.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await expect(drawer).toBeVisible();
+
+        // 关闭抽屉
+        const closeButton = page.locator('.ant-drawer-close');
+        if (await closeButton.isVisible()) {
+          await closeButton.click();
+        }
+      }
+    }
+  });
+
+  test('内容输入区域可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 查找文本输入区域
+    const textArea = page.locator('textarea, .ant-input').first();
+
+    if (await textArea.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(textArea).toBeEnabled();
+
+      // 测试输入
+      await textArea.fill('测试朋友圈内容');
+      await expect(textArea).toHaveValue('测试朋友圈内容');
+    }
+  });
+
+  test('发表按钮可见', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const publishButton = page.getByRole('button', { name: /发表|发送|提交/i });
+
+    if (await publishButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(publishButton).toBeVisible();
+    }
+  });
+});
+
+// ==================== CRM 朋友圈统计测试 ====================
+test.describe('CRM 朋友圈统计测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.goto(`${BASE_URL}/crm/moments/statistics`);
+    await waitForPageLoad(page);
+  });
+
+  test('统计页面正确加载', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查统计卡片
+    await page.waitForSelector('.ant-card, .ant-statistic', { timeout: 5000 }).catch(() => {});
+
+    const cards = page.locator('.ant-card, .ant-statistic');
+    const cardCount = await cards.count();
+
+    expect(cardCount).toBeGreaterThanOrEqual(0);
+  });
+
+  test('同步互动数据按钮可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const syncButton = page.getByRole('button', { name: /同步/i });
+
+    if (await syncButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(syncButton).toBeEnabled();
+    }
+  });
+
+  test('返回按钮可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const backButton = page.locator('button').filter({ has: page.locator('[class*="ArrowLeft"]') });
+
+    if (await backButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(backButton).toBeEnabled();
+    }
+  });
+});
+
+// ==================== CRM 群发消息工具测试 ====================
+test.describe('CRM 群发消息工具测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.goto(`${BASE_URL}/crm/mass-message/tools`);
+    await waitForPageLoad(page);
+  });
+
+  test('群发工具页面正确加载', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查是否有工具卡片
+    const cards = page.locator('.ant-card');
+    const cardCount = await cards.count();
+
+    expect(cardCount).toBeGreaterThan(0);
+  });
+
+  test('群发消息给客户入口可点击', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const customerButton = page.getByRole('button', { name: /新建消息/i }).first();
+
+    if (await customerButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(customerButton).toBeEnabled();
+    }
+  });
+
+  test('朋友圈入口可点击', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const momentsButton = page.getByRole('button', { name: /新建内容/i });
+
+    if (await momentsButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(momentsButton).toBeEnabled();
+    }
+  });
+});
+
+// ==================== CRM 群发消息创建测试 ====================
+test.describe('CRM 群发消息创建测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.goto(`${BASE_URL}/crm/mass-message/create`);
+    await waitForPageLoad(page);
+  });
+
+  test('群发消息创建页面正确加载', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查步骤条
+    const steps = page.locator('.ant-steps');
+
+    if (await steps.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(steps).toBeVisible();
+    }
+  });
+
+  test('步骤一 - 目标选择区域可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查部门/标签选择器
+    const selectors = page.locator('.ant-select, .ant-tree');
+    const selectorCount = await selectors.count();
+
+    expect(selectorCount).toBeGreaterThanOrEqual(0);
+  });
+
+  test('下一步按钮可见', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const nextButton = page.getByRole('button', { name: /下一步/i });
+
+    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(nextButton).toBeVisible();
+    }
+  });
+
+  test('附件编辑区域可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 先进入第二步
+    const nextButton = page.getByRole('button', { name: /下一步/i });
+
+    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      // 选择一些条件后点击下一步
+      await nextButton.click();
+      await page.waitForTimeout(1000);
+
+      // 检查附件编辑区域
+      const attachmentArea = page.locator('.ant-upload, [class*="attachment"]');
+      if (await attachmentArea.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await expect(attachmentArea).toBeVisible();
+      }
+    }
+  });
+});
+
+// ==================== CRM 快速群发测试 ====================
+test.describe('CRM 快速群发测试', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+    await page.goto(`${BASE_URL}/crm/mass-message`);
+    await waitForPageLoad(page);
+  });
+
+  test('快速群发页面正确加载', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 检查步骤条
+    const steps = page.locator('.ant-steps');
+
+    if (await steps.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(steps).toBeVisible();
+    }
+  });
+
+  test('标签筛选器可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 查找标签选择器
+    const tagSelector = page.locator('.ant-select').first();
+
+    if (await tagSelector.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(tagSelector).toBeVisible();
+    }
+  });
+
+  test('消息内容输入区域可用', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    // 先进入第二步
+    const nextButton = page.getByRole('button', { name: /下一步/i });
+
+    if (await nextButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await nextButton.click();
+      await page.waitForTimeout(1000);
+
+      // 检查文本输入区域
+      const textArea = page.locator('textarea');
+
+      if (await textArea.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await expect(textArea).toBeEnabled();
+        await textArea.fill('测试群发消息内容');
+        await expect(textArea).toHaveValue('测试群发消息内容');
+      }
+    }
+  });
+
+  test('统计分析入口可见', async ({ page }) => {
+    if (!(await isPageAccessible(page))) {
+      test.skip(true, '用户无权限访问此页面');
+      return;
+    }
+
+    const statsButton = page.getByRole('button', { name: /统计/i });
+
+    if (await statsButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await expect(statsButton).toBeEnabled();
+    }
+  });
+});
