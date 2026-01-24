@@ -100,6 +100,64 @@ const routes: RouteRecordRaw[] = [
           permissions: ['LMS:TUTOR:USE'],
         },
       },
+      {
+        name: 'GradingDetail',
+        path: 'grading/:id',
+        component: () => import('#/views/ai-tutor/grading-detail/index.vue'),
+        meta: {
+          title: '批改详情',
+          appModule: 'LMS',
+          permissions: ['LMS:TUTOR:USE'],
+          hideInMenu: true,
+          activeMenu: '/ai-tutor/grading-history',
+        },
+      },
+      {
+        name: 'MistakeReview',
+        path: 'mistake-review',
+        meta: {
+          icon: 'ant-design:check-circle-outlined',
+          title: '错题审核',
+          appModule: 'LMS',
+          permissions: ['EDUCATION:PAPER:VIEW'],
+        },
+        children: [
+          {
+            name: 'MistakeList',
+            path: '',
+            component: () => import('#/views/ai-tutor/mistake-review/MistakeListPage.vue'),
+            meta: {
+              title: '错题列表',
+              appModule: 'LMS',
+              permissions: ['EDUCATION:PAPER:VIEW'],
+              hideInMenu: false,
+            },
+          },
+          {
+            name: 'MistakeDetail',
+            path: ':mistakeId',
+            component: () => import('#/views/ai-tutor/mistake-review/MistakeDetailPage.vue'),
+            meta: {
+              title: '错题详情',
+              appModule: 'LMS',
+              permissions: ['EDUCATION:PAPER:VIEW'],
+              hideInMenu: true,
+              activeMenu: '/ai-tutor/mistake-review',
+            },
+          },
+        ],
+      },
+      {
+        name: 'QuestionBankImport',
+        path: 'question-import',
+        component: () => import('#/views/ai-tutor/mistake-review/QuestionBankImportPage.vue'),
+        meta: {
+          icon: 'ant-design:database-outlined',
+          title: '题库导入',
+          appModule: 'LMS',
+          permissions: ['EDUCATION:QUESTION:IMPORT'],
+        },
+      },
     ],
   },
 ];

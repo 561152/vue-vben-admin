@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Card,
   Table,
@@ -9,11 +10,13 @@ import {
   Space,
   message,
 } from 'ant-design-vue';
-import { HistoryOutlined, PrinterOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import { HistoryOutlined, PrinterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons-vue';
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
 import { getGradingHistory } from '#/api/ai';
 import type { GradingHistoryItem } from '#/api/ai';
 import { generatePdf } from '#/api/print';
+
+const router = useRouter();
 
 // 状态
 const loading = ref(false);
@@ -29,6 +32,12 @@ const pagination = ref<TablePaginationConfig>({
 
 // 表格列配置
 const columns: TableColumnsType = [
+  {
+    title: '试卷预览',
+    dataIndex: 'paperImageUrls',
+    width: 120,
+    align: 'center',
+  },
   {
     title: '批改时间',
     dataIndex: 'createdAt',
@@ -191,6 +200,20 @@ onMounted(() => {
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'paperImageUrls'">
+            <div v-if="record.paperImageUrls && record.paperImageUrls.length > 0" class="paper-thumbnail">
+              <img
+                :src="record.paperImageUrls[0].thumbnail"
+                :alt="`试卷第${record.paperImageUrls[0].pageIndex}页`"
+                loading="lazy"
+                class="thumbnail-img"
+              />
+              <span v-if="record.paperImageUrls.length > 1" class="page-count-badge">
+                {{ record.paperImageUrls.length }}页
+              </span>
+            </div>
+            <span v-else class="no-image">无图片</span>
+          </template>
           <template v-if="column.dataIndex === 'createdAt'">
             {{ formatTime(record.createdAt) }}
           </template>
@@ -217,15 +240,25 @@ onMounted(() => {
             <span class="time-text">{{ record.processingMs }}ms</span>
           </template>
           <template v-if="column.dataIndex === 'action'">
-            <Button
-              type="link"
-              size="small"
-              :loading="printingId === record.id"
-              @click="handlePrint(record)"
-            >
-              <template #icon><PrinterOutlined /></template>
-              打印
-            </Button>
+            <Space>
+              <Button
+                type="link"
+                size="small"
+                @click="router.push(`/ai-tutor/grading/${record.id}`)"
+              >
+                <template #icon><EyeOutlined /></template>
+                详情
+              </Button>
+              <Button
+                type="link"
+                size="small"
+                :loading="printingId === record.id"
+                @click="handlePrint(record)"
+              >
+                <template #icon><PrinterOutlined /></template>
+                打印
+              </Button>
+            </Space>
           </template>
         </template>
 
@@ -286,5 +319,44 @@ onMounted(() => {
 .empty-icon {
   margin-bottom: 16px;
   font-size: 48px;
+}
+
+.paper-thumbnail {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.paper-thumbnail:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.page-count-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 2px;
+}
+
+.no-image {
+  color: #999;
+  font-size: 12px;
 }
 </style>

@@ -519,6 +519,16 @@ export interface HomeworkGradingResponse {
 }
 
 /**
+ * 试卷图片多尺寸 URLs
+ */
+export interface PaperImageUrls {
+  pageIndex: number;
+  thumbnail: string;   // 缩略图 (400px)
+  preview: string;     // 预览图 (1000px)
+  original: string;    // 原图
+}
+
+/**
  * 批改历史记录
  */
 export interface GradingHistoryItem {
@@ -531,6 +541,7 @@ export interface GradingHistoryItem {
   accuracy: number;
   processingMs: number;
   createdAt: string;
+  paperImageUrls?: PaperImageUrls[];  // 试卷图片 URLs
 }
 
 /**
@@ -568,6 +579,15 @@ export async function getGradingHistory(params: {
   return requestClient.get<PaginatedResponse<GradingHistoryItem>>(
     '/lms/homework/grading-history',
     { params },
+  );
+}
+
+/**
+ * 获取批改详情
+ */
+export async function getGradingDetail(recordId: string) {
+  return requestClient.get<GradingHistoryItem>(
+    `/education/paper/grade/${recordId}`,
   );
 }
 
