@@ -1,8 +1,28 @@
 <template>
   <div class="mistake-detail-page">
     <!-- 页面头部 -->
-    <page-header :title="pageTitle" :show-back="true" @back="handleBack">
-      <template #extra>
+    <div class="page-header">
+      <!-- 面包屑导航 -->
+      <div class="breadcrumb-section">
+        <a-breadcrumb>
+          <a-breadcrumb-item>
+            <router-link to="/education">教育管理</router-link>
+          </a-breadcrumb-item>
+          <a-breadcrumb-item>
+            <router-link to="/education/mistakes">错题管理</router-link>
+          </a-breadcrumb-item>
+          <a-breadcrumb-item>错题详情</a-breadcrumb-item>
+        </a-breadcrumb>
+      </div>
+
+      <!-- 头部内容 -->
+      <div class="header-content">
+        <div class="header-left">
+          <a-button type="text" @click="handleBack">
+            <LeftOutlined />
+          </a-button>
+          <h2>{{ pageTitle }}</h2>
+        </div>
         <a-space>
           <!-- 上一题/下一题 -->
           <a-button-group>
@@ -54,21 +74,8 @@
             <ReloadOutlined />
           </a-button>
         </a-space>
-      </template>
-
-      <!-- 面包屑 -->
-      <template #breadcrumb>
-        <a-breadcrumb>
-          <a-breadcrumb-item>
-            <router-link to="/education">教育管理</router-link>
-          </a-breadcrumb-item>
-          <a-breadcrumb-item>
-            <router-link to="/education/mistakes">错题管理</router-link>
-          </a-breadcrumb-item>
-          <a-breadcrumb-item>错题详情</a-breadcrumb-item>
-        </a-breadcrumb>
-      </template>
-    </page-header>
+      </div>
+    </div>
 
     <!-- 主体内容区 -->
     <div class="page-content">
@@ -478,7 +485,7 @@ import CorrectionEditor from '@/components/CorrectionEditor.vue';
 import StepScorePanel from '@/components/StepScorePanel.vue';
 import HistoryTimeline from '@/components/HistoryTimeline.vue';
 import KatexRenderer from '@/components/KatexRenderer.vue';
-import PageHeader from '@/components/PageHeader.vue';
+// PageHeader component removed - using plain div instead
 
 // 类型定义
 interface MistakeData {
@@ -917,6 +924,35 @@ export default defineComponent({
   flex-direction: column;
   height: 100vh;
   background: #f0f2f5;
+
+  // 页面头部样式
+  .page-header {
+    background: #fff;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e8e8e8;
+
+    .breadcrumb-section {
+      margin-bottom: 16px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        h2 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
 
   .page-content {
     flex: 1;
