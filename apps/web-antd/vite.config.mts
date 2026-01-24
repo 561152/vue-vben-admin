@@ -12,7 +12,7 @@ export default defineConfig(async () => {
           '/api': {
             changeOrigin: true,
             // 代理到后端 API 服务
-            target: 'http://localhost:3000',
+            target: 'http://localhost:3010',
             ws: true,
           },
         },
