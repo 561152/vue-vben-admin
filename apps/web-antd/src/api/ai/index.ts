@@ -92,6 +92,9 @@ export interface MistakeRecord {
   status: 'pending' | 'reviewing' | 'mastered';
   createdAt: string;
   updatedAt: string;
+  // 图片多尺寸 URLs（新增）
+  questionImageUrls?: QuestionImageUrls;
+  answerImageUrls?: QuestionImageUrls;
 }
 
 // ==================== 会话管理 API ====================
@@ -526,6 +529,15 @@ export interface PaperImageUrls {
   thumbnail: string; // 缩略图 (400px)
   preview: string; // 预览图 (1000px)
   original: string; // 原图
+}
+
+/**
+ * 题目图片多尺寸 URLs
+ */
+export interface QuestionImageUrls {
+  thumbnail: string; // 缩略图 (200px) - 列表页
+  medium: string; // 中等图 (800px) - 详情页
+  original: string; // 原图 - 高清查看
 }
 
 /**
