@@ -153,7 +153,7 @@ defineExpose({
         <component :is="() => renderField(key as string, prop)" />
       </template>
     </template>
-    <div v-else style=" padding: 40px;color: #999; text-align: center">
+    <div v-else style="padding: 40px; color: #999; text-align: center">
       No schema properties found
     </div>
   </Form>

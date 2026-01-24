@@ -97,7 +97,7 @@ const step = computed(() => {
       <!-- 默认值提示 -->
       <div
         v-if="schema.default !== undefined"
-        style=" font-size: 12px;color: #999"
+        style="font-size: 12px; color: #999"
       >
         默认值: {{ schema.default }}
       </div>

@@ -200,7 +200,7 @@
               <a-tag color="blue">
                 {{ (importConfig.qualityThreshold * 100).toFixed(0) }}%
               </a-tag>
-              <span style=" margin-left: 8px; font-size: 12px;color: #8c8c8c">
+              <span style="margin-left: 8px; font-size: 12px; color: #8c8c8c">
                 OCR置信度低于此值的题目将不会导入
               </span>
             </div>
@@ -283,7 +283,7 @@
                   {{ estimateStats.totalQuestions }}
                 </a-descriptions-item>
                 <a-descriptions-item label="预计导入">
-                  <span style=" font-weight: 600;color: #52c41a">
+                  <span style="font-weight: 600; color: #52c41a">
                     {{ estimateStats.estimatedImport }}
                   </span>
                 </a-descriptions-item>
@@ -355,7 +355,7 @@
               {{ estimateStats.totalQuestions }}
             </a-descriptions-item>
             <a-descriptions-item label="预计导入">
-              <span style=" font-size: 16px; font-weight: 600;color: #52c41a">
+              <span style="font-size: 16px; font-weight: 600; color: #52c41a">
                 {{ estimateStats.estimatedImport }} 道题
               </span>
             </a-descriptions-item>
@@ -506,7 +506,7 @@
             <!-- 导入日志 -->
             <a-divider />
             <div style="margin-top: 16px">
-              <div style=" margin-bottom: 8px;font-weight: 600">导入日志</div>
+              <div style="margin-bottom: 8px; font-weight: 600">导入日志</div>
               <a-timeline>
                 <a-timeline-item color="green">
                   开始导入试卷: {{ selectedPaper?.paperName }}

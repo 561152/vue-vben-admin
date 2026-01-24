@@ -407,7 +407,7 @@
                     :value="item.difficulty"
                     disabled
                     :count="5"
-                    style=" margin-left: 4px;font-size: 12px"
+                    style="margin-left: 4px; font-size: 12px"
                   />
                 </span>
                 <span>

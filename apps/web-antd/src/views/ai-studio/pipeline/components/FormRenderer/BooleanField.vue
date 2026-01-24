@@ -39,7 +39,7 @@ watch(
   >
     <div style="display: flex; gap: 12px; align-items: center">
       <Switch v-model:checked="localValue" />
-      <span style=" font-size: 12px;color: #999">
+      <span style="font-size: 12px; color: #999">
         当前: {{ localValue ? '开启' : '关闭' }}
         <template v-if="schema.default !== undefined">
           | 默认: {{ schema.default ? '开启' : '关闭' }}
