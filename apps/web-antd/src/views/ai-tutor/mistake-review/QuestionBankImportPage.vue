@@ -1,17 +1,8 @@
 <template>
   <div class="question-bank-import-page">
     <!-- 页面头部 -->
-    <page-header title="题库导入" :show-back="true" @back="handleBack">
-      <template #extra>
-        <a-space>
-          <a-button @click="refreshData" :loading="loading">
-            <ReloadOutlined />
-            刷新
-          </a-button>
-        </a-space>
-      </template>
-
-      <template #breadcrumb>
+    <div class="page-header">
+      <div class="breadcrumb-section">
         <a-breadcrumb>
           <a-breadcrumb-item>
             <router-link to="/education">教育管理</router-link>
@@ -21,8 +12,22 @@
           </a-breadcrumb-item>
           <a-breadcrumb-item>题库导入</a-breadcrumb-item>
         </a-breadcrumb>
-      </template>
-    </page-header>
+      </div>
+      <div class="header-content">
+        <div class="header-left">
+          <a-button type="text" @click="handleBack" style="margin-right: 8px">
+            <LeftOutlined />
+          </a-button>
+          <h2>题库导入</h2>
+        </div>
+        <a-space>
+          <a-button @click="refreshData" :loading="loading">
+            <ReloadOutlined />
+            刷新
+          </a-button>
+        </a-space>
+      </div>
+    </div>
 
     <!-- 步骤条 -->
     <div class="steps-section">
@@ -553,7 +558,7 @@ import {
 } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
 import axios from 'axios';
-import PageHeader from '@/components/PageHeader.vue';
+// PageHeader component removed - using plain div instead
 
 // 类型定义
 interface PaperItem {
@@ -889,6 +894,35 @@ export default defineComponent({
   padding: 16px;
   background: #f0f2f5;
   min-height: 100vh;
+
+  .page-header {
+    background: #fff;
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+
+    .breadcrumb-section {
+      margin-bottom: 12px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .header-left {
+        display: flex;
+        align-items: center;
+
+        h2 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+          color: rgba(0, 0, 0, 0.85);
+        }
+      }
+    }
+  }
 
   .steps-section {
     margin-bottom: 24px;
