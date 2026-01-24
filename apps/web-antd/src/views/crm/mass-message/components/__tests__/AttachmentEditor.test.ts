@@ -124,7 +124,9 @@ describe('AttachmentEditor', () => {
       };
 
       expect(miniprogramAttachment.type).toBe('miniprogram');
-      expect(miniprogramAttachment.miniprogram?.appid).toBe('wx1234567890abcdef');
+      expect(miniprogramAttachment.miniprogram?.appid).toBe(
+        'wx1234567890abcdef',
+      );
       expect(miniprogramAttachment.miniprogram?.page).toBe('pages/index/index');
     });
   });
@@ -145,7 +147,8 @@ describe('AttachmentEditor', () => {
         url: 'https://example.com',
       };
 
-      const isValid = linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
+      const isValid =
+        linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
       expect(isValid).toBe(false);
     });
 
@@ -155,7 +158,8 @@ describe('AttachmentEditor', () => {
         url: '',
       };
 
-      const isValid = linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
+      const isValid =
+        linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
       expect(isValid).toBe(false);
     });
 
@@ -165,7 +169,8 @@ describe('AttachmentEditor', () => {
         url: 'https://example.com',
       };
 
-      const isValid = linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
+      const isValid =
+        linkForm.title.trim().length > 0 && linkForm.url.trim().length > 0;
       expect(isValid).toBe(true);
     });
   });
@@ -250,7 +255,8 @@ describe('AttachmentEditor', () => {
 
   describe('Attachment Management', () => {
     it('should generate unique attachment ID', () => {
-      const generateId = () => `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const generateId = () =>
+        `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       const id1 = generateId();
       const id2 = generateId();
@@ -267,10 +273,10 @@ describe('AttachmentEditor', () => {
       ];
 
       const removeId = '2';
-      const filtered = attachments.filter(a => a.id !== removeId);
+      const filtered = attachments.filter((a) => a.id !== removeId);
 
       expect(filtered).toHaveLength(2);
-      expect(filtered.find(a => a.id === '2')).toBeUndefined();
+      expect(filtered.find((a) => a.id === '2')).toBeUndefined();
     });
 
     it('should add attachment to list', () => {

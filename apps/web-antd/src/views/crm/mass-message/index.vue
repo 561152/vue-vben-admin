@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Button,
@@ -23,13 +23,9 @@ import {
 } from 'ant-design-vue';
 import {
   SendOutlined,
-  UserOutlined,
   TeamOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
-  EyeOutlined,
   BarChartOutlined,
 } from '@ant-design/icons-vue';
 import {
@@ -130,7 +126,7 @@ async function fetchUsers() {
 async function fetchTemplates() {
   try {
     const res = await getMessageTemplates({ isActive: true, pageSize: 100 });
-    templates.value = res.data || [];
+    templates.value = res.items || [];
   } catch (e) {
     console.error(e);
   }

@@ -185,12 +185,12 @@ describe('MediaLibraryModal', () => {
       ];
 
       const searchKeyword = 'product';
-      const filtered = mediaList.filter(m =>
-        m.filename.toLowerCase().includes(searchKeyword.toLowerCase())
+      const filtered = mediaList.filter((m) =>
+        m.filename.toLowerCase().includes(searchKeyword.toLowerCase()),
       );
 
       expect(filtered).toHaveLength(2);
-      expect(filtered.map(m => m.id)).toEqual([1, 3]);
+      expect(filtered.map((m) => m.id)).toEqual([1, 3]);
     });
 
     it('should handle empty search keyword', () => {
@@ -201,7 +201,7 @@ describe('MediaLibraryModal', () => {
 
       const searchKeyword = '';
       const filtered = searchKeyword
-        ? mediaList.filter(m => m.filename.includes(searchKeyword))
+        ? mediaList.filter((m) => m.filename.includes(searchKeyword))
         : mediaList;
 
       expect(filtered).toHaveLength(2);
@@ -215,8 +215,8 @@ describe('MediaLibraryModal', () => {
       ];
 
       const searchKeyword = 'PHOTO';
-      const filtered = mediaList.filter(m =>
-        m.filename.toLowerCase().includes(searchKeyword.toLowerCase())
+      const filtered = mediaList.filter((m) =>
+        m.filename.toLowerCase().includes(searchKeyword.toLowerCase()),
       );
 
       expect(filtered).toHaveLength(3);
@@ -269,7 +269,7 @@ describe('MediaLibraryModal', () => {
         { id: 3, type: 'image', filename: 'photo3.jpg', ossUrl: 'url3' },
       ];
 
-      const selectedItems = mediaList.filter(m => selectedIds.has(m.id));
+      const selectedItems = mediaList.filter((m) => selectedIds.has(m.id));
       emit('select', selectedItems);
 
       expect(emit).toHaveBeenCalledWith('select', [
@@ -332,8 +332,8 @@ describe('MediaLibraryModal', () => {
         { id: 2, filename: 'video.mp4' },
       ];
 
-      const filtered = mediaList.filter(m =>
-        m.filename.includes(searchKeyword)
+      const filtered = mediaList.filter((m) =>
+        m.filename.includes(searchKeyword),
       );
 
       expect(filtered).toHaveLength(0);

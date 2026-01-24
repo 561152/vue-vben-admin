@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import { Card, Button } from 'ant-design-vue';
 import {
   UserOutlined,

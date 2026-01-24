@@ -867,9 +867,13 @@ test.describe('CRM 朋友圈功能测试', () => {
     }
 
     // 查找"所有客户可见"或类似的单选按钮/选择器
-    const visibilitySelector = page.locator('.ant-radio-group, .ant-select').first();
+    const visibilitySelector = page
+      .locator('.ant-radio-group, .ant-select')
+      .first();
 
-    if (await visibilitySelector.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (
+      await visibilitySelector.isVisible({ timeout: 5000 }).catch(() => false)
+    ) {
       await expect(visibilitySelector).toBeVisible();
     }
   });
@@ -951,7 +955,9 @@ test.describe('CRM 朋友圈统计测试', () => {
     }
 
     // 检查统计卡片
-    await page.waitForSelector('.ant-card, .ant-statistic', { timeout: 5000 }).catch(() => {});
+    await page
+      .waitForSelector('.ant-card, .ant-statistic', { timeout: 5000 })
+      .catch(() => {});
 
     const cards = page.locator('.ant-card, .ant-statistic');
     const cardCount = await cards.count();
@@ -978,7 +984,9 @@ test.describe('CRM 朋友圈统计测试', () => {
       return;
     }
 
-    const backButton = page.locator('button').filter({ has: page.locator('[class*="ArrowLeft"]') });
+    const backButton = page
+      .locator('button')
+      .filter({ has: page.locator('[class*="ArrowLeft"]') });
 
     if (await backButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(backButton).toBeEnabled();
@@ -1013,7 +1021,9 @@ test.describe('CRM 群发消息工具测试', () => {
       return;
     }
 
-    const customerButton = page.getByRole('button', { name: /新建消息/i }).first();
+    const customerButton = page
+      .getByRole('button', { name: /新建消息/i })
+      .first();
 
     if (await customerButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(customerButton).toBeEnabled();
@@ -1098,7 +1108,9 @@ test.describe('CRM 群发消息创建测试', () => {
 
       // 检查附件编辑区域
       const attachmentArea = page.locator('.ant-upload, [class*="attachment"]');
-      if (await attachmentArea.isVisible({ timeout: 3000 }).catch(() => false)) {
+      if (
+        await attachmentArea.isVisible({ timeout: 3000 }).catch(() => false)
+      ) {
         await expect(attachmentArea).toBeVisible();
       }
     }

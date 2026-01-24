@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import {
   Button,
   Space,
@@ -7,7 +7,6 @@ import {
   Tag,
   Card,
   Table,
-  Modal,
   Form,
   Input,
   Select,
@@ -17,6 +16,7 @@ import {
   Radio,
   Popconfirm,
   Image,
+  Alert,
 } from 'ant-design-vue';
 import type { UploadFile } from 'ant-design-vue';
 import {
@@ -35,10 +35,23 @@ import {
   ExportOutlined,
   BarChartOutlined,
   ReloadOutlined,
+  FilterOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable } from '#/composables';
+import CustomerFilterDrawer from './components/CustomerFilterDrawer.vue';
+
+interface FilterConditions {
+  tagIds: number[];
+  tagLogic: 'ANY' | 'ALL' | 'EXCLUDE';
+  departmentIds: number[];
+  excludeDepartmentIds: number[];
+  ownerIds: number[];
+  statuses: string[];
+  lifecycleStages: string[];
+  importedCustomerIds: number[];
+}
 
 // ==================== 类型定义 ====================
 
@@ -97,19 +110,29 @@ const materialsTotal = ref(0);
 const materialsPage = ref(1);
 
 // Filters (用于 history 表格)
-const dateRange = ref<[string, string] | null>(null);
+const dateRange = ref<[unknown, unknown] | null>(null);
 
 // Create form
 const createForm = ref({
-  visibleType: 'ALL',
-  customerIds: [] as number[],
+  visibleType: 'ALL' as 'ALL' | 'FILTERED',
   text: '',
   attachments: [] as UploadFile[],
 });
 const createLoading = ref(false);
 
-// Modal
-const customerSelectVisible = ref(false);
+// Customer filter drawer
+const filterDrawerVisible = ref(false);
+const filterConditions = ref<FilterConditions>({
+  tagIds: [],
+  tagLogic: 'ANY',
+  departmentIds: [],
+  excludeDepartmentIds: [],
+  ownerIds: [],
+  statuses: [],
+  lifecycleStages: [],
+  importedCustomerIds: [],
+});
+const previewCount = ref(0);
 
 // ==================== 常量 ====================
 
@@ -233,7 +256,45 @@ async function fetchMaterials() {
   }
 }
 
+// ==================== 计算属性 ====================
+
+const hasFilterConditions = computed(() => {
+  const c = filterConditions.value;
+  return (
+    c.tagIds.length > 0 ||
+    c.departmentIds.length > 0 ||
+    c.excludeDepartmentIds.length > 0 ||
+    c.ownerIds.length > 0 ||
+    c.statuses.length > 0 ||
+    c.lifecycleStages.length > 0 ||
+    c.importedCustomerIds.length > 0
+  );
+});
+
+const filterSummary = computed(() => {
+  if (!hasFilterConditions.value) return '未设置筛选条件';
+  const parts: string[] = [];
+  const c = filterConditions.value;
+  if (c.tagIds.length > 0) parts.push(`${c.tagIds.length} 个标签`);
+  if (c.departmentIds.length > 0) parts.push(`${c.departmentIds.length} 个部门`);
+  if (c.excludeDepartmentIds.length > 0) parts.push(`排除 ${c.excludeDepartmentIds.length} 个部门`);
+  if (c.ownerIds.length > 0) parts.push(`${c.ownerIds.length} 个归属人`);
+  if (c.statuses.length > 0) parts.push(`${c.statuses.length} 种状态`);
+  if (c.lifecycleStages.length > 0) parts.push(`${c.lifecycleStages.length} 个生命周期`);
+  if (c.importedCustomerIds.length > 0) parts.push(`导入 ${c.importedCustomerIds.length} 人`);
+  return parts.join('、');
+});
+
 // ==================== 事件处理 ====================
+
+function handleOpenFilterDrawer() {
+  filterDrawerVisible.value = true;
+}
+
+function handleFilterConfirm(conditions: FilterConditions) {
+  filterConditions.value = conditions;
+  // Preview count will be updated by the drawer
+}
 
 async function handlePublish() {
   if (!createForm.value.text && createForm.value.attachments.length === 0) {
@@ -241,25 +302,71 @@ async function handlePublish() {
     return;
   }
 
+  if (createForm.value.visibleType === 'FILTERED' && !hasFilterConditions.value) {
+    message.warning('请设置客户筛选条件');
+    return;
+  }
+
   createLoading.value = true;
   try {
-    await requestClient.post('/moments', {
+    const payload: Record<string, unknown> = {
+      name: `朋友圈发布 - ${new Date().toLocaleString('zh-CN')}`,
       text: createForm.value.text,
       visibleType: createForm.value.visibleType,
-      customerIds: createForm.value.customerIds,
       attachments: createForm.value.attachments.map((f) => ({
         type: f.type,
         url: (f.response as { url?: string })?.url || f.url,
         name: f.name,
       })),
-    });
+    };
+
+    // Add filter conditions if using FILTERED mode
+    if (createForm.value.visibleType === 'FILTERED') {
+      const c = filterConditions.value;
+      if (c.tagIds.length > 0) {
+        payload.tagIds = c.tagIds;
+        payload.tagLogic = c.tagLogic;
+      }
+      if (c.departmentIds.length > 0) {
+        payload.departmentIds = c.departmentIds;
+      }
+      if (c.excludeDepartmentIds.length > 0) {
+        payload.excludeDepartmentIds = c.excludeDepartmentIds;
+      }
+      if (c.ownerIds.length > 0) {
+        payload.ownerIds = c.ownerIds;
+      }
+      if (c.statuses.length > 0) {
+        payload.statuses = c.statuses;
+      }
+      if (c.lifecycleStages.length > 0) {
+        payload.lifecycleStages = c.lifecycleStages;
+      }
+      if (c.importedCustomerIds.length > 0) {
+        payload.importedCustomerIds = c.importedCustomerIds;
+      }
+    }
+
+    await requestClient.post('/moments', payload);
     message.success('已通知成员发表');
+
+    // Reset form
     createForm.value = {
       visibleType: 'ALL',
-      customerIds: [],
       text: '',
       attachments: [],
     };
+    filterConditions.value = {
+      tagIds: [],
+      tagLogic: 'ANY',
+      departmentIds: [],
+      excludeDepartmentIds: [],
+      ownerIds: [],
+      statuses: [],
+      lifecycleStages: [],
+      importedCustomerIds: [],
+    };
+    previewCount.value = 0;
   } catch (e: unknown) {
     const errorMessage = e instanceof Error ? e.message : '发布失败';
     message.error(errorMessage);
@@ -289,8 +396,8 @@ async function handleDelete(id: number) {
   }
 }
 
-function handleTabChange(key: string) {
-  activeTab.value = key;
+function handleTabChange(key: string | number) {
+  activeTab.value = String(key);
   if (key === 'history') {
     fetchMoments();
   } else if (key === 'materials') {
@@ -302,10 +409,6 @@ function handleTabChange(key: string) {
 function handleMaterialsPageChange(page: number) {
   materialsPage.value = page;
   fetchMaterials();
-}
-
-function handleSelectCustomers() {
-  customerSelectVisible.value = true;
 }
 
 // ==================== 统计与重试 ====================
@@ -385,18 +488,30 @@ onMounted(() => {
           <div class="max-w-3xl">
             <Form layout="vertical">
               <Form.Item label="可见的客户">
-                <div class="flex items-center">
+                <div class="flex flex-col gap-2">
                   <Radio.Group v-model:value="createForm.visibleType">
-                    <Radio value="ALL">公开</Radio>
+                    <Radio value="ALL">公开（所有客户可见）</Radio>
                     <Radio value="FILTERED">按条件筛选的客户</Radio>
                   </Radio.Group>
-                  <Button
-                    v-if="createForm.visibleType === 'FILTERED'"
-                    type="link"
-                    @click="handleSelectCustomers"
-                  >
-                    选择客户
-                  </Button>
+
+                  <div v-if="createForm.visibleType === 'FILTERED'" class="mt-2">
+                    <div class="flex items-center gap-2">
+                      <Button type="primary" ghost @click="handleOpenFilterDrawer">
+                        <FilterOutlined /> 设置筛选条件
+                      </Button>
+                      <span v-if="previewCount > 0" class="text-blue-500">
+                        {{ previewCount }} 位客户
+                      </span>
+                    </div>
+
+                    <Alert
+                      v-if="hasFilterConditions"
+                      class="mt-2"
+                      type="info"
+                      :message="`已设置筛选条件：${filterSummary}`"
+                      show-icon
+                    />
+                  </div>
                 </div>
               </Form.Item>
 
@@ -654,27 +769,11 @@ onMounted(() => {
       </Tabs>
     </Card>
 
-    <!-- Customer Select Modal -->
-    <Modal
-      v-model:open="customerSelectVisible"
-      title="选择可见的客户"
-      width="600px"
-      @ok="customerSelectVisible = false"
-    >
-      <div class="py-4">
-        <Radio.Group v-model:value="createForm.visibleType" class="w-full">
-          <div class="space-y-4">
-            <Radio value="ALL" class="w-full">
-              <span>公开</span>
-              <span class="ml-2 text-gray-400">所有客户可见</span>
-            </Radio>
-            <Radio value="FILTERED" class="w-full">
-              <span>按条件筛选的客户</span>
-              <span class="ml-2 text-gray-400">只有符合条件的客户可见</span>
-            </Radio>
-          </div>
-        </Radio.Group>
-      </div>
-    </Modal>
+    <!-- Customer Filter Drawer -->
+    <CustomerFilterDrawer
+      v-model:open="filterDrawerVisible"
+      :initial-conditions="filterConditions"
+      @confirm="handleFilterConfirm"
+    />
   </div>
 </template>

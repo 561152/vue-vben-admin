@@ -72,7 +72,7 @@ const topCustomersLoading = ref(false);
 
 // 筛选
 const filterType = ref<string | undefined>(undefined);
-const filterDateRange = ref<[string, string] | null>(null);
+const filterDateRange = ref<[unknown, unknown] | null>(null);
 
 // ==================== 常量 ====================
 

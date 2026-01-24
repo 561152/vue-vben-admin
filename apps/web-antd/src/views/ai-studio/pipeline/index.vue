@@ -25,6 +25,7 @@ import {
   EyeOutlined,
   ApartmentOutlined,
   CodeOutlined,
+  SlidersOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import dayjs from 'dayjs';
@@ -37,6 +38,7 @@ interface PipelineItem {
   triggerType: string;
   steps: any[];
   isActive: boolean;
+  isSystem: boolean;
   version: number;
   publishedAt: string | null;
   createdAt: string;
@@ -202,6 +204,10 @@ const showDesign = (record: PipelineItem) => {
   router.push(`/ai-studio/pipeline/edit/${record.key}`);
 };
 
+const handleTune = (record: PipelineItem) => {
+  router.push(`/ai-studio/pipeline/tune/${record.key}`);
+};
+
 const exportAsCode = async (record: PipelineItem) => {
   try {
     const response = await requestClient.get(
@@ -343,7 +349,12 @@ onMounted(() => {
                   <template #icon><EyeOutlined /></template>
                 </Button>
               </Tooltip>
-              <Tooltip title="设计流程">
+              <Tooltip v-if="record.isSystem" title="参数调优">
+                <Button type="link" size="small" @click="handleTune(record)">
+                  <template #icon><SlidersOutlined /></template>
+                </Button>
+              </Tooltip>
+              <Tooltip v-else title="设计流程">
                 <Button type="link" size="small" @click="showDesign(record)">
                   <template #icon><ApartmentOutlined /></template>
                 </Button>
@@ -361,6 +372,11 @@ onMounted(() => {
               <Tooltip title="编辑">
                 <Button type="link" size="small" @click="showEdit(record)">
                   <template #icon><EditOutlined /></template>
+                </Button>
+              </Tooltip>
+              <Tooltip title="参数调优">
+                <Button type="link" size="small" @click="handleTune(record)">
+                  <template #icon><SlidersOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="复制">

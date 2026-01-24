@@ -35,6 +35,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'AIPipelineTune',
+        path: 'pipeline/tune/:key',
+        component: () => import('#/views/ai-studio/pipeline/tune.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '参数调优',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:PIPELINE:EDIT'],
+        },
+      },
+      {
         name: 'AIComponent',
         path: 'component',
         component: () => import('#/views/ai-studio/component/index.vue'),

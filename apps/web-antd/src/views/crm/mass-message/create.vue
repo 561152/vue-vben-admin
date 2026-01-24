@@ -14,32 +14,25 @@ import {
   Checkbox,
   Modal,
   Tree,
-  Table,
-  Statistic,
-  Divider,
-  Spin,
   Steps,
   Step,
   Result,
   Alert,
+  Image,
 } from 'ant-design-vue';
 import type { TreeProps } from 'ant-design-vue';
 import {
   SendOutlined,
-  UserOutlined,
-  TeamOutlined,
-  FileTextOutlined,
   PlusOutlined,
-  DeleteOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
-  PictureOutlined,
-  VideoCameraOutlined,
-  FileOutlined,
   LinkOutlined,
   AppstoreOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { refreshWecomMediaId } from '#/api/crm';
+import AttachmentEditor from './components/AttachmentEditor.vue';
+import type { Attachment } from './components/AttachmentEditor.vue';
 
 // Types
 interface Department {
@@ -96,7 +89,7 @@ const formState = ref({
 
   // Content
   textContent: '',
-  attachments: [] as any[],
+  attachments: [] as Attachment[],
 });
 
 // Filter options
@@ -107,15 +100,6 @@ const ageRangeOptions = [
   { value: '重要,25-40', label: '重要,25-40' },
   { value: '一般,18-25', label: '一般,18-25' },
   { value: '潜在,40+', label: '潜在,40+' },
-];
-
-// Attachment types
-const attachmentTypes = [
-  { key: 'image', icon: PictureOutlined, label: '图片' },
-  { key: 'video', icon: VideoCameraOutlined, label: '视频' },
-  { key: 'file', icon: FileOutlined, label: '文件' },
-  { key: 'link', icon: LinkOutlined, label: '网页' },
-  { key: 'miniprogram', icon: AppstoreOutlined, label: '小程序' },
 ];
 
 // Tree data for department selection
@@ -279,6 +263,63 @@ function handlePrev() {
 async function handleSend() {
   loading.value = true;
   try {
+    // Convert attachments to API format
+    const apiAttachments = await Promise.all(
+      formState.value.attachments.map(async (att) => {
+        if (att.type === 'link') {
+          return {
+            type: 'link' as const,
+            link: att.link,
+          };
+        }
+
+        if (att.type === 'miniprogram') {
+          // Refresh miniprogram cover media ID if needed
+          let picMediaId = att.miniprogram?.picMediaId;
+          if (picMediaId) {
+            try {
+              const refreshed = await refreshWecomMediaId(picMediaId);
+              picMediaId = refreshed.mediaId;
+            } catch (e) {
+              console.warn('Failed to refresh miniprogram cover:', e);
+            }
+          }
+          return {
+            type: 'miniprogram' as const,
+            miniprogram: {
+              title: att.miniprogram?.title || '',
+              appid: att.miniprogram?.appid || '',
+              page: att.miniprogram?.page || '',
+              picMediaId,
+            },
+          };
+        }
+
+        // For image/video/file, refresh the media ID
+        if (att.mediaId) {
+          try {
+            const refreshed = await refreshWecomMediaId(att.mediaId);
+            return {
+              type: att.type,
+              mediaId: att.mediaId,
+              wecomMediaId: refreshed.wecomMediaId,
+            };
+          } catch (e) {
+            console.warn('Failed to refresh media ID:', e);
+            return {
+              type: att.type,
+              mediaId: att.mediaId,
+            };
+          }
+        }
+
+        return {
+          type: att.type,
+          mediaId: att.mediaId,
+        };
+      }),
+    );
+
     await requestClient.post('/mass-message/send', {
       sendToDepts: formState.value.sendToDepts,
       excludeDepts: formState.value.excludeDepts,
@@ -290,7 +331,7 @@ async function handleSend() {
       },
       content: {
         text: formState.value.textContent,
-        attachments: formState.value.attachments,
+        attachments: apiAttachments,
       },
       allowMemberEditRange: formState.value.allowMemberEditRange,
     });
@@ -323,10 +364,6 @@ function handleReset() {
     textContent: '',
     attachments: [],
   };
-}
-
-function handleSelectFromMaterials() {
-  message.info('从素材库中选择');
 }
 
 watch(
@@ -557,13 +594,7 @@ onMounted(() => {
               </Button>
             </Form.Item>
 
-            <Form.Item label="通知成员，给客户发送以下内容">
-              <Button type="link" @click="handleSelectFromMaterials">
-                从素材库中选择
-              </Button>
-            </Form.Item>
-
-            <Form.Item>
+            <Form.Item label="消息内容">
               <Input.TextArea
                 v-model:value="formState.textContent"
                 placeholder="输入消息内容...
@@ -574,23 +605,11 @@ onMounted(() => {
               />
             </Form.Item>
 
-            <Form.Item>
-              <div class="rounded border border-dashed p-4">
-                <div class="mb-2 text-gray-500">+ 添加图片等附件</div>
-                <div class="flex gap-2">
-                  <Button
-                    v-for="type in attachmentTypes"
-                    :key="type.key"
-                    class="flex h-16 w-16 flex-col items-center justify-center"
-                  >
-                    <component :is="type.icon" class="text-lg" />
-                    <span class="mt-1 text-xs">{{ type.label }}</span>
-                  </Button>
-                </div>
-                <div class="mt-2 text-xs text-gray-400">
-                  ③支持的可触达的文件类型
-                </div>
-              </div>
+            <Form.Item label="添加附件">
+              <AttachmentEditor
+                v-model="formState.attachments"
+                :max-count="9"
+              />
             </Form.Item>
           </Form>
         </Col>
@@ -602,8 +621,8 @@ onMounted(() => {
               <div class="flex items-start gap-2">
                 <div class="h-10 w-10 rounded-full bg-blue-500"></div>
                 <div class="flex-1">
-                  <div class="font-medium">张克力</div>
-                  <div class="text-xs text-gray-400">晚送 12:00</div>
+                  <div class="font-medium">企业员工</div>
+                  <div class="text-xs text-gray-400">即将发送</div>
                 </div>
               </div>
               <div class="mt-3 rounded bg-white p-3 text-sm">
@@ -611,8 +630,50 @@ onMounted(() => {
                   {{ formState.textContent }}
                 </div>
                 <div v-else class="text-gray-400">输入消息内容</div>
+
+                <!-- Attachment Preview -->
+                <div v-if="formState.attachments.length > 0" class="mt-3">
+                  <div class="flex flex-wrap gap-2">
+                    <template v-for="att in formState.attachments" :key="att.id">
+                      <!-- Image/Video Preview -->
+                      <Image
+                        v-if="(att.type === 'image' || att.type === 'video') && att.ossUrl"
+                        :src="att.ossUrl"
+                        :width="60"
+                        :height="60"
+                        class="rounded object-cover"
+                      />
+                      <!-- Link Preview -->
+                      <div
+                        v-else-if="att.type === 'link'"
+                        class="flex w-full items-center gap-2 rounded border p-2"
+                      >
+                        <LinkOutlined class="text-blue-500" />
+                        <div class="flex-1 truncate text-xs">
+                          {{ att.link?.title }}
+                        </div>
+                      </div>
+                      <!-- Miniprogram Preview -->
+                      <div
+                        v-else-if="att.type === 'miniprogram'"
+                        class="flex w-full items-center gap-2 rounded border p-2"
+                      >
+                        <AppstoreOutlined class="text-green-500" />
+                        <div class="flex-1 truncate text-xs">
+                          {{ att.miniprogram?.title }}
+                        </div>
+                      </div>
+                      <!-- File Preview -->
+                      <div
+                        v-else-if="att.type === 'file'"
+                        class="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs"
+                      >
+                        <span class="max-w-20 truncate">{{ att.name }}</span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
               </div>
-              <div class="mt-2 text-xs text-red-500">支持展示消息版本效果</div>
             </div>
           </Card>
         </Col>
@@ -682,6 +743,30 @@ onMounted(() => {
           <Card title="消息内容" size="small">
             <div class="whitespace-pre-wrap rounded bg-gray-50 p-3">
               {{ formState.textContent || '(无内容)' }}
+            </div>
+            <div v-if="formState.attachments.length > 0" class="mt-2">
+              <div class="text-sm text-gray-500">
+                附件：{{ formState.attachments.length }} 个
+              </div>
+              <div class="mt-1 flex flex-wrap gap-1">
+                <Tag
+                  v-for="att in formState.attachments"
+                  :key="att.id"
+                  size="small"
+                >
+                  {{
+                    att.type === 'image'
+                      ? '图片'
+                      : att.type === 'video'
+                        ? '视频'
+                        : att.type === 'file'
+                          ? '文件'
+                          : att.type === 'link'
+                            ? '网页'
+                            : '小程序'
+                  }}
+                </Tag>
+              </div>
             </div>
           </Card>
         </Col>

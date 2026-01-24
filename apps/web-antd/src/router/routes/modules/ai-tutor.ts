@@ -125,7 +125,8 @@ const routes: RouteRecordRaw[] = [
           {
             name: 'MistakeList',
             path: '',
-            component: () => import('#/views/ai-tutor/mistake-review/MistakeListPage.vue'),
+            component: () =>
+              import('#/views/ai-tutor/mistake-review/MistakeListPage.vue'),
             meta: {
               title: '错题列表',
               appModule: 'LMS',
@@ -136,7 +137,8 @@ const routes: RouteRecordRaw[] = [
           {
             name: 'MistakeDetail',
             path: ':mistakeId',
-            component: () => import('#/views/ai-tutor/mistake-review/MistakeDetailPage.vue'),
+            component: () =>
+              import('#/views/ai-tutor/mistake-review/MistakeDetailPage.vue'),
             meta: {
               title: '错题详情',
               appModule: 'LMS',
@@ -150,7 +152,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'QuestionBankImport',
         path: 'question-import',
-        component: () => import('#/views/ai-tutor/mistake-review/QuestionBankImportPage.vue'),
+        component: () =>
+          import('#/views/ai-tutor/mistake-review/QuestionBankImportPage.vue'),
         meta: {
           icon: 'ant-design:database-outlined',
           title: '题库导入',

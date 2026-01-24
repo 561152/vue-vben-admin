@@ -62,8 +62,8 @@ describe('CustomerFilterDrawer', () => {
       ];
 
       expect(statusOptions).toHaveLength(4);
-      expect(statusOptions.map(o => o.value)).toContain('POTENTIAL');
-      expect(statusOptions.map(o => o.value)).toContain('ACTIVE');
+      expect(statusOptions.map((o) => o.value)).toContain('POTENTIAL');
+      expect(statusOptions.map((o) => o.value)).toContain('ACTIVE');
     });
 
     it('should validate lifecycle stage options', () => {
@@ -75,8 +75,8 @@ describe('CustomerFilterDrawer', () => {
       ];
 
       expect(lifecycleOptions).toHaveLength(4);
-      expect(lifecycleOptions.map(o => o.value)).toContain('LEAD');
-      expect(lifecycleOptions.map(o => o.value)).toContain('CUSTOMER');
+      expect(lifecycleOptions.map((o) => o.value)).toContain('LEAD');
+      expect(lifecycleOptions.map((o) => o.value)).toContain('CUSTOMER');
     });
   });
 
@@ -111,7 +111,7 @@ describe('CustomerFilterDrawer', () => {
 
     it('should parse CSV content correctly', () => {
       const csvContent = 'phone\n13800138001\n13800138002\n13800138003';
-      const lines = csvContent.split('\n').filter(line => line.trim());
+      const lines = csvContent.split('\n').filter((line) => line.trim());
 
       expect(lines).toHaveLength(4);
       expect(lines[0]).toBe('phone');
@@ -257,7 +257,10 @@ describe('CustomerFilterDrawer', () => {
       emit('update:filterConditions', emittedConditions);
       emit('confirm');
 
-      expect(emit).toHaveBeenCalledWith('update:filterConditions', emittedConditions);
+      expect(emit).toHaveBeenCalledWith(
+        'update:filterConditions',
+        emittedConditions,
+      );
       expect(emit).toHaveBeenCalledWith('confirm');
     });
   });

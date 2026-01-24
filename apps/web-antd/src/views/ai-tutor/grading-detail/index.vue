@@ -1,8 +1,22 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Card, Image, Spin, Empty, Button, Space, Tag, Progress, message } from 'ant-design-vue';
-import { ArrowLeftOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
+import {
+  Card,
+  Image,
+  Spin,
+  Empty,
+  Button,
+  Space,
+  Tag,
+  Progress,
+  message,
+} from 'ant-design-vue';
+import {
+  ArrowLeftOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from '@ant-design/icons-vue';
 import { getGradingDetail } from '#/api/ai';
 import type { GradingHistoryItem } from '#/api/ai';
 
@@ -16,7 +30,10 @@ const currentImageIndex = ref(0);
 
 // 当前图片的 URLs
 const currentImageUrls = computed(() => {
-  if (!detail.value?.paperImageUrls || detail.value.paperImageUrls.length === 0) {
+  if (
+    !detail.value?.paperImageUrls ||
+    detail.value.paperImageUrls.length === 0
+  ) {
     return null;
   }
   return detail.value.paperImageUrls[currentImageIndex.value];
@@ -127,7 +144,9 @@ onMounted(() => {
               {{ currentImageIndex + 1 }} / {{ detail.paperImageUrls!.length }}
             </span>
             <Button
-              :disabled="currentImageIndex === detail.paperImageUrls!.length - 1"
+              :disabled="
+                currentImageIndex === detail.paperImageUrls!.length - 1
+              "
               @click="nextPage"
             >
               下一页
@@ -140,7 +159,10 @@ onMounted(() => {
             <div
               v-for="(img, index) in detail.paperImageUrls"
               :key="index"
-              :class="['thumbnail-item', { active: index === currentImageIndex }]"
+              :class="[
+                'thumbnail-item',
+                { active: index === currentImageIndex },
+              ]"
               @click="currentImageIndex = index"
             >
               <img
@@ -184,7 +206,9 @@ onMounted(() => {
             </div>
             <div class="info-item">
               <span class="label">得分：</span>
-              <span class="value score">{{ detail.totalScore }} / {{ detail.maxScore }}</span>
+              <span class="value score"
+                >{{ detail.totalScore }} / {{ detail.maxScore }}</span
+              >
             </div>
             <div class="info-item">
               <span class="label">处理耗时：</span>
@@ -204,8 +228,8 @@ onMounted(() => {
 
 .card-header {
   display: flex;
-  align-items: center;
   gap: 16px;
+  align-items: center;
 }
 
 .card-header h2 {
@@ -219,53 +243,53 @@ onMounted(() => {
 
 .image-container {
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-height: 400px;
+  padding: 20px;
   margin-bottom: 16px;
   background: #f5f5f5;
-  padding: 20px;
   border-radius: 8px;
-  min-height: 400px;
-  align-items: center;
 }
 
 .paper-image {
   max-width: 100%;
   height: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
 }
 
 .page-controls {
   display: flex;
-  justify-content: center;
-  align-items: center;
   gap: 16px;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 16px;
 }
 
 .page-indicator {
+  min-width: 80px;
   font-size: 14px;
   color: #666;
-  min-width: 80px;
   text-align: center;
 }
 
 .thumbnail-nav {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  padding: 8px 0;
   justify-content: center;
+  padding: 8px 0;
+  overflow-x: auto;
 }
 
 .thumbnail-item {
   position: relative;
+  flex-shrink: 0;
   width: 80px;
   height: 100px;
-  flex-shrink: 0;
+  overflow: hidden;
   cursor: pointer;
   border: 2px solid transparent;
   border-radius: 4px;
-  overflow: hidden;
   transition: all 0.3s;
 }
 
@@ -275,7 +299,7 @@ onMounted(() => {
 
 .thumbnail-item.active {
   border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  box-shadow: 0 2px 8px rgb(24 144 255 / 30%);
 }
 
 .thumbnail-item img {
@@ -286,18 +310,18 @@ onMounted(() => {
 
 .page-number {
   position: absolute;
-  bottom: 4px;
   right: 4px;
+  bottom: 4px;
   padding: 2px 6px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
   font-size: 12px;
+  color: #fff;
+  background: rgb(0 0 0 / 70%);
   border-radius: 2px;
 }
 
 .grading-info {
-  margin-top: 24px;
   padding: 16px;
+  margin-top: 24px;
   background: #f9f9f9;
   border-radius: 8px;
 }
@@ -319,8 +343,8 @@ onMounted(() => {
 }
 
 .info-item .label {
-  color: #666;
   margin-right: 8px;
+  color: #666;
   white-space: nowrap;
 }
 
@@ -330,8 +354,8 @@ onMounted(() => {
 }
 
 .info-item .value.score {
-  color: #1890ff;
   font-size: 16px;
+  color: #1890ff;
 }
 
 @media (max-width: 768px) {

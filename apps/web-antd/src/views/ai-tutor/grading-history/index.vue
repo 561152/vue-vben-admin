@@ -10,7 +10,12 @@ import {
   Space,
   message,
 } from 'ant-design-vue';
-import { HistoryOutlined, PrinterOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons-vue';
+import {
+  HistoryOutlined,
+  PrinterOutlined,
+  ReloadOutlined,
+  EyeOutlined,
+} from '@ant-design/icons-vue';
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
 import { getGradingHistory } from '#/api/ai';
 import type { GradingHistoryItem } from '#/api/ai';
@@ -136,7 +141,9 @@ const handleRefresh = () => {
 const printingId = ref<string | null>(null);
 
 // 打印批改报告
-const handlePrint = async (record: GradingHistoryItem | Record<string, any>) => {
+const handlePrint = async (
+  record: GradingHistoryItem | Record<string, any>,
+) => {
   printingId.value = record.id;
   try {
     const printData = {
@@ -149,8 +156,10 @@ const handlePrint = async (record: GradingHistoryItem | Record<string, any>) => 
       totalQuestions: record.questionCount,
       processingTime: record.processingMs,
       overallComment: `本次作业共 ${record.questionCount} 题，正确 ${record.correctCount} 题，正确率 ${(record.accuracy * 100).toFixed(1)}%`,
-      strengthPoints: record.accuracy >= 0.8 ? ['整体表现优秀', '答题准确率高'] : [],
-      improvementPoints: record.accuracy < 0.6 ? ['建议加强基础知识', '多做练习巩固'] : [],
+      strengthPoints:
+        record.accuracy >= 0.8 ? ['整体表现优秀', '答题准确率高'] : [],
+      improvementPoints:
+        record.accuracy < 0.6 ? ['建议加强基础知识', '多做练习巩固'] : [],
       studySuggestions: ['继续保持良好的学习习惯', '针对错题进行专项练习'],
     };
 
@@ -201,14 +210,20 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.dataIndex === 'paperImageUrls'">
-            <div v-if="record.paperImageUrls && record.paperImageUrls.length > 0" class="paper-thumbnail">
+            <div
+              v-if="record.paperImageUrls && record.paperImageUrls.length > 0"
+              class="paper-thumbnail"
+            >
               <img
                 :src="record.paperImageUrls[0].thumbnail"
                 :alt="`试卷第${record.paperImageUrls[0].pageIndex}页`"
                 loading="lazy"
                 class="thumbnail-img"
               />
-              <span v-if="record.paperImageUrls.length > 1" class="page-count-badge">
+              <span
+                v-if="record.paperImageUrls.length > 1"
+                class="page-count-badge"
+              >
                 {{ record.paperImageUrls.length }}页
               </span>
             </div>
@@ -327,15 +342,15 @@ onMounted(() => {
   width: 80px;
   height: 100px;
   overflow: hidden;
-  border-radius: 4px;
-  border: 1px solid #e8e8e8;
   cursor: pointer;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
   transition: all 0.3s;
 }
 
 .paper-thumbnail:hover {
   border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 2px 8px rgb(24 144 255 / 20%);
 }
 
 .thumbnail-img {
@@ -346,17 +361,17 @@ onMounted(() => {
 
 .page-count-badge {
   position: absolute;
-  bottom: 4px;
   right: 4px;
+  bottom: 4px;
   padding: 2px 6px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
   font-size: 12px;
+  color: #fff;
+  background: rgb(0 0 0 / 70%);
   border-radius: 2px;
 }
 
 .no-image {
-  color: #999;
   font-size: 12px;
+  color: #999;
 }
 </style>

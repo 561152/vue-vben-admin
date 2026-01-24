@@ -523,9 +523,9 @@ export interface HomeworkGradingResponse {
  */
 export interface PaperImageUrls {
   pageIndex: number;
-  thumbnail: string;   // 缩略图 (400px)
-  preview: string;     // 预览图 (1000px)
-  original: string;    // 原图
+  thumbnail: string; // 缩略图 (400px)
+  preview: string; // 预览图 (1000px)
+  original: string; // 原图
 }
 
 /**
@@ -541,7 +541,7 @@ export interface GradingHistoryItem {
   accuracy: number;
   processingMs: number;
   createdAt: string;
-  paperImageUrls?: PaperImageUrls[];  // 试卷图片 URLs
+  paperImageUrls?: PaperImageUrls[]; // 试卷图片 URLs
 }
 
 /**
