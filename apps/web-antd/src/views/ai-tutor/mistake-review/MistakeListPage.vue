@@ -1,8 +1,9 @@
 <template>
   <div class="mistake-list-page">
     <!-- 页面头部 -->
-    <page-header title="错题管理">
-      <template #extra>
+    <div class="page-header">
+      <div class="header-content">
+        <h2>错题管理</h2>
         <a-space>
           <a-button @click="refreshData" :loading="loading">
             <ReloadOutlined />
@@ -17,8 +18,8 @@
             导出
           </a-button>
         </a-space>
-      </template>
-    </page-header>
+      </div>
+    </div>
 
     <!-- 统计卡片 -->
     <div class="stats-section">
@@ -622,7 +623,7 @@ import {
 } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
 import axios from 'axios';
-import PageHeader from '@/components/PageHeader.vue';
+// PageHeader component removed - using plain div instead
 
 // 类型定义
 interface MistakeItem {
@@ -1034,6 +1035,26 @@ export default defineComponent({
   padding: 16px;
   background: #f0f2f5;
   min-height: 100vh;
+
+  .page-header {
+    background: #fff;
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+  }
 
   .stats-section {
     margin-bottom: 16px;
