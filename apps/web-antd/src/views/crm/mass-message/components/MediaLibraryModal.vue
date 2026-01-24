@@ -259,9 +259,7 @@ watch(
           </template>
         </Input>
         <Button @click="handleSearch">搜索</Button>
-        <Button @click="fetchMediaList">
-          <ReloadOutlined /> 刷新
-        </Button>
+        <Button @click="fetchMediaList"> <ReloadOutlined /> 刷新 </Button>
 
         <div class="ml-auto text-sm text-gray-500">
           已选择 {{ selectedIds.length }}

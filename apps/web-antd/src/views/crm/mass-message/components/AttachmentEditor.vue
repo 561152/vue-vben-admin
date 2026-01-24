@@ -388,7 +388,9 @@ function getTypeIcon(type: string) {
         />
 
         <!-- Preview -->
-        <div class="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-gray-100">
+        <div
+          class="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-gray-100"
+        >
           <Image
             v-if="
               (att.type === 'image' || att.type === 'video') &&
@@ -442,8 +444,8 @@ function getTypeIcon(type: string) {
       <div class="flex flex-wrap gap-2">
         <!-- Upload buttons for image/video/file -->
         <template
-          v-for="type in attachmentTypes.filter(
-            (t) => ['image', 'video', 'file'].includes(t.key),
+          v-for="type in attachmentTypes.filter((t) =>
+            ['image', 'video', 'file'].includes(t.key),
           )"
           :key="type.key"
         >
@@ -620,6 +622,6 @@ function getTypeIcon(type: string) {
 
 .attachment-editor :deep(.ant-card:hover) {
   border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 2px 8px rgb(24 144 255 / 15%);
 }
 </style>

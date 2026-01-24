@@ -37,10 +37,7 @@ const useSlider = computed(() => {
   const min = props.schema.minimum;
   const max = props.schema.maximum;
   return (
-    min !== undefined &&
-    max !== undefined &&
-    max - min <= 100 &&
-    max - min >= 0
+    min !== undefined && max !== undefined && max - min <= 100 && max - min >= 0
   );
 });
 
@@ -98,7 +95,10 @@ const step = computed(() => {
       />
 
       <!-- 默认值提示 -->
-      <div v-if="schema.default !== undefined" style="color: #999; font-size: 12px">
+      <div
+        v-if="schema.default !== undefined"
+        style=" font-size: 12px;color: #999"
+      >
         默认值: {{ schema.default }}
       </div>
     </Space>

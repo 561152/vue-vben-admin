@@ -137,7 +137,7 @@ test.describe('步骤评分面板显示测试', () => {
 
       // 查找步骤列表（List 或 Table）
       const stepList = page.locator(
-        '.ant-list, .ant-table, [class*="step-list"]'
+        '.ant-list, .ant-table, [class*="step-list"]',
       );
 
       if (await stepList.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -145,7 +145,7 @@ test.describe('步骤评分面板显示测试', () => {
 
         // 检查是否有步骤项
         const stepItems = page.locator(
-          '.ant-list-item, .ant-table-row, [class*="step-item"]'
+          '.ant-list-item, .ant-table-row, [class*="step-item"]',
         );
         const itemCount = await stepItems.count();
         expect(itemCount).toBeGreaterThanOrEqual(0);
@@ -355,7 +355,7 @@ test.describe('AI 评分显示测试', () => {
       // 查找正确/错误状态图标（通常是 CheckCircle 或 CloseCircle）
       const statusIcon = page
         .locator(
-          '[class*="check-circle"], [class*="close-circle"], [class*="status-icon"]'
+          '[class*="check-circle"], [class*="close-circle"], [class*="status-icon"]',
         )
         .first();
 
@@ -390,9 +390,7 @@ test.describe('教师修改分数测试', () => {
       await page.waitForTimeout(500);
 
       // 查找教师评分输入框（InputNumber）
-      const teacherScoreInput = page
-        .locator('.ant-input-number-input')
-        .first();
+      const teacherScoreInput = page.locator('.ant-input-number-input').first();
 
       if (
         await teacherScoreInput.isVisible({ timeout: 2000 }).catch(() => false)
@@ -417,9 +415,7 @@ test.describe('教师修改分数测试', () => {
       await stepScoreTab.click();
       await page.waitForTimeout(500);
 
-      const teacherScoreInput = page
-        .locator('.ant-input-number-input')
-        .first();
+      const teacherScoreInput = page.locator('.ant-input-number-input').first();
 
       if (
         await teacherScoreInput.isVisible({ timeout: 2000 }).catch(() => false)
@@ -454,9 +450,7 @@ test.describe('教师修改分数测试', () => {
       await stepScoreTab.click();
       await page.waitForTimeout(500);
 
-      const teacherScoreInput = page
-        .locator('.ant-input-number-input')
-        .first();
+      const teacherScoreInput = page.locator('.ant-input-number-input').first();
 
       if (
         await teacherScoreInput.isVisible({ timeout: 2000 }).catch(() => false)
@@ -489,9 +483,7 @@ test.describe('教师修改分数测试', () => {
       await stepScoreTab.click();
       await page.waitForTimeout(500);
 
-      const teacherScoreInput = page
-        .locator('.ant-input-number-input')
-        .first();
+      const teacherScoreInput = page.locator('.ant-input-number-input').first();
 
       if (
         await teacherScoreInput.isVisible({ timeout: 2000 }).catch(() => false)
@@ -718,9 +710,7 @@ test.describe('总分计算测试', () => {
       // 查找总满分显示（通常显示为 "X/Y" 格式）
       const totalMaxScore = page.locator('text=/\\/\\s*\\d+/').last();
 
-      if (
-        await totalMaxScore.isVisible({ timeout: 2000 }).catch(() => false)
-      ) {
+      if (await totalMaxScore.isVisible({ timeout: 2000 }).catch(() => false)) {
         const text = await totalMaxScore.textContent();
         expect(text).toMatch(/\d+/);
       }
@@ -757,9 +747,7 @@ test.describe('总分计算测试', () => {
         // 修改第一个步骤分
         const scoreInput = page.locator('.ant-input-number-input').first();
 
-        if (
-          await scoreInput.isVisible({ timeout: 2000 }).catch(() => false)
-        ) {
+        if (await scoreInput.isVisible({ timeout: 2000 }).catch(() => false)) {
           await scoreInput.fill('3.5');
           await page.waitForTimeout(500);
 

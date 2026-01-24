@@ -110,6 +110,6 @@ export async function markMistakeMastered(mistakeId: string) {
 export async function generateMistakeBookPdf(studentId: number) {
   return requestClient.post<{ downloadUrl: string }>(
     '/education/mistakes/generate-pdf',
-    { studentId }
+    { studentId },
   );
 }

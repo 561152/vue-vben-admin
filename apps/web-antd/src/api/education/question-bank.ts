@@ -38,7 +38,7 @@ export interface ImportPaperDto {
 export async function importPaperToQuestionBank(data: ImportPaperDto) {
   return requestClient.post<QuestionBankImport>(
     '/education/question-bank/import',
-    data
+    data,
   );
 }
 
@@ -47,7 +47,7 @@ export async function importPaperToQuestionBank(data: ImportPaperDto) {
  */
 export async function getImportStatus(importId: string) {
   return requestClient.get<QuestionBankImport>(
-    `/education/question-bank/import/${importId}/status`
+    `/education/question-bank/import/${importId}/status`,
   );
 }
 

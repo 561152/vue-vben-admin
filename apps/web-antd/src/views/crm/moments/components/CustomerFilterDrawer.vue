@@ -273,9 +273,12 @@ async function fetchDepartments() {
 
 async function fetchTags() {
   try {
-    const res = await requestClient.get<{ items: TagItem[] }>('/customer-tags', {
-      params: { pageSize: 200 },
-    });
+    const res = await requestClient.get<{ items: TagItem[] }>(
+      '/customer-tags',
+      {
+        params: { pageSize: 200 },
+      },
+    );
     tags.value = res.items || [];
   } catch (e) {
     console.error(e);
@@ -397,7 +400,10 @@ async function handleFileUpload(file: File): Promise<boolean> {
     }
 
     // Validate with backend
-    const result = await validateImportedCustomers(data, importMatchColumn.value);
+    const result = await validateImportedCustomers(
+      data,
+      importMatchColumn.value,
+    );
     importPreview.value = result;
     importFile.value.status = 'done';
 
@@ -428,12 +434,12 @@ async function readExcelFile(file: File): Promise<string[]> {
         const data = e.target?.result;
         let rows: string[] = [];
 
-        if (
-          file.name.endsWith('.csv') ||
-          file.name.endsWith('.txt')
-        ) {
+        if (file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
           // CSV/TXT: split by line
-          const text = typeof data === 'string' ? data : new TextDecoder().decode(data as ArrayBuffer);
+          const text =
+            typeof data === 'string'
+              ? data
+              : new TextDecoder().decode(data as ArrayBuffer);
           rows = text
             .split(/\r?\n/)
             .map((line: string) => line.trim())
@@ -610,7 +616,10 @@ onMounted(() => {
               />
             </Form.Item>
 
-            <div v-if="conditions.tagIds.length > 0" class="mb-4 flex flex-wrap gap-2">
+            <div
+              v-if="conditions.tagIds.length > 0"
+              class="mb-4 flex flex-wrap gap-2"
+            >
               <Tag
                 v-for="tagId in conditions.tagIds"
                 :key="tagId"
@@ -645,8 +654,13 @@ onMounted(() => {
             </template>
 
             <div class="mb-4">
-              <div class="mb-2 text-sm text-gray-500">发送给以下部门的客户：</div>
-              <div v-if="conditions.departmentIds.length > 0" class="mb-2 flex flex-wrap gap-2">
+              <div class="mb-2 text-sm text-gray-500">
+                发送给以下部门的客户：
+              </div>
+              <div
+                v-if="conditions.departmentIds.length > 0"
+                class="mb-2 flex flex-wrap gap-2"
+              >
                 <Tag
                   v-for="deptId in conditions.departmentIds"
                   :key="deptId"
@@ -668,7 +682,10 @@ onMounted(() => {
                 checkable
                 :selectable="false"
                 @check="
-                  (keys: Key[] | { checked: Key[]; halfChecked: Key[] }, info: CheckInfo) => handleDeptCheck(keys, info, 'include')
+                  (
+                    keys: Key[] | { checked: Key[]; halfChecked: Key[] },
+                    info: CheckInfo,
+                  ) => handleDeptCheck(keys, info, 'include')
                 "
               />
             </div>
@@ -677,7 +694,10 @@ onMounted(() => {
 
             <div>
               <div class="mb-2 text-sm text-gray-500">排除以下部门的客户：</div>
-              <div v-if="conditions.excludeDepartmentIds.length > 0" class="mb-2 flex flex-wrap gap-2">
+              <div
+                v-if="conditions.excludeDepartmentIds.length > 0"
+                class="mb-2 flex flex-wrap gap-2"
+              >
                 <Tag
                   v-for="deptId in conditions.excludeDepartmentIds"
                   :key="deptId"
@@ -698,7 +718,10 @@ onMounted(() => {
                 checkable
                 :selectable="false"
                 @check="
-                  (keys: Key[] | { checked: Key[]; halfChecked: Key[] }, info: CheckInfo) => handleDeptCheck(keys, info, 'exclude')
+                  (
+                    keys: Key[] | { checked: Key[]; halfChecked: Key[] },
+                    info: CheckInfo,
+                  ) => handleDeptCheck(keys, info, 'exclude')
                 "
               />
             </div>
@@ -842,7 +865,10 @@ onMounted(() => {
                     class="mb-2"
                   />
 
-                  <div v-if="importPreview.sampleCustomers.length > 0" class="mb-2">
+                  <div
+                    v-if="importPreview.sampleCustomers.length > 0"
+                    class="mb-2"
+                  >
                     <div class="mb-1 text-sm text-gray-500">匹配示例：</div>
                     <Table
                       :columns="[

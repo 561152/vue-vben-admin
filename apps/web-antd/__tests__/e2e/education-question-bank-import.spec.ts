@@ -101,7 +101,7 @@ test.describe('题库导入页面测试', () => {
     if (!(await isPageAccessible(page))) {
       test.skip(
         true,
-        '用户无权限访问此页面 (需要 EDUCATION:QUESTION:IMPORT 权限)'
+        '用户无权限访问此页面 (需要 EDUCATION:QUESTION:IMPORT 权限)',
       );
       return;
     }
@@ -127,9 +127,7 @@ test.describe('题库导入页面测试', () => {
       .filter({ has: page.locator('text=试卷, text=选择试卷') })
       .first();
 
-    if (
-      await paperSelector.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await paperSelector.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(paperSelector).toBeVisible();
       await paperSelector.click();
       await page.waitForTimeout(300);
@@ -213,9 +211,7 @@ test.describe('导入配置测试', () => {
       .filter({ has: page.locator('text=质量阈值, text=threshold') })
       .first();
 
-    if (
-      await qualitySlider.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await qualitySlider.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(qualitySlider).toBeVisible();
     }
   });
@@ -255,9 +251,7 @@ test.describe('导入配置测试', () => {
       .filter({ has: page.locator('text=自动合并, text=合并重复') })
       .first();
 
-    if (
-      await autoMergeSwitch.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await autoMergeSwitch.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(autoMergeSwitch).toBeEnabled();
 
       // 测试切换开关
@@ -278,7 +272,7 @@ test.describe('导入配置测试', () => {
 
     // 查找配置说明或帮助文本
     const helpText = page.locator(
-      '.ant-form-item-extra, .ant-alert, [class*="help"]'
+      '.ant-form-item-extra, .ant-alert, [class*="help"]',
     );
 
     if (await helpText.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -314,7 +308,7 @@ test.describe('导入执行测试', () => {
 
         // 检查确认对话框
         const confirmModal = page.locator(
-          '.ant-modal-confirm, .ant-popconfirm, .ant-modal'
+          '.ant-modal-confirm, .ant-popconfirm, .ant-modal',
         );
 
         if (
@@ -388,7 +382,7 @@ test.describe('导入进度监控测试', () => {
 
     // 查找统计数字（总数、已导入、重复、失败）
     const statsArea = page.locator(
-      '.ant-statistic, [class*="stat"], [class*="count"]'
+      '.ant-statistic, [class*="stat"], [class*="count"]',
     );
 
     if (await statsArea.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -465,7 +459,9 @@ test.describe('导入历史测试', () => {
       await page.waitForTimeout(500);
 
       // 查找历史记录表格
-      const historyTable = page.locator('.ant-drawer .ant-table, .ant-modal .ant-table');
+      const historyTable = page.locator(
+        '.ant-drawer .ant-table, .ant-modal .ant-table',
+      );
 
       if (await historyTable.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(historyTable).toBeVisible();
@@ -506,7 +502,9 @@ test.describe('导入历史测试', () => {
       await historyButton.click();
       await page.waitForTimeout(500);
 
-      const pagination = page.locator('.ant-drawer .ant-pagination, .ant-modal .ant-pagination');
+      const pagination = page.locator(
+        '.ant-drawer .ant-pagination, .ant-modal .ant-pagination',
+      );
 
       if (await pagination.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(pagination).toBeVisible();
@@ -537,9 +535,7 @@ test.describe('导入结果处理测试', () => {
     // 这个测试需要实际触发导入成功，暂时只检查消息组件
     // 在实际导入完成后，应该显示成功提示
     // 这里只验证页面上是否有 message 或 notification 组件的容器
-    const messageContainer = page.locator(
-      '.ant-message, .ant-notification'
-    );
+    const messageContainer = page.locator('.ant-message, .ant-notification');
 
     // 消息可能默认不显示
     const hasMessage = await messageContainer
@@ -561,9 +557,7 @@ test.describe('导入结果处理测试', () => {
       .filter({ hasText: /错误日志|查看日志|error log/i })
       .first();
 
-    if (
-      await errorLogButton.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await errorLogButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(errorLogButton).toBeEnabled();
       await errorLogButton.click();
       await page.waitForTimeout(500);
@@ -598,9 +592,7 @@ test.describe('重复题处理测试', () => {
       .locator('[class*="count"], [class*="number"]')
       .first();
 
-    if (
-      await duplicateCount.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await duplicateCount.isVisible({ timeout: 3000 }).catch(() => false)) {
       const text = await duplicateCount.textContent();
       expect(text).toMatch(/\d+/);
     }
@@ -694,7 +686,7 @@ test.describe('题目预览测试', () => {
 
         // 检查题目内容是否显示
         const questionContent = previewModal.locator(
-          '[class*="question"], [class*="content"]'
+          '[class*="question"], [class*="content"]',
         );
         if (
           await questionContent.isVisible({ timeout: 1000 }).catch(() => false)
@@ -719,12 +711,10 @@ test.describe('题目预览测试', () => {
 
     // 查找 LaTeX 渲染容器（katex 或 MathJax）
     const latexContainer = page.locator(
-      '.katex, .MathJax, [class*="latex"], [class*="formula"]'
+      '.katex, .MathJax, [class*="latex"], [class*="formula"]',
     );
 
-    if (
-      await latexContainer.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await latexContainer.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(latexContainer.first()).toBeVisible();
     }
   });
@@ -768,9 +758,7 @@ test.describe('取消导入测试', () => {
       await page.waitForTimeout(500);
 
       const confirmModal = page.locator('.ant-modal-confirm, .ant-popconfirm');
-      if (
-        await confirmModal.isVisible({ timeout: 2000 }).catch(() => false)
-      ) {
+      if (await confirmModal.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(confirmModal).toBeVisible();
 
         // 取消操作

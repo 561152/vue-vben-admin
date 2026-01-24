@@ -132,9 +132,7 @@ test.describe('错题列表页测试', () => {
       .filter({ has: page.locator('text=错误类型') })
       .first();
 
-    if (
-      await errorTypeSelect.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await errorTypeSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(errorTypeSelect).toBeVisible();
       await errorTypeSelect.click();
       await page.waitForTimeout(300);
@@ -188,9 +186,7 @@ test.describe('错题列表页测试', () => {
     await page.waitForTimeout(1000);
 
     // 查找第一个错题卡片或表格行
-    const firstItem = page
-      .locator('.ant-card, .ant-table-row')
-      .first();
+    const firstItem = page.locator('.ant-card, .ant-table-row').first();
 
     const itemVisible = await firstItem
       .isVisible({ timeout: 3000 })
@@ -251,7 +247,7 @@ test.describe('错题详情页测试', () => {
 
     // 检查图片容器或 Canvas
     const imageContainer = page.locator(
-      'img, canvas, .image-container, [class*="image"]'
+      'img, canvas, .image-container, [class*="image"]',
     );
 
     if (await imageContainer.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -331,9 +327,9 @@ test.describe('矫正编辑器测试', () => {
       await page.waitForTimeout(500);
 
       // 查找学生答案输入框
-      const answerInput = page.locator(
-        'textarea, .ant-input'
-      ).filter({ hasText: /学生答案|studentAnswer/i });
+      const answerInput = page
+        .locator('textarea, .ant-input')
+        .filter({ hasText: /学生答案|studentAnswer/i });
 
       if (await answerInput.isVisible({ timeout: 3000 }).catch(() => false)) {
         await expect(answerInput).toBeEnabled();
@@ -441,9 +437,7 @@ test.describe('步骤评分测试', () => {
       .filter({ hasText: /步骤|评分/i })
       .first();
 
-    if (
-      await stepScorePanel.isVisible({ timeout: 3000 }).catch(() => false)
-    ) {
+    if (await stepScorePanel.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(stepScorePanel).toBeVisible();
     }
   });
@@ -469,9 +463,7 @@ test.describe('步骤评分测试', () => {
     }
 
     // 查找评分输入框（InputNumber）
-    const scoreInput = page
-      .locator('.ant-input-number-input')
-      .first();
+    const scoreInput = page.locator('.ant-input-number-input').first();
 
     if (await scoreInput.isVisible({ timeout: 3000 }).catch(() => false)) {
       await expect(scoreInput).toBeEnabled();
@@ -650,9 +642,7 @@ test.describe('提交审核流程测试', () => {
 
       // 检查确认对话框
       const confirmModal = page.locator('.ant-modal-confirm, .ant-popconfirm');
-      if (
-        await confirmModal.isVisible({ timeout: 2000 }).catch(() => false)
-      ) {
+      if (await confirmModal.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(confirmModal).toBeVisible();
 
         // 取消提交
@@ -673,7 +663,9 @@ test.describe('提交审核流程测试', () => {
     // 查找状态标签 (AUTO/TEACHER/EXPERT/VERIFIED)
     const statusTag = page
       .locator('.ant-tag')
-      .filter({ hasText: /自动|教师|专家|已验证|AUTO|TEACHER|EXPERT|VERIFIED/i })
+      .filter({
+        hasText: /自动|教师|专家|已验证|AUTO|TEACHER|EXPERT|VERIFIED/i,
+      })
       .first();
 
     if (await statusTag.isVisible({ timeout: 3000 }).catch(() => false)) {

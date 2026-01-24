@@ -187,8 +187,14 @@ async function handleTest() {
     console.log('📋 Pipeline Key:', pipelineKey);
     console.log('📦 Pipeline对象:', pipeline.value);
     console.log('🔍 确认执行的pipeline key:', pipeline.value?.key);
-    console.log('⚙️  配置参数 (config):', JSON.stringify(config.value, null, 2));
-    console.log('🧪 测试参数 (testParams):', JSON.stringify(testParams.value, null, 2));
+    console.log(
+      '⚙️  配置参数 (config):',
+      JSON.stringify(config.value, null, 2),
+    );
+    console.log(
+      '🧪 测试参数 (testParams):',
+      JSON.stringify(testParams.value, null, 2),
+    );
 
     // 合并配置和测试参数，并转换字段名为下划线格式
     const inputData = {
@@ -209,7 +215,10 @@ async function handleTest() {
       sync: true, // 同步执行
     };
 
-    console.log('📤 发送给后端的完整请求体:', JSON.stringify(requestBody, null, 2));
+    console.log(
+      '📤 发送给后端的完整请求体:',
+      JSON.stringify(requestBody, null, 2),
+    );
 
     // 调用执行API
     const result = await executePipeline(pipelineKey, requestBody);
@@ -365,7 +374,12 @@ onBeforeUnmount(() => {
               <template #icon><ReloadOutlined /></template>
               重置默认值
             </Button>
-            <Button type="primary" size="large" @click="handleSave" :loading="saving">
+            <Button
+              type="primary"
+              size="large"
+              @click="handleSave"
+              :loading="saving"
+            >
               <template #icon><SaveOutlined /></template>
               保存配置
             </Button>
@@ -374,12 +388,22 @@ onBeforeUnmount(() => {
 
         <!-- 进度指示器 -->
         <div class="progress-bar">
-          <div :class="['progress-item', { active: currentStep >= 1, completed: currentStep > 1 }]">
+          <div
+            :class="[
+              'progress-item',
+              { active: currentStep >= 1, completed: currentStep > 1 },
+            ]"
+          >
             <div class="progress-number">{{ currentStep > 1 ? '✓' : '1' }}</div>
             <div class="progress-label">配置参数</div>
           </div>
           <div class="progress-line" :class="{ active: currentStep > 1 }"></div>
-          <div :class="['progress-item', { active: currentStep >= 2, completed: currentStep > 2 }]">
+          <div
+            :class="[
+              'progress-item',
+              { active: currentStep >= 2, completed: currentStep > 2 },
+            ]"
+          >
             <div class="progress-number">{{ currentStep > 2 ? '✓' : '2' }}</div>
             <div class="progress-label">测试运行</div>
           </div>
@@ -406,14 +430,19 @@ onBeforeUnmount(() => {
               ref="schemaFormRef"
               v-model="config"
               :schema="pipeline.formSchema"
-              @validate="(valid, errors) => {
-                if (!valid) {
-                  console.error('参数验证失败:', errors);
+              @validate="
+                (valid, errors) => {
+                  if (!valid) {
+                    console.error('参数验证失败:', errors);
+                  }
                 }
-              }"
+              "
             />
           </div>
-          <Empty v-else-if="pipeline && !pipeline.formSchema" description="该流程无需配置参数" />
+          <Empty
+            v-else-if="pipeline && !pipeline.formSchema"
+            description="该流程无需配置参数"
+          />
         </Card>
 
         <!-- Step 2: 测试运行 -->
@@ -455,9 +484,11 @@ onBeforeUnmount(() => {
               <FormItem
                 label="客户反馈图片地址"
                 name="imageUrl"
-                :rules="[{ required: true, message: '请输入图片URL或上传图片' }]"
+                :rules="[
+                  { required: true, message: '请输入图片URL或上传图片' },
+                ]"
               >
-                <Space direction="vertical" style="width: 100%;" :size="12">
+                <Space direction="vertical" style="width: 100%" :size="12">
                   <!-- URL输入框和操作按钮 -->
                   <div class="image-input-row">
                     <Input
@@ -508,17 +539,13 @@ onBeforeUnmount(() => {
 
                   <div class="field-tip">
                     💡 支持三种方式：
-                    <br>• 直接输入图片URL
-                    <br>• 点击"上传图片"选择本地文件
-                    <br>• <strong>按 Ctrl+V 粘贴剪贴板中的图片</strong> ⭐
+                    <br />• 直接输入图片URL <br />• 点击"上传图片"选择本地文件
+                    <br />• <strong>按 Ctrl+V 粘贴剪贴板中的图片</strong> ⭐
                   </div>
                 </Space>
               </FormItem>
 
-              <FormItem
-                label="文字反馈（可选）"
-                name="feedbackText"
-              >
+              <FormItem label="文字反馈（可选）" name="feedbackText">
                 <Input.TextArea
                   v-model:value="testParams.feedbackText"
                   placeholder="客户的文字反馈内容..."
@@ -568,14 +595,26 @@ onBeforeUnmount(() => {
               <template #icon><ThunderboltOutlined /></template>
               {{ testing ? '执行中...' : '立即测试' }}
             </Button>
-            <div v-if="!pipeline?.formSchema" style="margin-top: 8px; font-size: 12px; color: #8c8c8c; text-align: center;">
+            <div
+              v-if="!pipeline?.formSchema"
+              style="
+                margin-top: 8px;
+                font-size: 12px;
+                color: #8c8c8c;
+                text-align: center;
+              "
+            >
               提示：该流程无需配置参数，可直接测试
             </div>
           </div>
         </Card>
 
         <!-- Step 3: 执行结果 -->
-        <Card class="step-card result-card" :class="{ active: currentStep === 3 }" v-if="testResult">
+        <Card
+          class="step-card result-card"
+          :class="{ active: currentStep === 3 }"
+          v-if="testResult"
+        >
           <template #title>
             <div class="card-title">
               <span class="step-badge">步骤 3</span>
@@ -585,7 +624,13 @@ onBeforeUnmount(() => {
 
           <!-- 执行状态 -->
           <Alert
-            :type="testResult.status === 'COMPLETED' ? 'success' : testResult.status === 'FAILED' ? 'error' : 'info'"
+            :type="
+              testResult.status === 'COMPLETED'
+                ? 'success'
+                : testResult.status === 'FAILED'
+                  ? 'error'
+                  : 'info'
+            "
             show-icon
             class="status-alert"
           >
@@ -593,23 +638,40 @@ onBeforeUnmount(() => {
               <div class="status-header">
                 <span class="status-label">执行状态：</span>
                 <Tag
-                  :color="testResult.status === 'COMPLETED' ? 'success' : testResult.status === 'FAILED' ? 'error' : 'processing'"
+                  :color="
+                    testResult.status === 'COMPLETED'
+                      ? 'success'
+                      : testResult.status === 'FAILED'
+                        ? 'error'
+                        : 'processing'
+                  "
                   class="status-tag"
                 >
-                  {{ testResult.status === 'COMPLETED' ? '✓ 成功' : testResult.status === 'FAILED' ? '✗ 失败' : '⋯ 进行中' }}
+                  {{
+                    testResult.status === 'COMPLETED'
+                      ? '✓ 成功'
+                      : testResult.status === 'FAILED'
+                        ? '✗ 失败'
+                        : '⋯ 进行中'
+                  }}
                 </Tag>
               </div>
             </template>
             <template #description>
               <div class="execution-info">
                 <div>执行ID：{{ testResult.executionId }}</div>
-                <div v-if="testResult.jobId">任务ID：{{ testResult.jobId }}</div>
+                <div v-if="testResult.jobId">
+                  任务ID：{{ testResult.jobId }}
+                </div>
               </div>
             </template>
           </Alert>
 
           <!-- 分析结果（成功时显示） -->
-          <div v-if="testResult.result && testResult.status === 'COMPLETED'" class="result-container">
+          <div
+            v-if="testResult.result && testResult.status === 'COMPLETED'"
+            class="result-container"
+          >
             <div class="result-section">
               <div class="section-title">
                 <span class="icon">🎯</span>
@@ -618,18 +680,24 @@ onBeforeUnmount(() => {
               <div v-if="testResult.result.sentiment" class="sentiment-result">
                 <Tag
                   :color="
-                    testResult.result.sentiment === 'satisfied' ? 'green' :
-                    testResult.result.sentiment === 'neutral' ? 'blue' :
-                    testResult.result.sentiment === 'dissatisfied' ? 'orange' :
-                    'red'
+                    testResult.result.sentiment === 'satisfied'
+                      ? 'green'
+                      : testResult.result.sentiment === 'neutral'
+                        ? 'blue'
+                        : testResult.result.sentiment === 'dissatisfied'
+                          ? 'orange'
+                          : 'red'
                   "
                   class="sentiment-tag"
                 >
                   {{
-                    testResult.result.sentiment === 'satisfied' ? '😊 满意' :
-                    testResult.result.sentiment === 'neutral' ? '😐 一般' :
-                    testResult.result.sentiment === 'dissatisfied' ? '😟 不满意' :
-                    '😠 非常不满'
+                    testResult.result.sentiment === 'satisfied'
+                      ? '😊 满意'
+                      : testResult.result.sentiment === 'neutral'
+                        ? '😐 一般'
+                        : testResult.result.sentiment === 'dissatisfied'
+                          ? '😟 不满意'
+                          : '😠 非常不满'
                   }}
                 </Tag>
                 <span v-if="testResult.result.confidence" class="confidence">
@@ -638,16 +706,20 @@ onBeforeUnmount(() => {
                 <Tag
                   v-if="testResult.result.priority"
                   :color="
-                    testResult.result.priority === 'high' ? 'red' :
-                    testResult.result.priority === 'medium' ? 'orange' :
-                    'green'
+                    testResult.result.priority === 'high'
+                      ? 'red'
+                      : testResult.result.priority === 'medium'
+                        ? 'orange'
+                        : 'green'
                   "
                   class="priority-tag"
                 >
                   优先级：{{
-                    testResult.result.priority === 'high' ? '高' :
-                    testResult.result.priority === 'medium' ? '中' :
-                    '低'
+                    testResult.result.priority === 'high'
+                      ? '高'
+                      : testResult.result.priority === 'medium'
+                        ? '中'
+                        : '低'
                   }}
                 </Tag>
               </div>
@@ -671,36 +743,64 @@ onBeforeUnmount(() => {
                 <span>图像分析</span>
               </div>
               <div class="analysis-items">
-                <div v-if="testResult.result.imageAnalysis.productCondition" class="analysis-item">
+                <div
+                  v-if="testResult.result.imageAnalysis.productCondition"
+                  class="analysis-item"
+                >
                   <span class="label">产品状态：</span>
-                  <span class="value">{{ testResult.result.imageAnalysis.productCondition }}</span>
+                  <span class="value">{{
+                    testResult.result.imageAnalysis.productCondition
+                  }}</span>
                 </div>
-                <div v-if="testResult.result.imageAnalysis.emotionalTone" class="analysis-item">
+                <div
+                  v-if="testResult.result.imageAnalysis.emotionalTone"
+                  class="analysis-item"
+                >
                   <span class="label">情感基调：</span>
-                  <span class="value">{{ testResult.result.imageAnalysis.emotionalTone }}</span>
+                  <span class="value">{{
+                    testResult.result.imageAnalysis.emotionalTone
+                  }}</span>
                 </div>
               </div>
             </div>
 
             <!-- 问题列表 -->
-            <div v-if="testResult.result.issues && testResult.result.issues.length > 0" class="result-section">
+            <div
+              v-if="
+                testResult.result.issues && testResult.result.issues.length > 0
+              "
+              class="result-section"
+            >
               <div class="section-title">
                 <span class="icon">⚠️</span>
                 <span>发现的问题</span>
               </div>
               <ul class="issue-list">
-                <li v-for="(issue, idx) in testResult.result.issues" :key="idx">{{ issue }}</li>
+                <li v-for="(issue, idx) in testResult.result.issues" :key="idx">
+                  {{ issue }}
+                </li>
               </ul>
             </div>
 
             <!-- 行动建议 -->
-            <div v-if="testResult.result.actionPlan && testResult.result.actionPlan.length > 0" class="result-section">
+            <div
+              v-if="
+                testResult.result.actionPlan &&
+                testResult.result.actionPlan.length > 0
+              "
+              class="result-section"
+            >
               <div class="section-title">
                 <span class="icon">💡</span>
                 <span>行动建议</span>
               </div>
               <ul class="action-list">
-                <li v-for="(action, idx) in testResult.result.actionPlan" :key="idx">{{ action }}</li>
+                <li
+                  v-for="(action, idx) in testResult.result.actionPlan"
+                  :key="idx"
+                >
+                  {{ action }}
+                </li>
               </ul>
             </div>
 
@@ -712,7 +812,10 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- 错误详情（失败时显示） -->
-          <div v-if="testResult.result && testResult.status === 'FAILED'" class="error-container">
+          <div
+            v-if="testResult.result && testResult.status === 'FAILED'"
+            class="error-container"
+          >
             <Alert
               type="error"
               :message="testResult.result.error || '执行失败'"
@@ -742,12 +845,51 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+
+
 /* ====================
-   全局样式
+   响应式设计
    ==================== */
+@media (max-width: 768px) {
+  .pipeline-tune-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    padding: 16px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .progress-bar {
+    padding: 16px 0 0;
+  }
+
+  .progress-line {
+    width: 60px;
+    margin: 0 8px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .image-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .image-input-row :deep(.ant-input-affix-wrapper) {
+    width: 100%;
+  }
+}
+
 .pipeline-tune-page {
-  padding: 24px;
   min-height: 100vh;
+  padding: 24px;
   background: #f0f2f5;
 }
 
@@ -755,17 +897,17 @@ onBeforeUnmount(() => {
    页面头部
    ==================== */
 .page-header {
-  background: white;
   padding: 24px;
-  border-radius: 8px;
   margin-bottom: 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
 }
 
 .header-top {
   display: flex;
-  align-items: center;
   gap: 20px;
+  align-items: center;
   margin-bottom: 24px;
 }
 
@@ -781,7 +923,7 @@ onBeforeUnmount(() => {
 }
 
 .subtitle {
-  margin: 4px 0 0 0;
+  margin: 4px 0 0;
   font-size: 14px;
   color: #8c8c8c;
 }
@@ -793,49 +935,49 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 0 0 0;
+  padding: 20px 0 0;
   border-top: 1px solid #f0f0f0;
 }
 
 .progress-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .progress-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   font-size: 18px;
   font-weight: 600;
-  background: #f5f5f5;
   color: #bfbfbf;
+  background: #f5f5f5;
   border: 2px solid #d9d9d9;
+  border-radius: 50%;
   transition: all 0.3s ease;
 }
 
 .progress-item.active .progress-number {
-  background: #1890ff;
   color: white;
+  background: #1890ff;
   border-color: #1890ff;
-  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.12);
+  box-shadow: 0 0 0 4px rgb(24 144 255 / 12%);
 }
 
 .progress-item.completed .progress-number {
-  background: #52c41a;
   color: white;
+  background: #52c41a;
   border-color: #52c41a;
 }
 
 .progress-label {
   font-size: 14px;
-  color: #8c8c8c;
   font-weight: 500;
+  color: #8c8c8c;
 }
 
 .progress-item.active .progress-label {
@@ -847,12 +989,12 @@ onBeforeUnmount(() => {
 }
 
 .progress-line {
-  width: 100px;
-  height: 2px;
-  background: #d9d9d9;
-  margin: 0 16px;
   position: relative;
   top: -20px;
+  width: 100px;
+  height: 2px;
+  margin: 0 16px;
+  background: #d9d9d9;
 }
 
 .progress-line.active {
@@ -870,28 +1012,28 @@ onBeforeUnmount(() => {
 
 .step-card {
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 6%);
   transition: all 0.3s ease;
 }
 
 .step-card.active {
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
   border-color: #1890ff;
+  box-shadow: 0 4px 12px rgb(24 144 255 / 15%);
 }
 
 .card-title {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .step-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   padding: 4px 12px;
-  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
 }
 
 .title-text {
@@ -914,19 +1056,19 @@ onBeforeUnmount(() => {
 /* 粘贴提示框 */
 .paste-hint {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
   padding: 16px 20px;
+  margin-bottom: 24px;
   background: linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 100%);
   border: 2px dashed #91caff;
   border-radius: 8px;
-  margin-bottom: 24px;
   transition: all 0.3s ease;
 }
 
 .paste-hint:hover {
   border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  box-shadow: 0 2px 8px rgb(24 144 255 / 15%);
 }
 
 .paste-hint-icon {
@@ -936,28 +1078,28 @@ onBeforeUnmount(() => {
 
 .paste-hint-text {
   flex: 1;
-  color: #595959;
   line-height: 1.6;
+  color: #595959;
 }
 
 .paste-hint-text strong {
-  color: #1890ff;
-  font-weight: 600;
   margin-right: 4px;
+  font-weight: 600;
+  color: #1890ff;
 }
 
 .paste-hint-text kbd {
   display: inline-block;
   padding: 2px 8px;
-  background: white;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  margin: 0 2px;
   font-family: 'Courier New', monospace;
   font-size: 12px;
   font-weight: 600;
   color: #262626;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  margin: 0 2px;
+  background: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
 }
 
 .test-form-container {
@@ -966,13 +1108,13 @@ onBeforeUnmount(() => {
 
 .form-section-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
   font-size: 15px;
   font-weight: 600;
   color: #262626;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
   border-bottom: 2px solid #f0f0f0;
 }
 
@@ -987,13 +1129,13 @@ onBeforeUnmount(() => {
 .field-tip {
   margin-top: 6px;
   font-size: 12px;
-  color: #8c8c8c;
   line-height: 1.8;
+  color: #8c8c8c;
 }
 
 .field-tip strong {
-  color: #1890ff;
   font-weight: 600;
+  color: #1890ff;
 }
 
 .form-row {
@@ -1006,8 +1148,8 @@ onBeforeUnmount(() => {
 }
 
 .test-action {
-  margin-top: 16px;
   padding-top: 16px;
+  margin-top: 16px;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -1020,18 +1162,18 @@ onBeforeUnmount(() => {
 
 .status-header {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .status-label {
-  font-weight: 600;
   font-size: 15px;
+  font-weight: 600;
 }
 
 .status-tag {
-  font-size: 14px;
   padding: 4px 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -1048,19 +1190,19 @@ onBeforeUnmount(() => {
 }
 
 .result-section {
-  background: #fafafa;
   padding: 20px;
+  background: #fafafa;
   border-radius: 8px;
 }
 
 .section-title {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
   font-size: 15px;
   font-weight: 600;
   color: #262626;
-  margin-bottom: 16px;
 }
 
 .section-title .icon {
@@ -1069,21 +1211,21 @@ onBeforeUnmount(() => {
 
 .sentiment-result {
   display: flex;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
 }
 
 .sentiment-tag {
-  font-size: 16px;
   padding: 8px 16px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .confidence {
   font-size: 14px;
-  color: #595959;
   font-weight: 500;
+  color: #595959;
 }
 
 .priority-tag {
@@ -1092,15 +1234,15 @@ onBeforeUnmount(() => {
 }
 
 .text-box {
-  background: white;
   padding: 16px;
-  border-radius: 6px;
-  border: 1px solid #e8e8e8;
-  white-space: pre-wrap;
   font-family: 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.6;
   color: #262626;
+  white-space: pre-wrap;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
 }
 
 .analysis-items {
@@ -1110,16 +1252,16 @@ onBeforeUnmount(() => {
 }
 
 .analysis-item {
-  background: white;
   padding: 12px 16px;
-  border-radius: 6px;
+  background: white;
   border-left: 3px solid #1890ff;
+  border-radius: 6px;
 }
 
 .analysis-item .label {
+  margin-right: 8px;
   font-weight: 600;
   color: #595959;
-  margin-right: 8px;
 }
 
 .analysis-item .value {
@@ -1128,8 +1270,8 @@ onBeforeUnmount(() => {
 
 .issue-list,
 .action-list {
-  margin: 0;
   padding-left: 24px;
+  margin: 0;
   list-style: none;
 }
 
@@ -1143,32 +1285,32 @@ onBeforeUnmount(() => {
 }
 
 .issue-list li::before {
-  content: '⚠️';
   position: absolute;
   left: 0;
+  content: '⚠️';
 }
 
 .action-list li::before {
-  content: '▸';
   position: absolute;
   left: 0;
-  color: #1890ff;
   font-weight: bold;
+  color: #1890ff;
+  content: '▸';
 }
 
 .raw-json {
-  margin-top: 16px;
   padding-top: 16px;
+  margin-top: 16px;
   border-top: 1px solid #e8e8e8;
 }
 
 .raw-json summary {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1890ff;
   cursor: pointer;
   user-select: none;
-  color: #1890ff;
-  font-weight: 500;
-  font-size: 14px;
-  padding: 8px 12px;
   background: #f0f5ff;
   border-radius: 4px;
 }
@@ -1178,14 +1320,14 @@ onBeforeUnmount(() => {
 }
 
 .raw-json pre {
-  background: white;
   padding: 16px;
-  border-radius: 6px;
-  overflow: auto;
   margin-top: 12px;
-  border: 1px solid #e8e8e8;
+  overflow: auto;
   font-size: 12px;
   line-height: 1.5;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
 }
 
 .error-container {
@@ -1197,12 +1339,12 @@ onBeforeUnmount(() => {
 }
 
 .error-details summary {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ff4d4f;
   cursor: pointer;
   user-select: none;
-  color: #ff4d4f;
-  font-weight: 500;
-  font-size: 14px;
-  padding: 8px 12px;
   background: #fff2f0;
   border-radius: 4px;
 }
@@ -1212,14 +1354,14 @@ onBeforeUnmount(() => {
 }
 
 .error-details pre {
-  background: #fff2f0;
   padding: 16px;
-  border-radius: 6px;
-  overflow: auto;
   margin-top: 12px;
-  border: 1px solid #ffccc7;
+  overflow: auto;
   font-size: 12px;
   line-height: 1.5;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
 }
 
 /* ====================
@@ -1236,13 +1378,13 @@ onBeforeUnmount(() => {
 }
 
 .image-preview-container {
-  background: #fafafa;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px dashed #d9d9d9;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
 }
 
 .preview-label {
@@ -1252,48 +1394,12 @@ onBeforeUnmount(() => {
 }
 
 .image-preview-container :deep(.ant-image) {
-  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 /* ====================
-   响应式设计
+   全局样式
    ==================== */
-@media (max-width: 768px) {
-  .pipeline-tune-page {
-    padding: 16px;
-  }
-
-  .page-header {
-    padding: 16px;
-  }
-
-  .header-top {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .progress-bar {
-    padding: 16px 0 0 0;
-  }
-
-  .progress-line {
-    width: 60px;
-    margin: 0 8px;
-  }
-
-  .form-row {
-    flex-direction: column;
-  }
-
-  .image-input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .image-input-row :deep(.ant-input-affix-wrapper) {
-    width: 100%;
-  }
-}
 </style>

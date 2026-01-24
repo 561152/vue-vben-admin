@@ -109,7 +109,9 @@
             @change="handleFilterChange"
           >
             <a-select-option value="">全部</a-select-option>
-            <a-select-option value="CALCULATION_ERROR">计算错误</a-select-option>
+            <a-select-option value="CALCULATION_ERROR"
+              >计算错误</a-select-option
+            >
             <a-select-option value="CONCEPT_ERROR">概念错误</a-select-option>
             <a-select-option value="CARELESS_ERROR">粗心错误</a-select-option>
             <a-select-option value="METHOD_ERROR">方法错误</a-select-option>
@@ -170,9 +172,7 @@
         </a-form-item>
 
         <a-form-item>
-          <a-button @click="resetFilters">
-            重置
-          </a-button>
+          <a-button @click="resetFilters"> 重置 </a-button>
         </a-form-item>
       </a-form>
     </a-card>
@@ -199,10 +199,16 @@
         <a-divider type="vertical" />
 
         <span class="sort-label">排序：</span>
-        <a-select v-model:value="sortBy" style="width: 150px" @change="handleSortChange">
+        <a-select
+          v-model:value="sortBy"
+          style="width: 150px"
+          @change="handleSortChange"
+        >
           <a-select-option value="createdAt_desc">最新创建</a-select-option>
           <a-select-option value="createdAt_asc">最早创建</a-select-option>
-          <a-select-option value="difficulty_desc">难度从高到低</a-select-option>
+          <a-select-option value="difficulty_desc"
+            >难度从高到低</a-select-option
+          >
           <a-select-option value="difficulty_asc">难度从低到高</a-select-option>
           <a-select-option value="score_asc">得分从低到高</a-select-option>
           <a-select-option value="score_desc">得分从高到低</a-select-option>
@@ -238,7 +244,9 @@
                     :alt="mistake.questionNumber"
                   />
                   <div v-else class="no-image">
-                    <FileImageOutlined style="font-size: 48px; color: #d9d9d9" />
+                    <FileImageOutlined
+                      style="font-size: 48px; color: #d9d9d9"
+                    />
                   </div>
                   <div class="card-overlay">
                     <a-tag :color="getSubjectColor(mistake.subject)">
@@ -278,7 +286,10 @@
                   />
                 </div>
                 <div class="footer-item">
-                  <a-tag :color="getErrorTypeColor(mistake.errorType)" size="small">
+                  <a-tag
+                    :color="getErrorTypeColor(mistake.errorType)"
+                    size="small"
+                  >
                     {{ getErrorTypeText(mistake.errorType) }}
                   </a-tag>
                 </div>
@@ -396,7 +407,7 @@
                     :value="item.difficulty"
                     disabled
                     :count="5"
-                    style="font-size: 12px; margin-left: 4px"
+                    style=" margin-left: 4px;font-size: 12px"
                   />
                 </span>
                 <span>
@@ -407,9 +418,7 @@
                   <ClockCircleOutlined />
                   {{ formatTime(item.createdAt) }}
                 </span>
-                <span>
-                  得分: {{ item.score }} / {{ item.maxScore }}
-                </span>
+                <span> 得分: {{ item.score }} / {{ item.maxScore }} </span>
               </a-space>
             </div>
           </a-list-item>
@@ -468,9 +477,7 @@
           </template>
 
           <template v-if="column.key === 'masteryStatus'">
-            <a-tag
-              :color="getMasteryStatusColor(record.masteryStatus)"
-            >
+            <a-tag :color="getMasteryStatusColor(record.masteryStatus)">
               {{ getMasteryStatusText(record.masteryStatus) }}
             </a-tag>
           </template>
@@ -481,10 +488,18 @@
 
           <template v-if="column.key === 'action'">
             <a-space>
-              <a-button type="link" size="small" @click.stop="viewMistakeDetail(record)">
+              <a-button
+                type="link"
+                size="small"
+                @click.stop="viewMistakeDetail(record)"
+              >
                 查看
               </a-button>
-              <a-button type="link" size="small" @click.stop="practiceMistake(record)">
+              <a-button
+                type="link"
+                size="small"
+                @click.stop="practiceMistake(record)"
+              >
                 练习
               </a-button>
               <a-dropdown>
@@ -557,16 +572,12 @@
           <InboxOutlined />
         </p>
         <p class="ant-upload-text">点击或拖拽文件到此区域上传</p>
-        <p class="ant-upload-hint">
-          支持 Excel、CSV 格式，单次上传不超过 10MB
-        </p>
+        <p class="ant-upload-hint">支持 Excel、CSV 格式，单次上传不超过 10MB</p>
       </a-upload-dragger>
 
       <div style="margin-top: 16px; text-align: right">
         <a-space>
-          <a-button @click="importModalVisible = false">
-            取消
-          </a-button>
+          <a-button @click="importModalVisible = false"> 取消 </a-button>
           <a-button
             type="primary"
             :loading="uploading"
@@ -864,8 +875,10 @@ function showImportModal() {
 
 // 文件上传
 function beforeUpload(file: UploadFile) {
-  const isExcel = file.type === 'application/vnd.ms-excel' ||
-    file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  const isExcel =
+    file.type === 'application/vnd.ms-excel' ||
+    file.type ===
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   const isCSV = file.type === 'text/csv';
 
   if (!isExcel && !isCSV) {

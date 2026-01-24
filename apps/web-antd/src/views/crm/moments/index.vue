@@ -276,12 +276,16 @@ const filterSummary = computed(() => {
   const parts: string[] = [];
   const c = filterConditions.value;
   if (c.tagIds.length > 0) parts.push(`${c.tagIds.length} 个标签`);
-  if (c.departmentIds.length > 0) parts.push(`${c.departmentIds.length} 个部门`);
-  if (c.excludeDepartmentIds.length > 0) parts.push(`排除 ${c.excludeDepartmentIds.length} 个部门`);
+  if (c.departmentIds.length > 0)
+    parts.push(`${c.departmentIds.length} 个部门`);
+  if (c.excludeDepartmentIds.length > 0)
+    parts.push(`排除 ${c.excludeDepartmentIds.length} 个部门`);
   if (c.ownerIds.length > 0) parts.push(`${c.ownerIds.length} 个归属人`);
   if (c.statuses.length > 0) parts.push(`${c.statuses.length} 种状态`);
-  if (c.lifecycleStages.length > 0) parts.push(`${c.lifecycleStages.length} 个生命周期`);
-  if (c.importedCustomerIds.length > 0) parts.push(`导入 ${c.importedCustomerIds.length} 人`);
+  if (c.lifecycleStages.length > 0)
+    parts.push(`${c.lifecycleStages.length} 个生命周期`);
+  if (c.importedCustomerIds.length > 0)
+    parts.push(`导入 ${c.importedCustomerIds.length} 人`);
   return parts.join('、');
 });
 
@@ -302,7 +306,10 @@ async function handlePublish() {
     return;
   }
 
-  if (createForm.value.visibleType === 'FILTERED' && !hasFilterConditions.value) {
+  if (
+    createForm.value.visibleType === 'FILTERED' &&
+    !hasFilterConditions.value
+  ) {
     message.warning('请设置客户筛选条件');
     return;
   }
@@ -494,9 +501,16 @@ onMounted(() => {
                     <Radio value="FILTERED">按条件筛选的客户</Radio>
                   </Radio.Group>
 
-                  <div v-if="createForm.visibleType === 'FILTERED'" class="mt-2">
+                  <div
+                    v-if="createForm.visibleType === 'FILTERED'"
+                    class="mt-2"
+                  >
                     <div class="flex items-center gap-2">
-                      <Button type="primary" ghost @click="handleOpenFilterDrawer">
+                      <Button
+                        type="primary"
+                        ghost
+                        @click="handleOpenFilterDrawer"
+                      >
                         <FilterOutlined /> 设置筛选条件
                       </Button>
                       <span v-if="previewCount > 0" class="text-blue-500">

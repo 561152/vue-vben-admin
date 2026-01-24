@@ -108,21 +108,30 @@ export interface UpdateStepScoreDto {
  * 创建矫正记录
  */
 export async function createCorrection(data: CreateCorrectionDto) {
-  return requestClient.post<CorrectionHistory>('/education/paper/corrections', data);
+  return requestClient.post<CorrectionHistory>(
+    '/education/paper/corrections',
+    data,
+  );
 }
 
 /**
  * 字符级矫正
  */
 export async function correctSegment(data: SegmentCorrectionDto) {
-  return requestClient.post<CorrectionHistory>('/education/paper/corrections/segment', data);
+  return requestClient.post<CorrectionHistory>(
+    '/education/paper/corrections/segment',
+    data,
+  );
 }
 
 /**
  * 批量矫正
  */
 export async function batchCorrection(data: BatchCorrectionDto) {
-  return requestClient.post<BatchResult>('/education/paper/corrections/batch', data);
+  return requestClient.post<BatchResult>(
+    '/education/paper/corrections/batch',
+    data,
+  );
 }
 
 /**
@@ -130,7 +139,7 @@ export async function batchCorrection(data: BatchCorrectionDto) {
  */
 export async function getCorrectionHistory(questionItemId: string) {
   return requestClient.get<CorrectionHistory[]>(
-    `/education/paper/corrections/history/${questionItemId}`
+    `/education/paper/corrections/history/${questionItemId}`,
   );
 }
 
@@ -139,7 +148,7 @@ export async function getCorrectionHistory(questionItemId: string) {
  */
 export async function rollbackCorrection(correctionId: string) {
   return requestClient.post<void>(
-    `/education/paper/corrections/${correctionId}/rollback`
+    `/education/paper/corrections/${correctionId}/rollback`,
   );
 }
 
@@ -147,10 +156,13 @@ export async function rollbackCorrection(correctionId: string) {
  * 提交审核
  */
 export async function submitForReview(questionItemId: string, notes?: string) {
-  return requestClient.post<void>(`/education/paper/corrections/submit-review`, {
-    questionItemId,
-    notes,
-  });
+  return requestClient.post<void>(
+    `/education/paper/corrections/submit-review`,
+    {
+      questionItemId,
+      notes,
+    },
+  );
 }
 
 /**
@@ -158,16 +170,19 @@ export async function submitForReview(questionItemId: string, notes?: string) {
  */
 export async function getStepScores(questionItemId: string) {
   return requestClient.get<StepScoreDetail[]>(
-    `/education/paper/steps/${questionItemId}`
+    `/education/paper/steps/${questionItemId}`,
   );
 }
 
 /**
  * 修改步骤分
  */
-export async function updateStepScore(stepId: string, data: UpdateStepScoreDto) {
+export async function updateStepScore(
+  stepId: string,
+  data: UpdateStepScoreDto,
+) {
   return requestClient.put<StepScoreDetail>(
     `/education/paper/steps/${stepId}/score`,
-    data
+    data,
   );
 }

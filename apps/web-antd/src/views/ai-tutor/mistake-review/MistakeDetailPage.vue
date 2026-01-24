@@ -1,26 +1,16 @@
 <template>
   <div class="mistake-detail-page">
     <!-- 页面头部 -->
-    <page-header
-      :title="pageTitle"
-      :show-back="true"
-      @back="handleBack"
-    >
+    <page-header :title="pageTitle" :show-back="true" @back="handleBack">
       <template #extra>
         <a-space>
           <!-- 上一题/下一题 -->
           <a-button-group>
-            <a-button
-              :disabled="!hasPrevious"
-              @click="navigateToPrevious"
-            >
+            <a-button :disabled="!hasPrevious" @click="navigateToPrevious">
               <LeftOutlined />
               上一题
             </a-button>
-            <a-button
-              :disabled="!hasNext"
-              @click="navigateToNext"
-            >
+            <a-button :disabled="!hasNext" @click="navigateToNext">
               下一题
               <RightOutlined />
             </a-button>
@@ -157,7 +147,9 @@
                   />
                 </a-descriptions-item>
                 <a-descriptions-item label="分值">
-                  <span style="font-size: 16px; font-weight: 600; color: #ff4d4f">
+                  <span
+                    style="font-size: 16px; font-weight: 600; color: #ff4d4f"
+                  >
                     {{ mistakeData?.maxScore }}
                   </span>
                   分
@@ -165,7 +157,12 @@
                 <a-descriptions-item label="得分">
                   <span
                     style="font-size: 16px; font-weight: 600"
-                    :style="{ color: getScoreColor(mistakeData?.score, mistakeData?.maxScore) }"
+                    :style="{
+                      color: getScoreColor(
+                        mistakeData?.score,
+                        mistakeData?.maxScore,
+                      ),
+                    }"
                   >
                     {{ mistakeData?.score }}
                   </span>
@@ -189,7 +186,10 @@
                 <div class="content-text">
                   {{ mistakeData?.questionContent }}
                 </div>
-                <div v-if="mistakeData?.questionContentLatex" class="content-latex">
+                <div
+                  v-if="mistakeData?.questionContentLatex"
+                  class="content-latex"
+                >
                   <katex-renderer
                     :expression="mistakeData.questionContentLatex"
                     :auto-fix="true"
@@ -213,7 +213,10 @@
                   <div class="answer-text">
                     {{ mistakeData?.studentAnswer || '未作答' }}
                   </div>
-                  <div v-if="mistakeData?.studentAnswerLatex" class="answer-latex">
+                  <div
+                    v-if="mistakeData?.studentAnswerLatex"
+                    class="answer-latex"
+                  >
                     <katex-renderer
                       :expression="mistakeData.studentAnswerLatex"
                       :auto-fix="true"
@@ -232,7 +235,10 @@
                   <div class="answer-text">
                     {{ mistakeData?.correctAnswer }}
                   </div>
-                  <div v-if="mistakeData?.correctAnswerLatex" class="answer-latex">
+                  <div
+                    v-if="mistakeData?.correctAnswerLatex"
+                    class="answer-latex"
+                  >
                     <katex-renderer
                       :expression="mistakeData.correctAnswerLatex"
                       :auto-fix="true"
@@ -388,7 +394,8 @@
                             <template #description>
                               <a-space>
                                 <a-tag size="small">
-                                  相似度: {{ (item.similarity * 100).toFixed(0) }}%
+                                  相似度:
+                                  {{ (item.similarity * 100).toFixed(0) }}%
                                 </a-tag>
                                 <span>{{ item.source }}</span>
                               </a-space>
@@ -422,17 +429,11 @@
             <SaveOutlined />
             保存所有修改
           </a-button>
-          <a-button
-            size="large"
-            @click="submitForReview"
-            :loading="submitting"
-          >
+          <a-button size="large" @click="submitForReview" :loading="submitting">
             <CheckOutlined />
             提交审核
           </a-button>
-          <a-button size="large" @click="handleBack">
-            取消
-          </a-button>
+          <a-button size="large" @click="handleBack"> 取消 </a-button>
         </a-space>
 
         <a-space :size="16">
@@ -572,7 +573,9 @@ async function loadMistakeData() {
   loading.value = true;
   try {
     // 加载错题详情
-    const response = await axios.get(`/api/education/mistakes/${mistakeId.value}`);
+    const response = await axios.get(
+      `/api/education/mistakes/${mistakeId.value}`,
+    );
     mistakeData.value = response.data.data;
 
     // 如果有题目ID，加载试卷图片
@@ -594,7 +597,7 @@ async function loadMistakeData() {
 async function loadPaperImage(questionItemId: string) {
   try {
     const response = await axios.get(
-      `/api/education/paper/question-items/${questionItemId}/paper-image`
+      `/api/education/paper/question-items/${questionItemId}/paper-image`,
     );
     imageData.value = response.data.data;
     currentQuestionId.value = questionItemId;
@@ -610,15 +613,12 @@ async function loadSimilarQuestions() {
 
   loadingSimilar.value = true;
   try {
-    const response = await axios.get(
-      `/api/education/questions/similar`,
-      {
-        params: {
-          questionContent: mistakeData.value.questionContent,
-          limit: 5,
-        },
-      }
-    );
+    const response = await axios.get(`/api/education/questions/similar`, {
+      params: {
+        questionContent: mistakeData.value.questionContent,
+        limit: 5,
+      },
+    });
     similarQuestions.value = response.data.data || [];
   } catch (error: any) {
     console.error('Failed to load similar questions:', error);
@@ -660,10 +660,9 @@ function handleSubmitReview() {
     content: '提交后将进入专家审核队列，是否继续？',
     onOk: async () => {
       try {
-        await axios.post(
-          `/api/education/paper/corrections/submit-review`,
-          { questionItemId: mistakeData.value?.questionItemId }
-        );
+        await axios.post(`/api/education/paper/corrections/submit-review`, {
+          questionItemId: mistakeData.value?.questionItemId,
+        });
         message.success('已提交审核');
         refreshData();
       } catch (error: any) {
@@ -737,10 +736,9 @@ async function saveAllChanges() {
 async function submitForReview() {
   submitting.value = true;
   try {
-    await axios.post(
-      `/api/education/paper/corrections/submit-review`,
-      { questionItemId: mistakeData.value?.questionItemId }
-    );
+    await axios.post(`/api/education/paper/corrections/submit-review`, {
+      questionItemId: mistakeData.value?.questionItemId,
+    });
     message.success('已提交审核');
     refreshData();
   } catch (error: any) {
@@ -764,7 +762,9 @@ function markAsMastered() {
     content: '标记后此题将从待复习列表中移除',
     onOk: async () => {
       try {
-        await axios.patch(`/api/education/mistakes/${mistakeId.value}/mastered`);
+        await axios.patch(
+          `/api/education/mistakes/${mistakeId.value}/mastered`,
+        );
         message.success('已标记为已掌握');
         refreshData();
       } catch (error: any) {
@@ -858,7 +858,9 @@ function getScoreColor(score: number, maxScore: number): string {
   return '#ff4d4f';
 }
 
-function getOcrConfidenceStatus(confidence: number): 'success' | 'normal' | 'exception' {
+function getOcrConfidenceStatus(
+  confidence: number,
+): 'success' | 'normal' | 'exception' {
   if (confidence >= 0.9) return 'success';
   if (confidence >= 0.75) return 'normal';
   return 'exception';

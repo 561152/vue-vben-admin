@@ -634,10 +634,16 @@ onMounted(() => {
                 <!-- Attachment Preview -->
                 <div v-if="formState.attachments.length > 0" class="mt-3">
                   <div class="flex flex-wrap gap-2">
-                    <template v-for="att in formState.attachments" :key="att.id">
+                    <template
+                      v-for="att in formState.attachments"
+                      :key="att.id"
+                    >
                       <!-- Image/Video Preview -->
                       <Image
-                        v-if="(att.type === 'image' || att.type === 'video') && att.ossUrl"
+                        v-if="
+                          (att.type === 'image' || att.type === 'video') &&
+                          att.ossUrl
+                        "
                         :src="att.ossUrl"
                         :width="60"
                         :height="60"

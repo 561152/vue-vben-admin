@@ -99,7 +99,10 @@
         <!-- 试卷列表 -->
         <a-spin :spinning="loadingPapers">
           <a-radio-group v-model:value="selectedPaperId" style="width: 100%">
-            <a-list :data-source="papers" :locale="{ emptyText: '暂无可导入的试卷' }">
+            <a-list
+              :data-source="papers"
+              :locale="{ emptyText: '暂无可导入的试卷' }"
+            >
               <template #renderItem="{ item }">
                 <a-list-item>
                   <a-list-item-meta>
@@ -118,9 +121,7 @@
                         <span>
                           {{ item.gradeLevel }}
                         </span>
-                        <span>
-                          题目数量: {{ item.questionCount }}
-                        </span>
+                        <span> 题目数量: {{ item.questionCount }} </span>
                         <span>
                           批改时间: {{ formatTime(item.completedAt) }}
                         </span>
@@ -175,12 +176,13 @@
           style="margin-bottom: 24px"
         />
 
-        <a-form :model="importConfig" :label-col="{ span: 6 }" :wrapper-col="{ span: 14 }">
+        <a-form
+          :model="importConfig"
+          :label-col="{ span: 6 }"
+          :wrapper-col="{ span: 14 }"
+        >
           <!-- 质量阈值 -->
-          <a-form-item
-            label="OCR质量阈值"
-            help="低于此阈值的题目将被跳过"
-          >
+          <a-form-item label="OCR质量阈值" help="低于此阈值的题目将被跳过">
             <a-slider
               v-model:value="importConfig.qualityThreshold"
               :min="0"
@@ -198,7 +200,7 @@
               <a-tag color="blue">
                 {{ (importConfig.qualityThreshold * 100).toFixed(0) }}%
               </a-tag>
-              <span style="color: #8c8c8c; font-size: 12px; margin-left: 8px">
+              <span style=" margin-left: 8px; font-size: 12px;color: #8c8c8c">
                 OCR置信度低于此值的题目将不会导入
               </span>
             </div>
@@ -211,7 +213,7 @@
               checked-children="开启"
               un-checked-children="关闭"
             />
-            <div style="margin-top: 8px; color: #8c8c8c; font-size: 12px">
+            <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c">
               开启后，相似度超过 90% 的题目将自动合并，保留高质量版本
             </div>
           </a-form-item>
@@ -231,9 +233,7 @@
                   <QuestionCircleOutlined style="margin-left: 4px" />
                 </a-tooltip>
               </a-radio>
-              <a-radio value="none">
-                不去重
-              </a-radio>
+              <a-radio value="none"> 不去重 </a-radio>
             </a-radio-group>
           </a-form-item>
 
@@ -254,7 +254,7 @@
               checked-children="是"
               un-checked-children="否"
             />
-            <div style="margin-top: 8px; color: #8c8c8c; font-size: 12px">
+            <div style="margin-top: 8px; font-size: 12px; color: #8c8c8c">
               仅导入学生答错的题目，适用于错题本场景
             </div>
           </a-form-item>
@@ -283,7 +283,7 @@
                   {{ estimateStats.totalQuestions }}
                 </a-descriptions-item>
                 <a-descriptions-item label="预计导入">
-                  <span style="color: #52c41a; font-weight: 600">
+                  <span style=" font-weight: 600;color: #52c41a">
                     {{ estimateStats.estimatedImport }}
                   </span>
                 </a-descriptions-item>
@@ -355,7 +355,7 @@
               {{ estimateStats.totalQuestions }}
             </a-descriptions-item>
             <a-descriptions-item label="预计导入">
-              <span style="color: #52c41a; font-weight: 600; font-size: 16px">
+              <span style=" font-size: 16px; font-weight: 600;color: #52c41a">
                 {{ estimateStats.estimatedImport }} 道题
               </span>
             </a-descriptions-item>
@@ -381,10 +381,17 @@
             </a-descriptions-item>
             <a-descriptions-item label="标签">
               <a-space>
-                <a-tag v-for="tag in importConfig.tags" :key="tag" color="green">
+                <a-tag
+                  v-for="tag in importConfig.tags"
+                  :key="tag"
+                  color="green"
+                >
                   {{ tag }}
                 </a-tag>
-                <span v-if="importConfig.tags.length === 0" style="color: #8c8c8c">
+                <span
+                  v-if="importConfig.tags.length === 0"
+                  style="color: #8c8c8c"
+                >
                   无
                 </span>
               </a-space>
@@ -435,7 +442,9 @@
         <div v-if="!importing && importResult" class="result-section">
           <a-result
             :status="importResult.status === 'completed' ? 'success' : 'error'"
-            :title="importResult.status === 'completed' ? '导入成功' : '导入失败'"
+            :title="
+              importResult.status === 'completed' ? '导入成功' : '导入失败'
+            "
           >
             <template #subTitle>
               <div v-if="importResult.status === 'completed'">
@@ -451,12 +460,8 @@
                 <a-button type="primary" @click="viewQuestionBank">
                   查看题库
                 </a-button>
-                <a-button @click="importAnother">
-                  导入其他试卷
-                </a-button>
-                <a-button @click="handleBack">
-                  返回
-                </a-button>
+                <a-button @click="importAnother"> 导入其他试卷 </a-button>
+                <a-button @click="handleBack"> 返回 </a-button>
               </a-space>
             </template>
           </a-result>
@@ -501,13 +506,19 @@
             <!-- 导入日志 -->
             <a-divider />
             <div style="margin-top: 16px">
-              <div style="font-weight: 600; margin-bottom: 8px">导入日志</div>
+              <div style=" margin-bottom: 8px;font-weight: 600">导入日志</div>
               <a-timeline>
                 <a-timeline-item color="green">
                   开始导入试卷: {{ selectedPaper?.paperName }}
                 </a-timeline-item>
                 <a-timeline-item color="blue">
-                  质量过滤: 过滤掉 {{ importResult.totalQuestions - importResult.importedCount - importResult.duplicateCount }} 道低质量题目
+                  质量过滤: 过滤掉
+                  {{
+                    importResult.totalQuestions -
+                    importResult.importedCount -
+                    importResult.duplicateCount
+                  }}
+                  道低质量题目
                 </a-timeline-item>
                 <a-timeline-item color="purple">
                   去重检测: 发现 {{ importResult.duplicateCount }} 道重复题目
@@ -618,7 +629,12 @@ const importConfig = reactive<ImportConfig>({
   qualityThreshold: 0.8,
   autoMerge: true,
   dedupeMethod: 'vector',
-  includeTypes: ['MULTIPLE_CHOICE', 'FILL_BLANK', 'SHORT_ANSWER', 'CALCULATION'],
+  includeTypes: [
+    'MULTIPLE_CHOICE',
+    'FILL_BLANK',
+    'SHORT_ANSWER',
+    'CALCULATION',
+  ],
   onlyMistakes: false,
   tags: [],
 });
@@ -639,7 +655,7 @@ const importId = ref<string>('');
 
 // Computed
 const selectedPaper = computed(() =>
-  papers.value.find((p) => p.id === selectedPaperId.value)
+  papers.value.find((p) => p.id === selectedPaperId.value),
 );
 
 // 加载试卷列表
@@ -676,7 +692,7 @@ async function loadEstimate() {
       {
         paperId: selectedPaperId.value,
         config: importConfig,
-      }
+      },
     );
 
     Object.assign(estimateStats, response.data.data);
@@ -743,7 +759,7 @@ async function pollImportStatus() {
   const pollInterval = setInterval(async () => {
     try {
       const response = await axios.get(
-        `/api/education/question-bank/import/${importId.value}/status`
+        `/api/education/question-bank/import/${importId.value}/status`,
       );
 
       const result = response.data.data;
@@ -753,7 +769,7 @@ async function pollImportStatus() {
         importProgress.value = Math.floor(
           ((result.importedCount + result.duplicateCount + result.failedCount) /
             result.totalQuestions) *
-            100
+            100,
         );
       }
 

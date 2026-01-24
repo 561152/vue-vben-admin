@@ -37,9 +37,9 @@ watch(
     :help="schema.description"
     :required="required"
   >
-    <div style="display: flex; align-items: center; gap: 12px">
+    <div style="display: flex; gap: 12px; align-items: center">
       <Switch v-model:checked="localValue" />
-      <span style="color: #999; font-size: 12px">
+      <span style=" font-size: 12px;color: #999">
         当前: {{ localValue ? '开启' : '关闭' }}
         <template v-if="schema.default !== undefined">
           | 默认: {{ schema.default ? '开启' : '关闭' }}
