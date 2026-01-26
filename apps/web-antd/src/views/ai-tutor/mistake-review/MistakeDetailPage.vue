@@ -270,7 +270,7 @@
               <!-- 学习建议 -->
               <div v-if="mistakeData?.suggestion" class="suggestion-section">
                 <div class="section-header">
-                  <LightbulbOutlined />
+                  <BulbOutlined />
                   <span>学习建议</span>
                 </div>
                 <a-alert
@@ -471,7 +471,6 @@ import {
   FileTextOutlined,
   EditOutlined,
   BulbOutlined,
-  LightbulbOutlined,
   SaveOutlined,
   CheckOutlined,
   ExclamationCircleOutlined,
@@ -480,11 +479,11 @@ import {
   CopyOutlined,
 } from '@ant-design/icons-vue';
 import axios from 'axios';
-import ImageAnnotator from '@/components/ImageAnnotator.vue';
-import CorrectionEditor from '@/components/CorrectionEditor.vue';
-import StepScorePanel from '@/components/StepScorePanel.vue';
-import HistoryTimeline from '@/components/HistoryTimeline.vue';
-import KatexRenderer from '@/components/KatexRenderer.vue';
+import ImageAnnotator from '#/components/ImageAnnotator.vue';
+import CorrectionEditor from '#/components/CorrectionEditor.vue';
+import StepScorePanel from '#/components/StepScorePanel.vue';
+import HistoryTimeline from '#/components/HistoryTimeline.vue';
+import KatexRenderer from '#/components/KatexRenderer.vue';
 // PageHeader component removed - using plain div instead
 
 // 类型定义
