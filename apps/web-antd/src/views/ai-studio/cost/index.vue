@@ -113,9 +113,11 @@ const moduleOptions = [
 
 // 格式化 Token 数量
 const formatTokens = (tokens: number): string => {
-  if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(2)}M`;
-  if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
-  return tokens.toString();
+  // 确保 tokens 是数字
+  const numTokens = typeof tokens === 'number' ? tokens : Number(tokens) || 0;
+  if (numTokens >= 1000000) return `${(numTokens / 1000000).toFixed(2)}M`;
+  if (numTokens >= 1000) return `${(numTokens / 1000).toFixed(1)}K`;
+  return numTokens.toString();
 };
 
 // 格式化成本 (假设 1K tokens = $0.002 for input, $0.006 for output)
@@ -297,6 +299,10 @@ const fetchCostData = async () => {
           selectedModule.value !== 'all' ? selectedModule.value : undefined,
       },
     });
+
+    console.log('API Response:', JSON.stringify(response, null, 2));
+    console.log('Overview totalTokens type:', typeof response.overview?.totalTokens);
+    console.log('Overview totalTokens value:', response.overview?.totalTokens);
 
     if (response.overview) {
       overview.value = response.overview;
