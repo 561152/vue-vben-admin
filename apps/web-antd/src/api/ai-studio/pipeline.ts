@@ -76,6 +76,7 @@ export interface StepExecution {
  * 获取 Pipeline 列表
  */
 export async function getPipelines(params?: {
+  featureCode?: string;
   triggerType?: string;
   activeOnly?: boolean;
   page?: number;
@@ -147,4 +148,19 @@ export async function getExecutionDetail(executionId: string) {
     execution: PipelineExecution;
     steps: StepExecution[];
   }>(`/ai-studio/executions/${executionId}`);
+}
+
+// ==================== 功能模块 API ====================
+
+export interface FeatureModule {
+  code: string;
+  label: string;
+  pipelineCount: number;
+}
+
+/**
+ * 获取可用功能模块列表
+ */
+export async function getFeatureModules() {
+  return requestClient.get<FeatureModule[]>('/ai-studio/feature-modules');
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Table,
@@ -15,6 +15,7 @@ import {
   Card,
   Drawer,
   Tooltip,
+  Upload,
 } from 'ant-design-vue';
 import {
   PlusOutlined,
@@ -26,8 +27,14 @@ import {
   ApartmentOutlined,
   CodeOutlined,
   SlidersOutlined,
+  CloudUploadOutlined,
+  UploadOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import {
+  getFeatureModules,
+  type FeatureModule,
+} from '#/api/ai-studio/pipeline';
 import dayjs from 'dayjs';
 
 interface PipelineItem {
@@ -57,8 +64,19 @@ const formState = ref({
   description: '',
 });
 
+// 功能模块筛选
+const featureModules = ref<FeatureModule[]>([]);
+const selectedFeatureCode = ref<string | undefined>(undefined);
+
 const detailVisible = ref(false);
 const detailPipeline = ref<PipelineItem | null>(null);
+
+// 执行表单状态
+const executeVisible = ref(false);
+const executePipeline = ref<PipelineItem | null>(null);
+const executeFormState = ref<Record<string, any>>({});
+const uploadedImageUrls = ref<string[]>([]);
+const uploadLoading = ref(false);
 
 const router = useRouter();
 
@@ -148,6 +166,7 @@ const fetchData = async () => {
       params: {
         page: pagination.value.current,
         pageSize: pagination.value.pageSize,
+        featureCode: selectedFeatureCode.value || undefined,
       },
     });
 
@@ -165,6 +184,23 @@ const fetchData = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// 加载功能模块列表
+const loadFeatureModules = async () => {
+  try {
+    const modules = await getFeatureModules();
+    featureModules.value = modules || [];
+  } catch (error) {
+    console.error('Failed to load feature modules:', error);
+  }
+};
+
+// 功能模块筛选变化
+const handleFeatureCodeChange = (value: string | undefined) => {
+  selectedFeatureCode.value = value;
+  pagination.value.current = 1; // 重置到第一页
+  fetchData();
 };
 
 const handleTableChange = (pag: any) => {
@@ -274,15 +310,159 @@ const handleOk = async () => {
 };
 
 const handleExecute = async (record: PipelineItem) => {
+  // 检查流程是否已发布
+  if (!record.publishedAt) {
+    message.warning('流程尚未发布，请先发布流程后再执行');
+    return;
+  }
+
+  // 打开执行表单弹窗
+  executePipeline.value = record;
+  executeFormState.value = getDefaultInputData(record.key);
+  uploadedImageUrls.value = []; // 清空已上传的图片列表
+  executeVisible.value = true;
+};
+
+// 获取默认输入数据
+const getDefaultInputData = (pipelineKey: string): Record<string, any> => {
+  // 为不同的 pipeline 提供默认测试数据
+  if (pipelineKey === 'homework-grading-approval') {
+    return {
+      recordId: '',
+      studentId: undefined,
+      imageUrls: '',
+      subject: 'MATH',
+      gradeLevel: 'GRADE_3',
+    };
+  }
+  return {};
+};
+
+// 执行流程（提交表单）
+const handleExecuteSubmit = async () => {
+  if (!executePipeline.value) return;
+
   try {
-    await requestClient.post(`/ai-studio/pipelines/${record.key}/execute`, {
-      inputData: {},
-    });
+    // 转换表单数据
+    const inputData = transformExecuteFormData(
+      executePipeline.value.key,
+      executeFormState.value,
+    );
+
+    const response = await requestClient.post(
+      `/ai-studio/pipelines/${executePipeline.value.key}/execute`,
+      { inputData },
+    );
+    console.log('Execute response:', response);
     message.success('流程已开始执行');
+
+    // 如果返回了执行 ID，可以跳转到执行详情页
+    if (response?.executionId) {
+      console.log('Execution ID:', response.executionId);
+    }
+
+    executeVisible.value = false;
     fetchData();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to execute pipeline:', error);
-    message.error('执行失败');
+
+    // 显示详细错误信息
+    const errorMsg =
+      error?.response?.data?.message || error?.message || '执行失败';
+    const statusCode = error?.response?.status;
+
+    if (statusCode === 404) {
+      message.error('执行接口不存在，请检查后端服务是否正常运行');
+    } else if (statusCode === 403) {
+      message.error('无权限执行流程，请联系管理员分配权限');
+    } else if (statusCode === 400) {
+      message.error(
+        `执行失败：${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`,
+      );
+    } else {
+      message.error(`执行失败：${errorMsg}`);
+    }
+  }
+};
+
+// 转换表单数据为 API 需要的格式
+const transformExecuteFormData = (
+  pipelineKey: string,
+  formData: Record<string, any>,
+): Record<string, any> => {
+  if (pipelineKey === 'homework-grading-approval') {
+    // 合并手动输入的 URL 和上传的图片 URL
+    const manualUrls = formData.imageUrls
+      ? formData.imageUrls.split('\n').filter((url: string) => url.trim())
+      : [];
+    const allImageUrls = [...uploadedImageUrls.value, ...manualUrls];
+
+    return {
+      recordId: formData.recordId || `test-${Date.now()}`,
+      studentId: Number(formData.studentId) || 1,
+      imageUrls: allImageUrls,
+      subject: formData.subject || 'MATH',
+      gradeLevel: formData.gradeLevel || 'GRADE_3',
+    };
+  }
+  return formData;
+};
+
+// 处理图片上传
+const handleImageUpload = async (options: any) => {
+  const { file, onSuccess, onError } = options;
+
+  uploadLoading.value = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await requestClient.post('/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response?.url) {
+      uploadedImageUrls.value.push(response.url);
+      message.success('图片上传成功');
+      onSuccess(response);
+    } else {
+      throw new Error('上传失败，未返回 URL');
+    }
+  } catch (error: any) {
+    console.error('Upload failed:', error);
+    const errorMsg =
+      error?.response?.data?.message || error?.message || '上传失败';
+    message.error(`上传失败：${errorMsg}`);
+    onError(error);
+  } finally {
+    uploadLoading.value = false;
+  }
+};
+
+// 删除已上传的图片
+const handleRemoveImage = (url: string) => {
+  const index = uploadedImageUrls.value.indexOf(url);
+  if (index > -1) {
+    uploadedImageUrls.value.splice(index, 1);
+    message.success('已移除图片');
+  }
+};
+
+const handlePublish = async (record: PipelineItem) => {
+  try {
+    await requestClient.post(`/ai-studio/pipelines/${record.key}/publish`);
+    message.success('发布成功');
+    fetchData();
+  } catch (error: any) {
+    console.error('Failed to publish pipeline:', error);
+    const errorMsg =
+      error?.response?.data?.message || error?.message || '发布失败';
+    message.error(
+      `发布失败：${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`,
+    );
   }
 };
 
@@ -313,6 +493,7 @@ const handleDelete = async (key: string) => {
 };
 
 onMounted(() => {
+  loadFeatureModules();
   fetchData();
 });
 </script>
@@ -321,10 +502,27 @@ onMounted(() => {
   <div class="pipeline-list">
     <Card title="流程管理">
       <template #extra>
-        <Button type="primary" @click="showCreate">
-          <template #icon><PlusOutlined /></template>
-          新建流程
-        </Button>
+        <Space>
+          <Select
+            v-model:value="selectedFeatureCode"
+            placeholder="按功能模块筛选"
+            allow-clear
+            style="width: 180px"
+            @change="handleFeatureCodeChange"
+          >
+            <Select.Option
+              v-for="item in featureModules"
+              :key="item.code"
+              :value="item.code"
+            >
+              {{ item.label }} ({{ item.pipelineCount }})
+            </Select.Option>
+          </Select>
+          <Button type="primary" @click="showCreate">
+            <template #icon><PlusOutlined /></template>
+            新建流程
+          </Button>
+        </Space>
       </template>
 
       <Table
@@ -359,6 +557,11 @@ onMounted(() => {
                   <template #icon><ApartmentOutlined /></template>
                 </Button>
               </Tooltip>
+              <Tooltip :title="record.publishedAt ? '重新发布' : '发布流程'">
+                <Button type="link" size="small" @click="handlePublish(record)">
+                  <template #icon><CloudUploadOutlined /></template>
+                </Button>
+              </Tooltip>
               <Tooltip title="执行流程">
                 <Button
                   type="link"
@@ -372,11 +575,6 @@ onMounted(() => {
               <Tooltip title="编辑">
                 <Button type="link" size="small" @click="showEdit(record)">
                   <template #icon><EditOutlined /></template>
-                </Button>
-              </Tooltip>
-              <Tooltip title="参数调优">
-                <Button type="link" size="small" @click="handleTune(record)">
-                  <template #icon><SlidersOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="复制">
@@ -410,6 +608,166 @@ onMounted(() => {
         </template>
       </Table>
     </Card>
+
+    <!-- Execute Modal -->
+    <Modal
+      v-model:open="executeVisible"
+      title="执行流程"
+      @ok="handleExecuteSubmit"
+      @cancel="executeVisible = false"
+      width="600px"
+      ok-text="执行"
+      cancel-text="取消"
+    >
+      <div v-if="executePipeline">
+        <p style="margin-bottom: 16px; color: #666">
+          流程: <strong>{{ executePipeline.name }}</strong>
+        </p>
+
+        <!-- homework-grading-approval 专用表单 -->
+        <Form
+          v-if="executePipeline.key === 'homework-grading-approval'"
+          :model="executeFormState"
+          layout="vertical"
+        >
+          <Form.Item label="批改记录ID" required>
+            <Input
+              v-model:value="executeFormState.recordId"
+              placeholder="留空将自动生成"
+            />
+            <div style=" margin-top: 4px;font-size: 12px; color: #999">
+              可以留空，系统会自动生成测试ID
+            </div>
+          </Form.Item>
+
+          <Form.Item label="学生ID" required>
+            <Input
+              v-model:value="executeFormState.studentId"
+              type="number"
+              placeholder="请输入学生ID"
+            />
+          </Form.Item>
+
+          <Form.Item label="试卷图片" required>
+            <!-- 上传按钮 -->
+            <Upload
+              :custom-request="handleImageUpload"
+              :show-upload-list="false"
+              accept="image/*"
+              :disabled="uploadLoading"
+            >
+              <Button :loading="uploadLoading" type="primary">
+                {{ uploadLoading ? '上传中...' : '上传图片' }}
+              </Button>
+            </Upload>
+
+            <!-- 已上传的图片列表 -->
+            <div v-if="uploadedImageUrls.length > 0" style="margin-top: 12px">
+              <div style=" margin-bottom: 8px;font-weight: 500">
+                已上传图片：
+              </div>
+              <div
+                v-for="(url, index) in uploadedImageUrls"
+                :key="index"
+                style="
+                  display: flex;
+                  align-items: center;
+                  padding: 8px;
+                  margin-bottom: 8px;
+                  background: #f5f5f5;
+                  border-radius: 4px;
+                "
+              >
+                <img
+                  :src="url"
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    margin-right: 12px;
+                    object-fit: cover;
+                    border-radius: 4px;
+                  "
+                />
+                <div style="flex: 1; overflow: hidden">
+                  <div
+                    style="
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      font-size: 12px;
+                      color: #666;
+                      white-space: nowrap;
+                    "
+                  >
+                    {{ url }}
+                  </div>
+                </div>
+                <Button
+                  type="link"
+                  danger
+                  size="small"
+                  @click="handleRemoveImage(url)"
+                >
+                  删除
+                </Button>
+              </div>
+            </div>
+
+            <!-- 手动输入URL（可选） -->
+            <div style="margin-top: 12px">
+              <div style=" margin-bottom: 4px;font-size: 12px; color: #999">
+                或手动输入图片URL（每行一个）
+              </div>
+              <Input.TextArea
+                v-model:value="executeFormState.imageUrls"
+                placeholder="可选：手动输入图片URL，每行一个"
+                :rows="2"
+              />
+            </div>
+          </Form.Item>
+
+          <Form.Item label="学科" required>
+            <Select
+              v-model:value="executeFormState.subject"
+              placeholder="请选择学科"
+            >
+              <Select.Option value="MATH">数学</Select.Option>
+              <Select.Option value="CHINESE">语文</Select.Option>
+              <Select.Option value="ENGLISH">英语</Select.Option>
+              <Select.Option value="PHYSICS">物理</Select.Option>
+              <Select.Option value="CHEMISTRY">化学</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="年级" required>
+            <Select
+              v-model:value="executeFormState.gradeLevel"
+              placeholder="请选择年级"
+            >
+              <Select.Option value="GRADE_1">一年级</Select.Option>
+              <Select.Option value="GRADE_2">二年级</Select.Option>
+              <Select.Option value="GRADE_3">三年级</Select.Option>
+              <Select.Option value="GRADE_4">四年级</Select.Option>
+              <Select.Option value="GRADE_5">五年级</Select.Option>
+              <Select.Option value="GRADE_6">六年级</Select.Option>
+              <Select.Option value="GRADE_7">七年级</Select.Option>
+              <Select.Option value="GRADE_8">八年级</Select.Option>
+              <Select.Option value="GRADE_9">九年级</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+
+        <!-- 通用表单（其他 pipeline） -->
+        <Form v-else :model="executeFormState" layout="vertical">
+          <Form.Item label="输入数据（JSON格式）">
+            <Input.TextArea
+              v-model:value="executeFormState.jsonInput"
+              placeholder='{"key": "value"}'
+              :rows="8"
+            />
+          </Form.Item>
+        </Form>
+      </div>
+    </Modal>
 
     <!-- Edit Modal -->
     <Modal

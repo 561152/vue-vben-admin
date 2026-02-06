@@ -23,6 +23,10 @@ import {
   EyeOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import {
+  getFeatureModules,
+  type FeatureModule,
+} from '#/api/ai-studio/pipeline';
 import dayjs from 'dayjs';
 
 interface ComponentItem {
@@ -51,6 +55,10 @@ const formState = ref({
   type: 'LLM',
   category: 'AI',
 });
+
+// 功能模块筛选
+const featureModules = ref<FeatureModule[]>([]);
+const selectedFeatureCode = ref<string | undefined>(undefined);
 
 const detailVisible = ref(false);
 const detailComponent = ref<ComponentItem | null>(null);
@@ -143,6 +151,7 @@ const fetchData = async () => {
       params: {
         page: pagination.value.current,
         pageSize: pagination.value.pageSize,
+        featureCode: selectedFeatureCode.value || undefined,
       },
     });
 
@@ -160,6 +169,23 @@ const fetchData = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// 加载功能模块列表
+const loadFeatureModules = async () => {
+  try {
+    const modules = await getFeatureModules();
+    featureModules.value = modules || [];
+  } catch (error) {
+    console.error('Failed to load feature modules:', error);
+  }
+};
+
+// 功能模块筛选变化
+const handleFeatureCodeChange = (value: string | undefined) => {
+  selectedFeatureCode.value = value;
+  pagination.value.current = 1;
+  fetchData();
 };
 
 const handleTableChange = (pag: any) => {
@@ -256,6 +282,7 @@ const handleDelete = async (id: number) => {
 };
 
 onMounted(() => {
+  loadFeatureModules();
   fetchData();
 });
 </script>
@@ -264,10 +291,27 @@ onMounted(() => {
   <div class="component-list">
     <Card title="组件管理">
       <template #extra>
-        <Button type="primary" @click="showCreate">
-          <template #icon><PlusOutlined /></template>
-          新建组件
-        </Button>
+        <Space>
+          <Select
+            v-model:value="selectedFeatureCode"
+            placeholder="按功能模块筛选"
+            allow-clear
+            style="width: 180px"
+            @change="handleFeatureCodeChange"
+          >
+            <Select.Option
+              v-for="item in featureModules"
+              :key="item.code"
+              :value="item.code"
+            >
+              {{ item.label }}
+            </Select.Option>
+          </Select>
+          <Button type="primary" @click="showCreate">
+            <template #icon><PlusOutlined /></template>
+            新建组件
+          </Button>
+        </Space>
       </template>
 
       <Table
