@@ -46,6 +46,28 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'AIPrompt',
+        path: 'prompt',
+        component: () => import('#/views/ai-studio/prompt/index.vue'),
+        meta: {
+          icon: 'ant-design:file-text-outlined',
+          title: '提示词管理',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:PROMPT:LIST'],
+        },
+      },
+      {
+        name: 'AIPromptEdit',
+        path: 'prompt/edit/:id?',
+        component: () => import('#/views/ai-studio/prompt/edit.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '编辑提示词',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:PROMPT:EDIT'],
+        },
+      },
+      {
         name: 'AIComponent',
         path: 'component',
         component: () => import('#/views/ai-studio/component/index.vue'),

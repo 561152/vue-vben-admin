@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Table,
@@ -33,8 +33,12 @@ import {
 import { requestClient } from '#/api/request';
 import {
   getFeatureModules,
+  checkDeletePipeline,
+  deletePipeline,
   type FeatureModule,
+  type DeleteCheckResponse,
 } from '#/api/ai-studio/pipeline';
+import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
 import dayjs from 'dayjs';
 
 interface PipelineItem {
@@ -67,9 +71,18 @@ const formState = ref({
 // 功能模块筛选
 const featureModules = ref<FeatureModule[]>([]);
 const selectedFeatureCode = ref<string | undefined>(undefined);
+// 只有当用户有功能模块权限时才显示筛选器
+const showFeatureFilter = computed(() => featureModules.value.length > 0);
 
 const detailVisible = ref(false);
 const detailPipeline = ref<PipelineItem | null>(null);
+
+// 删除确认弹窗状态
+const deleteModalVisible = ref(false);
+const deleteModalLoading = ref(false);
+const deleteCheckData = ref<DeleteCheckResponse | null>(null);
+const deletingPipelineKey = ref<string>('');
+const deletingPipeline = ref<PipelineItem | null>(null);
 
 // 执行表单状态
 const executeVisible = ref(false);
@@ -186,13 +199,19 @@ const fetchData = async () => {
   }
 };
 
-// 加载功能模块列表
+// 加载功能模块列表（根据用户权限过滤）
 const loadFeatureModules = async () => {
   try {
     const modules = await getFeatureModules();
     featureModules.value = modules || [];
-  } catch (error) {
-    console.error('Failed to load feature modules:', error);
+  } catch (error: any) {
+    // 403 或其他权限错误时不显示筛选器
+    if (error?.response?.status === 403) {
+      console.warn('No permission to view feature modules');
+    } else {
+      console.error('Failed to load feature modules:', error);
+    }
+    featureModules.value = [];
   }
 };
 
@@ -481,6 +500,53 @@ const handleDuplicate = async (record: PipelineItem) => {
   }
 };
 
+// 打开删除确认弹窗
+const handleDeleteClick = async (record: PipelineItem) => {
+  deletingPipeline.value = record;
+  deletingPipelineKey.value = record.key;
+  deleteModalLoading.value = true;
+  deleteModalVisible.value = true;
+
+  try {
+    const response = await checkDeletePipeline(record.key);
+    deleteCheckData.value = response;
+  } catch (error: any) {
+    console.error('Failed to check delete prerequisites:', error);
+    message.error('获取删除检查信息失败');
+    deleteModalVisible.value = false;
+  } finally {
+    deleteModalLoading.value = false;
+  }
+};
+
+// 确认删除
+const handleDeleteConfirm = async (confirmationText: string) => {
+  if (!deletingPipelineKey.value) return;
+
+  deleteModalLoading.value = true;
+  try {
+    await deletePipeline(deletingPipelineKey.value, confirmationText);
+    message.success('删除成功');
+    deleteModalVisible.value = false;
+    fetchData();
+  } catch (error: any) {
+    console.error('Failed to delete pipeline:', error);
+    const errorMsg = error?.response?.data?.message || error?.message || '删除失败';
+    message.error(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);
+  } finally {
+    deleteModalLoading.value = false;
+  }
+};
+
+// 取消删除
+const handleDeleteCancel = () => {
+  deleteModalVisible.value = false;
+  deletingPipeline.value = null;
+  deletingPipelineKey.value = '';
+  deleteCheckData.value = null;
+};
+
+// 旧的删除方法（保留兼容性）
 const handleDelete = async (key: string) => {
   try {
     await requestClient.delete(`/ai-studio/pipelines/${key}`);
@@ -503,7 +569,9 @@ onMounted(() => {
     <Card title="流程管理">
       <template #extra>
         <Space>
+          <!-- 只有当用户有功能模块权限时才显示筛选器 -->
           <Select
+            v-if="showFeatureFilter"
             v-model:value="selectedFeatureCode"
             placeholder="按功能模块筛选"
             allow-clear
@@ -591,18 +659,16 @@ onMounted(() => {
                   <template #icon><CodeOutlined /></template>
                 </Button>
               </Tooltip>
-              <Popconfirm
-                title="确定要删除这个流程吗？"
-                @confirm="handleDelete(record.key)"
-                ok-text="确定"
-                cancel-text="取消"
-              >
-                <Tooltip title="删除">
-                  <Button type="link" danger size="small">
-                    <template #icon><DeleteOutlined /></template>
-                  </Button>
-                </Tooltip>
-              </Popconfirm>
+              <Tooltip title="删除">
+                <Button
+                  type="link"
+                  danger
+                  size="small"
+                  @click="handleDeleteClick(record)"
+                >
+                  <template #icon><DeleteOutlined /></template>
+                </Button>
+              </Tooltip>
             </Space>
           </template>
         </template>
@@ -635,7 +701,7 @@ onMounted(() => {
               v-model:value="executeFormState.recordId"
               placeholder="留空将自动生成"
             />
-            <div style=" margin-top: 4px;font-size: 12px; color: #999">
+            <div style="margin-top: 4px; font-size: 12px; color: #999">
               可以留空，系统会自动生成测试ID
             </div>
           </Form.Item>
@@ -663,7 +729,7 @@ onMounted(() => {
 
             <!-- 已上传的图片列表 -->
             <div v-if="uploadedImageUrls.length > 0" style="margin-top: 12px">
-              <div style=" margin-bottom: 8px;font-weight: 500">
+              <div style="margin-bottom: 8px; font-weight: 500">
                 已上传图片：
               </div>
               <div
@@ -714,7 +780,7 @@ onMounted(() => {
 
             <!-- 手动输入URL（可选） -->
             <div style="margin-top: 12px">
-              <div style=" margin-bottom: 4px;font-size: 12px; color: #999">
+              <div style="margin-bottom: 4px; font-size: 12px; color: #999">
                 或手动输入图片URL（每行一个）
               </div>
               <Input.TextArea
@@ -858,6 +924,16 @@ onMounted(() => {
         </div>
       </div>
     </Drawer>
+
+    <!-- Delete Confirm Modal -->
+    <DeleteConfirmModal
+      v-model:visible="deleteModalVisible"
+      :pipeline-key="deletingPipelineKey"
+      :check-data="deleteCheckData"
+      :loading="deleteModalLoading"
+      @confirm="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
+    />
   </div>
 </template>
 

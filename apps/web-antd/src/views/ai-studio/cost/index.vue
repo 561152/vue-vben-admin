@@ -332,7 +332,9 @@ const fetchCostData = async () => {
     // 检查是否是403权限错误
     if (error.response?.status === 403) {
       accessDenied.value = true;
-      errorMessage.value = error.response?.data?.message || '您没有权限访问此数据，请联系管理员分配权限。';
+      errorMessage.value =
+        error.response?.data?.message ||
+        '您没有权限访问此数据，请联系管理员分配权限。';
       // 清空数据
       overview.value = {
         totalTokens: 0,
@@ -398,7 +400,9 @@ onMounted(() => {
         <div class="access-denied-message">
           <h3>无权访问</h3>
           <p>{{ errorMessage }}</p>
-          <p class="hint">请联系管理员分配 <strong>AI_STUDIO:METRICS:COST</strong> 权限</p>
+          <p class="hint">
+            请联系管理员分配 <strong>AI_STUDIO:METRICS:COST</strong> 权限
+          </p>
         </div>
       </div>
     </Card>
@@ -449,223 +453,224 @@ onMounted(() => {
       </Card>
 
       <Spin :spinning="loading">
-      <!-- 总览统计 -->
-      <Row :gutter="16" class="stats-row">
-        <Col :span="6">
-          <Card>
-            <Statistic
-              title="Token 总消耗"
-              :value="overview.totalTokens"
-              :prefix="h(ThunderboltOutlined)"
-              :formatter="(value: number) => formatTokens(value)"
-            >
-              <template #suffix>
-                <span
-                  :class="[
-                    'trend',
-                    overview.tokensTrend >= 0 ? 'trend-up' : 'trend-down',
-                  ]"
-                >
-                  <RiseOutlined v-if="overview.tokensTrend >= 0" />
-                  <FallOutlined v-else />
-                  {{ Math.abs(overview.tokensTrend) }}%
-                </span>
-              </template>
-            </Statistic>
-          </Card>
-        </Col>
-        <Col :span="6">
-          <Card>
-            <Statistic
-              title="总成本"
-              :value="overview.totalCost"
-              :precision="2"
-              prefix="¥"
-              :prefix-icon="h(DollarOutlined)"
-            >
-              <template #suffix>
-                <span
-                  :class="[
-                    'trend',
-                    overview.costTrend >= 0 ? 'trend-up' : 'trend-down',
-                  ]"
-                >
-                  <RiseOutlined v-if="overview.costTrend >= 0" />
-                  <FallOutlined v-else />
-                  {{ Math.abs(overview.costTrend) }}%
-                </span>
-              </template>
-            </Statistic>
-          </Card>
-        </Col>
-        <Col :span="6">
-          <Card>
-            <Statistic
-              title="输入 Token"
-              :value="overview.promptTokens"
-              :formatter="(value: number) => formatTokens(value)"
-            />
-            <div class="stat-sub">
-              占比:
-              {{
-                (
-                  (overview.promptTokens / overview.totalTokens) * 100 || 0
-                ).toFixed(1)
-              }}%
-            </div>
-          </Card>
-        </Col>
-        <Col :span="6">
-          <Card>
-            <Statistic
-              title="输出 Token"
-              :value="overview.completionTokens"
-              :formatter="(value: number) => formatTokens(value)"
-            />
-            <div class="stat-sub">
-              占比:
-              {{
-                (
-                  (overview.completionTokens / overview.totalTokens) * 100 || 0
-                ).toFixed(1)
-              }}%
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      <!-- 详细数据 Tabs -->
-      <Card>
-        <Tabs v-model:activeKey="activeTab">
-          <!-- 按模块统计 -->
-          <Tabs.TabPane key="module" tab="按模块统计">
-            <Table
-              :columns="moduleCostColumns"
-              :data-source="moduleCosts"
-              :pagination="false"
-              row-key="module"
-            >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'moduleName'">
-                  <Space>
-                    <Tag
-                      :color="
-                        record.module === 'ai-tutor'
-                          ? 'blue'
-                          : record.module === 'ai-doctor'
-                            ? 'green'
-                            : 'purple'
-                      "
-                    >
-                      {{ record.moduleName }}
-                    </Tag>
-                  </Space>
+        <!-- 总览统计 -->
+        <Row :gutter="16" class="stats-row">
+          <Col :span="6">
+            <Card>
+              <Statistic
+                title="Token 总消耗"
+                :value="overview.totalTokens"
+                :prefix="h(ThunderboltOutlined)"
+                :formatter="(value: number) => formatTokens(value)"
+              >
+                <template #suffix>
+                  <span
+                    :class="[
+                      'trend',
+                      overview.tokensTrend >= 0 ? 'trend-up' : 'trend-down',
+                    ]"
+                  >
+                    <RiseOutlined v-if="overview.tokensTrend >= 0" />
+                    <FallOutlined v-else />
+                    {{ Math.abs(overview.tokensTrend) }}%
+                  </span>
                 </template>
-                <template v-if="column.key === 'percentage'">
-                  <Progress
-                    :percent="record.percentage"
-                    :show-info="true"
-                    size="small"
-                    :stroke-color="
-                      record.module === 'ai-tutor'
-                        ? '#1890ff'
-                        : record.module === 'ai-doctor'
-                          ? '#52c41a'
-                          : '#722ed1'
-                    "
-                  />
-                </template>
-              </template>
-            </Table>
-          </Tabs.TabPane>
-
-          <!-- 按模型统计 -->
-          <Tabs.TabPane key="model" tab="按模型统计">
-            <Table
-              :columns="modelCostColumns"
-              :data-source="modelCosts"
-              :pagination="false"
-              row-key="model"
-            >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'provider'">
-                  <Tag>{{ record.provider }}</Tag>
-                </template>
-              </template>
-            </Table>
-          </Tabs.TabPane>
-
-          <!-- 按用户统计 -->
-          <Tabs.TabPane key="user" tab="按用户统计">
-            <Table
-              :columns="userCostColumns"
-              :data-source="userCosts"
-              :pagination="{ pageSize: 10 }"
-              row-key="userId"
-            />
-          </Tabs.TabPane>
-
-          <!-- 每日趋势 -->
-          <Tabs.TabPane key="daily" tab="每日趋势">
-            <Table
-              :columns="dailyCostColumns"
-              :data-source="dailyCosts"
-              :pagination="false"
-              row-key="date"
-            />
-            <div class="chart-placeholder">
-              <BarChartOutlined style="font-size: 48px; color: #d9d9d9" />
-              <p>图表功能开发中...</p>
-            </div>
-          </Tabs.TabPane>
-        </Tabs>
-      </Card>
-
-      <!-- 成本优化建议 -->
-      <Card title="成本优化建议" class="suggestions-card">
-        <Row :gutter="16">
-          <Col :span="8">
-            <div class="suggestion-item">
-              <div class="suggestion-icon" style="background: #e6f7ff">
-                <ThunderboltOutlined style="color: #1890ff" />
-              </div>
-              <div class="suggestion-content">
-                <div class="suggestion-title">使用缓存减少重复调用</div>
-                <div class="suggestion-desc">
-                  相同输入的 OCR 识别结果可缓存，预计节省 15% Token 消耗
-                </div>
-              </div>
-            </div>
+              </Statistic>
+            </Card>
           </Col>
-          <Col :span="8">
-            <div class="suggestion-item">
-              <div class="suggestion-icon" style="background: #f6ffed">
-                <PieChartOutlined style="color: #52c41a" />
-              </div>
-              <div class="suggestion-content">
-                <div class="suggestion-title">优化 Prompt 长度</div>
-                <div class="suggestion-desc">
-                  AI-Doctor 模块 Prompt 平均长度较高，建议精简系统提示词
-                </div>
-              </div>
-            </div>
+          <Col :span="6">
+            <Card>
+              <Statistic
+                title="总成本"
+                :value="overview.totalCost"
+                :precision="2"
+                prefix="¥"
+                :prefix-icon="h(DollarOutlined)"
+              >
+                <template #suffix>
+                  <span
+                    :class="[
+                      'trend',
+                      overview.costTrend >= 0 ? 'trend-up' : 'trend-down',
+                    ]"
+                  >
+                    <RiseOutlined v-if="overview.costTrend >= 0" />
+                    <FallOutlined v-else />
+                    {{ Math.abs(overview.costTrend) }}%
+                  </span>
+                </template>
+              </Statistic>
+            </Card>
           </Col>
-          <Col :span="8">
-            <div class="suggestion-item">
-              <div class="suggestion-icon" style="background: #fff7e6">
-                <DollarOutlined style="color: #fa8c16" />
+          <Col :span="6">
+            <Card>
+              <Statistic
+                title="输入 Token"
+                :value="overview.promptTokens"
+                :formatter="(value: number) => formatTokens(value)"
+              />
+              <div class="stat-sub">
+                占比:
+                {{
+                  (
+                    (overview.promptTokens / overview.totalTokens) * 100 || 0
+                  ).toFixed(1)
+                }}%
               </div>
-              <div class="suggestion-content">
-                <div class="suggestion-title">选择性价比更高的模型</div>
-                <div class="suggestion-desc">
-                  简单任务可使用 qwen-turbo 替代 qwen-plus，成本降低 60%
-                </div>
+            </Card>
+          </Col>
+          <Col :span="6">
+            <Card>
+              <Statistic
+                title="输出 Token"
+                :value="overview.completionTokens"
+                :formatter="(value: number) => formatTokens(value)"
+              />
+              <div class="stat-sub">
+                占比:
+                {{
+                  (
+                    (overview.completionTokens / overview.totalTokens) * 100 ||
+                    0
+                  ).toFixed(1)
+                }}%
               </div>
-            </div>
+            </Card>
           </Col>
         </Row>
-      </Card>
-    </Spin>
+
+        <!-- 详细数据 Tabs -->
+        <Card>
+          <Tabs v-model:activeKey="activeTab">
+            <!-- 按模块统计 -->
+            <Tabs.TabPane key="module" tab="按模块统计">
+              <Table
+                :columns="moduleCostColumns"
+                :data-source="moduleCosts"
+                :pagination="false"
+                row-key="module"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'moduleName'">
+                    <Space>
+                      <Tag
+                        :color="
+                          record.module === 'ai-tutor'
+                            ? 'blue'
+                            : record.module === 'ai-doctor'
+                              ? 'green'
+                              : 'purple'
+                        "
+                      >
+                        {{ record.moduleName }}
+                      </Tag>
+                    </Space>
+                  </template>
+                  <template v-if="column.key === 'percentage'">
+                    <Progress
+                      :percent="record.percentage"
+                      :show-info="true"
+                      size="small"
+                      :stroke-color="
+                        record.module === 'ai-tutor'
+                          ? '#1890ff'
+                          : record.module === 'ai-doctor'
+                            ? '#52c41a'
+                            : '#722ed1'
+                      "
+                    />
+                  </template>
+                </template>
+              </Table>
+            </Tabs.TabPane>
+
+            <!-- 按模型统计 -->
+            <Tabs.TabPane key="model" tab="按模型统计">
+              <Table
+                :columns="modelCostColumns"
+                :data-source="modelCosts"
+                :pagination="false"
+                row-key="model"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'provider'">
+                    <Tag>{{ record.provider }}</Tag>
+                  </template>
+                </template>
+              </Table>
+            </Tabs.TabPane>
+
+            <!-- 按用户统计 -->
+            <Tabs.TabPane key="user" tab="按用户统计">
+              <Table
+                :columns="userCostColumns"
+                :data-source="userCosts"
+                :pagination="{ pageSize: 10 }"
+                row-key="userId"
+              />
+            </Tabs.TabPane>
+
+            <!-- 每日趋势 -->
+            <Tabs.TabPane key="daily" tab="每日趋势">
+              <Table
+                :columns="dailyCostColumns"
+                :data-source="dailyCosts"
+                :pagination="false"
+                row-key="date"
+              />
+              <div class="chart-placeholder">
+                <BarChartOutlined style="font-size: 48px; color: #d9d9d9" />
+                <p>图表功能开发中...</p>
+              </div>
+            </Tabs.TabPane>
+          </Tabs>
+        </Card>
+
+        <!-- 成本优化建议 -->
+        <Card title="成本优化建议" class="suggestions-card">
+          <Row :gutter="16">
+            <Col :span="8">
+              <div class="suggestion-item">
+                <div class="suggestion-icon" style="background: #e6f7ff">
+                  <ThunderboltOutlined style="color: #1890ff" />
+                </div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">使用缓存减少重复调用</div>
+                  <div class="suggestion-desc">
+                    相同输入的 OCR 识别结果可缓存，预计节省 15% Token 消耗
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col :span="8">
+              <div class="suggestion-item">
+                <div class="suggestion-icon" style="background: #f6ffed">
+                  <PieChartOutlined style="color: #52c41a" />
+                </div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">优化 Prompt 长度</div>
+                  <div class="suggestion-desc">
+                    AI-Doctor 模块 Prompt 平均长度较高，建议精简系统提示词
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col :span="8">
+              <div class="suggestion-item">
+                <div class="suggestion-icon" style="background: #fff7e6">
+                  <DollarOutlined style="color: #fa8c16" />
+                </div>
+                <div class="suggestion-content">
+                  <div class="suggestion-title">选择性价比更高的模型</div>
+                  <div class="suggestion-desc">
+                    简单任务可使用 qwen-turbo 替代 qwen-plus，成本降低 60%
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Card>
+      </Spin>
     </template>
   </div>
 </template>
@@ -687,55 +692,55 @@ export default {
 
 .access-denied-card {
   margin-bottom: 16px;
-  border: 1px solid #ffccc7;
   background: #fff2f0;
+  border: 1px solid #ffccc7;
 }
 
 .access-denied-content {
   display: flex;
-  align-items: center;
   gap: 20px;
+  align-items: center;
   padding: 20px;
 }
 
 .access-denied-icon {
-  font-size: 48px;
   flex-shrink: 0;
+  font-size: 48px;
 }
 
 .access-denied-message h3 {
-  color: #cf1322;
   margin-bottom: 8px;
   font-size: 18px;
+  color: #cf1322;
 }
 
 .access-denied-message p {
-  color: #595959;
   margin-bottom: 4px;
+  color: #595959;
 }
 
 .access-denied-message .hint {
-  color: #8c8c8c;
-  font-size: 12px;
   margin-top: 12px;
+  font-size: 12px;
+  color: #8c8c8c;
 }
 
 .error-card {
   margin-bottom: 16px;
-  border: 1px solid #ffd591;
   background: #fffbe6;
+  border: 1px solid #ffd591;
 }
 
 .error-content {
   display: flex;
-  align-items: center;
   gap: 16px;
+  align-items: center;
   padding: 16px;
 }
 
 .error-icon {
-  font-size: 32px;
   flex-shrink: 0;
+  font-size: 32px;
 }
 
 .error-message {

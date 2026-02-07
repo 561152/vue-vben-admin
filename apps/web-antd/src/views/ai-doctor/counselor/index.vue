@@ -24,8 +24,10 @@ import {
   LikeOutlined,
   DislikeOutlined,
   ReloadOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useRouter } from 'vue-router';
 
 interface Message {
   id: string;
@@ -83,6 +85,7 @@ const moodOptions = [
   { value: 'CONFUSED', label: '困惑', emoji: '🤔' },
 ];
 
+const router = useRouter();
 const messages = ref<Message[]>([]);
 const inputMessage = ref('');
 const isLoading = ref(false);
@@ -356,6 +359,11 @@ const getMoodEmoji = (mood: string) => {
   return moodOptions.find((m) => m.value === mood)?.emoji || '😐';
 };
 
+// 跳转到 FAQ 页面
+const navigateToFAQ = () => {
+  router.push('/ai-doctor/counselor/faq');
+};
+
 onMounted(() => {
   // 可以在这里加载最近的会话
 });
@@ -374,6 +382,11 @@ onMounted(() => {
 
       <template #extra>
         <Space>
+          <Tooltip title="常见问题">
+            <Button type="text" @click="navigateToFAQ">
+              <template #icon><QuestionCircleOutlined /></template>
+            </Button>
+          </Tooltip>
           <Tooltip title="历史会话">
             <Button type="text" @click="showHistory">
               <template #icon><HistoryOutlined /></template>
@@ -448,6 +461,15 @@ onMounted(() => {
         >
           开始咨询
         </Button>
+
+        <!-- FAQ 快速链接 -->
+        <div class="faq-tip">
+          <QuestionCircleOutlined />
+          <span>
+            不知道问什么？
+            <a @click="navigateToFAQ">查看常见问题</a>
+          </span>
+        </div>
       </div>
 
       <!-- 聊天区域 -->
@@ -796,5 +818,29 @@ onMounted(() => {
 
 .input-container :deep(.ant-input) {
   flex: 1;
+}
+
+.faq-tip {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.faq-tip a {
+  color: #1890ff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.faq-tip a:hover {
+  text-decoration: underline;
 }
 </style>

@@ -29,7 +29,7 @@ const config: PlaywrightTestConfig = {
   use: {
     actionTimeout: 10000,
     baseURL: 'http://localhost:5666',
-    headless: !!process.env.CI,
+    headless: true, // 强制无头模式，服务器环境没有 X Server
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

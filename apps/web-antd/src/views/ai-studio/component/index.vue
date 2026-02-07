@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Table,
   Button,
@@ -59,6 +59,8 @@ const formState = ref({
 // 功能模块筛选
 const featureModules = ref<FeatureModule[]>([]);
 const selectedFeatureCode = ref<string | undefined>(undefined);
+// 只有当用户有功能模块权限时才显示筛选器
+const showFeatureFilter = computed(() => featureModules.value.length > 0);
 
 const detailVisible = ref(false);
 const detailComponent = ref<ComponentItem | null>(null);
@@ -171,13 +173,19 @@ const fetchData = async () => {
   }
 };
 
-// 加载功能模块列表
+// 加载功能模块列表（根据用户权限过滤）
 const loadFeatureModules = async () => {
   try {
     const modules = await getFeatureModules();
     featureModules.value = modules || [];
-  } catch (error) {
-    console.error('Failed to load feature modules:', error);
+  } catch (error: any) {
+    // 403 或其他权限错误时不显示筛选器
+    if (error?.response?.status === 403) {
+      console.warn('No permission to view feature modules');
+    } else {
+      console.error('Failed to load feature modules:', error);
+    }
+    featureModules.value = [];
   }
 };
 
@@ -292,7 +300,9 @@ onMounted(() => {
     <Card title="组件管理">
       <template #extra>
         <Space>
+          <!-- 只有当用户有功能模块权限时才显示筛选器 -->
           <Select
+            v-if="showFeatureFilter"
             v-model:value="selectedFeatureCode"
             placeholder="按功能模块筛选"
             allow-clear

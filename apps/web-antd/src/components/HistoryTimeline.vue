@@ -15,7 +15,9 @@
             {{ item.description }}
           </div>
           <div class="timeline-meta">
-            <span v-if="item.operator" class="operator">{{ item.operator }}</span>
+            <span v-if="item.operator" class="operator">{{
+              item.operator
+            }}</span>
             <span class="time">{{ formatTime(item.timestamp) }}</span>
           </div>
         </div>
@@ -25,7 +27,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Timeline as ATimeline, TimelineItem as ATimelineItem } from 'ant-design-vue';
+import {
+  Timeline as ATimeline,
+  TimelineItem as ATimelineItem,
+} from 'ant-design-vue';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,

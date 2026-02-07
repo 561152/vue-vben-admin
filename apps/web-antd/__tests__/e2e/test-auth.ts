@@ -3,7 +3,7 @@
  *
  * 提供测试用的 JWT Token 和认证辅助函数
  */
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 // JWT 密钥 (与后端保持一致)
 const JWT_SECRET =
@@ -94,6 +94,19 @@ export function getPiniaAccessStoreData(token: string) {
       // AI Tutor 权限
       'ai-tutor:homework:view',
       'ai-tutor:chat:view',
+      // AI Studio 权限
+      'ai-studio:console:view',
+      'ai-studio:agent:view',
+      'ai-studio:agent:execute',
+      'ai-studio:workflow:view',
+      'ai-studio:workflow:create',
+      'ai-studio:workflow:update',
+      'ai-studio:workflow:execute',
+      'ai-studio:memory:view',
+      'ai-studio:memory:manage',
+      'ai-studio:plugin:view',
+      'ai-studio:plugin:install',
+      'ai-studio:plugin:uninstall',
     ],
     isLockScreen: false,
     lockScreenPassword: undefined,
@@ -141,6 +154,12 @@ export function getPiniaUserStoreData() {
             appModuleCode: 'AI_TUTOR',
             appModuleName: 'AI 智能教师',
             appModuleIcon: 'ant-design:robot-outlined',
+            status: 'ACTIVE',
+          },
+          {
+            appModuleCode: 'AI_STUDIO',
+            appModuleName: 'AI 控制台',
+            appModuleIcon: 'ant-design:experiment-outlined',
             status: 'ACTIVE',
           },
         ],

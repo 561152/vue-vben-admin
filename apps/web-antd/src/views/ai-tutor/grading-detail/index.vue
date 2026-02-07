@@ -10,6 +10,8 @@ import {
   Space,
   Tag,
   Progress,
+  Tabs,
+  TabPane,
   message,
 } from 'ant-design-vue';
 import {
@@ -17,13 +19,14 @@ import {
   LeftOutlined,
   RightOutlined,
 } from '@ant-design/icons-vue';
-import { getGradingDetail } from '#/api/ai';
-import type { GradingHistoryItem } from '#/api/ai';
+import { getGradingRecord } from '#/api/grading';
+import type { GradingRecord } from '#/api/grading';
+import QuestionListTab from '../../lms/grading-records/components/QuestionListTab.vue';
 
 const route = useRoute();
 const router = useRouter();
 const loading = ref(false);
-const detail = ref<GradingHistoryItem | null>(null);
+const detail = ref<GradingRecord | null>(null);
 
 // 当前查看的图片索引
 const currentImageIndex = ref(0);
@@ -49,7 +52,7 @@ const loadDetail = async () => {
   loading.value = true;
   try {
     const recordId = route.params.id as string;
-    detail.value = await getGradingDetail(recordId);
+    detail.value = await getGradingRecord(recordId);
   } catch (error: any) {
     message.error(error.message || '加载失败');
   } finally {
@@ -109,113 +112,125 @@ onMounted(() => {
       <Card v-if="detail" :bordered="false">
         <template #title>
           <div class="card-header">
-            <Button type="text" :icon="ArrowLeftOutlined" @click="goBack">
+            <Button type="text" @click="goBack">
+              <template #icon><ArrowLeftOutlined /></template>
               返回列表
             </Button>
             <h2>批改详情</h2>
           </div>
         </template>
 
-        <!-- 试卷图片展示 -->
-        <div v-if="currentImageUrls" class="paper-viewer">
-          <!-- 图片展示区域 -->
-          <div class="image-container">
-            <!-- 使用预览图，点击可查看原图 -->
-            <Image
-              :src="currentImageUrls.preview"
-              :preview="{
-                src: currentImageUrls.original,
-              }"
-              :alt="`第${currentImageUrls.pageIndex}页`"
-              class="paper-image"
-            />
-          </div>
+        <!-- Tabs：试卷预览 + 题目列表 -->
+        <Tabs default-active-key="preview" type="card">
+          <!-- 试卷预览标签页 -->
+          <TabPane key="preview" tab="试卷预览">
+            <!-- 试卷图片展示 -->
+            <div v-if="currentImageUrls" class="paper-viewer">
+              <!-- 图片展示区域 -->
+              <div class="image-container">
+                <!-- 使用预览图，点击可查看原图 -->
+                <Image
+                  :src="currentImageUrls.preview"
+                  :preview="{
+                    src: currentImageUrls.original,
+                  }"
+                  :alt="`第${currentImageUrls.pageIndex}页`"
+                  class="paper-image"
+                />
+              </div>
 
-          <!-- 分页控制 -->
-          <div v-if="hasMultiplePages" class="page-controls">
-            <Button
-              :disabled="currentImageIndex === 0"
-              :icon="LeftOutlined"
-              @click="prevPage"
-            >
-              上一页
-            </Button>
-            <span class="page-indicator">
-              {{ currentImageIndex + 1 }} / {{ detail.paperImageUrls!.length }}
-            </span>
-            <Button
-              :disabled="
-                currentImageIndex === detail.paperImageUrls!.length - 1
-              "
-              @click="nextPage"
-            >
-              下一页
-              <template #icon><RightOutlined /></template>
-            </Button>
-          </div>
+              <!-- 分页控制 -->
+              <div v-if="hasMultiplePages" class="page-controls">
+                <Button
+                  :disabled="currentImageIndex === 0"
+                  @click="prevPage"
+                >
+                  <template #icon><LeftOutlined /></template>
+                  上一页
+                </Button>
+                <span class="page-indicator">
+                  {{ currentImageIndex + 1 }} / {{ detail.paperImageUrls!.length }}
+                </span>
+                <Button
+                  :disabled="
+                    currentImageIndex === detail.paperImageUrls!.length - 1
+                  "
+                  @click="nextPage"
+                >
+                  下一页
+                  <template #icon><RightOutlined /></template>
+                </Button>
+              </div>
 
-          <!-- 缩略图导航 -->
-          <div v-if="hasMultiplePages" class="thumbnail-nav">
-            <div
-              v-for="(img, index) in detail.paperImageUrls"
-              :key="index"
-              :class="[
-                'thumbnail-item',
-                { active: index === currentImageIndex },
-              ]"
-              @click="currentImageIndex = index"
-            >
-              <img
-                :src="img.thumbnail"
-                :alt="`第${img.pageIndex}页`"
-                loading="lazy"
-              />
-              <span class="page-number">{{ img.pageIndex }}</span>
+              <!-- 缩略图导航 -->
+              <div v-if="hasMultiplePages" class="thumbnail-nav">
+                <div
+                  v-for="(img, index) in detail.paperImageUrls"
+                  :key="index"
+                  :class="[
+                    'thumbnail-item',
+                    { active: index === currentImageIndex },
+                  ]"
+                  @click="currentImageIndex = index"
+                >
+                  <img
+                    :src="img.thumbnail"
+                    :alt="`第${img.pageIndex}页`"
+                    loading="lazy"
+                  />
+                  <span class="page-number">{{ img.pageIndex }}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- 无图片状态 -->
-        <Empty v-else description="暂无试卷图片" />
+            <!-- 无图片状态 -->
+            <Empty v-else description="暂无试卷图片" />
 
-        <!-- 批改信息 -->
-        <div class="grading-info">
-          <h3>批改结果</h3>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">批改时间：</span>
-              <span class="value">{{ formatTime(detail.createdAt) }}</span>
+            <!-- 批改信息 -->
+            <div class="grading-info">
+              <h3>批改结果</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">批改时间：</span>
+                  <span class="value">{{ formatTime(detail.createdAt) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">题目数：</span>
+                  <Tag color="blue">{{ detail.totalQuestions }}</Tag>
+                </div>
+                <div class="info-item">
+                  <span class="label">正确数：</span>
+                  <Tag color="green">{{ detail.correctCount }}</Tag>
+                </div>
+                <div class="info-item">
+                  <span class="label">正确率：</span>
+                  <Progress
+                    :percent="detail.accuracy * 100"
+                    :stroke-color="getAccuracyColor(detail.accuracy)"
+                    :format="(percent) => `${percent?.toFixed(1)}%`"
+                    size="small"
+                    style="width: 200px"
+                  />
+                </div>
+                <div class="info-item">
+                  <span class="label">得分：</span>
+                  <span class="value score"
+                    >{{ detail.totalScore }} / {{ detail.maxScore }}</span
+                  >
+                </div>
+                <div class="info-item">
+                  <span class="label">处理耗时：</span>
+                  <span class="value">{{ detail.processingMs }}ms</span>
+                </div>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="label">题目数：</span>
-              <Tag color="blue">{{ detail.questionCount }}</Tag>
-            </div>
-            <div class="info-item">
-              <span class="label">正确数：</span>
-              <Tag color="green">{{ detail.correctCount }}</Tag>
-            </div>
-            <div class="info-item">
-              <span class="label">正确率：</span>
-              <Progress
-                :percent="detail.accuracy * 100"
-                :stroke-color="getAccuracyColor(detail.accuracy)"
-                :format="(percent) => `${percent?.toFixed(1)}%`"
-                size="small"
-                style="width: 200px"
-              />
-            </div>
-            <div class="info-item">
-              <span class="label">得分：</span>
-              <span class="value score"
-                >{{ detail.totalScore }} / {{ detail.maxScore }}</span
-              >
-            </div>
-            <div class="info-item">
-              <span class="label">处理耗时：</span>
-              <span class="value">{{ detail.processingMs }}ms</span>
-            </div>
-          </div>
-        </div>
+          </TabPane>
+
+          <!-- 题目列表标签页 -->
+          <TabPane key="questions" tab="题目列表">
+            <QuestionListTab :record-id="route.params.id as string" />
+          </TabPane>
+        </Tabs>
       </Card>
     </Spin>
   </div>

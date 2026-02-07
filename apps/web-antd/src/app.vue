@@ -6,6 +6,9 @@ import { preferences, usePreferences } from '@vben/preferences';
 
 import { App, ConfigProvider, theme } from 'ant-design-vue';
 
+// 使用 React 桥接组件替代直接导入 VibeKanbanWebCompanion
+import ReactBridge from '#/components/ReactBridge.vue';
+
 import { antdLocale } from '#/locales';
 
 defineOptions({ name: 'App' });
@@ -33,6 +36,8 @@ const tokenTheme = computed(() => {
 <template>
   <ConfigProvider :locale="antdLocale" :theme="tokenTheme">
     <App>
+      <!-- 使用 React 桥接组件，正确初始化 React 上下文 -->
+      <ReactBridge />
       <RouterView />
     </App>
   </ConfigProvider>

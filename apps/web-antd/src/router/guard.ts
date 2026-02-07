@@ -10,6 +10,7 @@ import { useAuthStore } from '#/store';
 import { hasAppModule, hasPermission } from '#/utils/permissions';
 
 import { generateAccess } from './access';
+import { getRedirectTarget } from './redirects';
 
 /**
  * 通用守卫配置
@@ -38,6 +39,44 @@ function setupCommonGuard(router: Router) {
     if (preferences.transition.progress) {
       stopProgress();
     }
+  });
+}
+
+/**
+ * 路由重定向守卫配置 (Phase 1: 菜单重组)
+ * @param router
+ */
+function setupRedirectGuard(router: Router) {
+  router.beforeEach((to) => {
+    // 检查是否需要重定向
+    const redirectTarget = getRedirectTarget(to.path);
+
+    if (redirectTarget) {
+      console.log(`[Route Redirect] ${to.path} → ${redirectTarget}`);
+
+      // Parse redirect target to handle query params
+      const [path, queryString] = redirectTarget.split('?');
+      const query: Record<string, string> = { ...to.query };
+
+      // Add migration marker
+      query._migrated = 'true';
+
+      // Parse query params from redirect target
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        params.forEach((value, key) => {
+          query[key] = value;
+        });
+      }
+
+      return {
+        path,
+        query,
+        replace: true, // Use replace to avoid back button issues
+      };
+    }
+
+    return true;
   });
 }
 
@@ -146,6 +185,8 @@ function setupAccessGuard(router: Router) {
 function createRouterGuard(router: Router) {
   /** 通用 */
   setupCommonGuard(router);
+  /** 路由重定向 (Phase 1: must run before access guard) */
+  setupRedirectGuard(router);
   /** 权限访问 */
   setupAccessGuard(router);
 }

@@ -690,6 +690,7 @@ onUnmounted(() => {
       v-else-if="showNodeConfigPanel"
       :node="selectedNodeData"
       :available-steps="availableSteps"
+      :pipeline-key="pipelineKey"
       @update="handleNodeConfigUpdate"
       @delete="handleNodeConfigDelete"
       @close="selectedNodeData = null"

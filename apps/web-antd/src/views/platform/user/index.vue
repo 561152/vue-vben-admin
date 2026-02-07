@@ -92,12 +92,12 @@ const columns = [
   {
     title: '角色',
     key: 'roles',
-    width: 200,
+    width: 300,
     customRender: ({ record }: { record: UserItem }) => {
       if (!record.roles || record.roles.length === 0) {
         return h('span', { style: 'color: #999' }, '无');
       }
-      return h(Space, { size: 4 }, () =>
+      return h(Space, { size: [4, 4], wrap: true }, () =>
         record.roles!.map((ur) =>
           h(Tag, { color: 'blue', key: ur.id }, () => ur.role.name),
         ),
@@ -126,6 +126,7 @@ const columns = [
     title: '操作',
     key: 'action',
     width: 200,
+    fixed: 'right',
   },
 ];
 
@@ -297,6 +298,7 @@ onMounted(() => {
       :data-source="dataSource"
       :loading="loading"
       :pagination="pagination"
+      :scroll="{ x: 1400 }"
       row-key="id"
       @change="handleTableChange"
     >

@@ -1,13 +1,16 @@
 <script lang="ts" setup>
 import type { VbenFormSchema } from '@vben/common-ui';
-import type { BasicOption } from '@vben/types';
 
-import { computed, markRaw } from 'vue';
+import { computed, markRaw, ref, onMounted } from 'vue';
 
-import { AuthenticationLogin, SliderCaptcha, z } from '@vben/common-ui';
+import { AuthenticationLogin, SliderCaptcha, z, RememberMeHelper } from '@vben/common-ui';
+import type { RememberMeData } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
 import { useAuthStore } from '#/store';
+import { getTenantsByUsernameApi } from '#/api';
+import type { AuthApi } from '#/api';
+import { notification } from 'ant-design-vue';
 
 defineOptions({ name: 'Login' });
 
@@ -16,75 +19,145 @@ const authStore = useAuthStore();
 // 检查是否禁用验证码（用于自动化测试）
 const isCaptchaEnabled = import.meta.env.VITE_ENABLE_CAPTCHA !== 'false';
 
-const MOCK_USER_OPTIONS: BasicOption[] = [
-  {
-    label: 'Super',
-    value: 'vben',
-  },
-  {
-    label: 'Admin',
-    value: 'admin',
-  },
-  {
-    label: 'User',
-    value: 'jack',
-  },
-];
+// 租户相关状态
+const tenants = ref<AuthApi.TenantInfo[]>([]);
+const selectedTenant = ref<string>('');
+const isLoadingTenants = ref(false);
+const usernameError = ref<string>('');
+const loginFailCount = ref(0);
+const isUsernameBlurred = ref(false);
 
+// 上次登录租户的 localStorage key（向后兼容）
+const LAST_TENANT_KEY = `LAST_TENANT_${location.hostname}`;
+
+// 登录组件引用
+const loginComponentRef = ref();
+
+/**
+ * 页面加载时，从加密存储恢复数据
+ */
+onMounted(() => {
+  const rememberedData = RememberMeHelper.decrypt();
+  if (rememberedData) {
+    // 等待下一个 tick 以确保表单已初始化
+    setTimeout(() => {
+      // 通过组件 API 设置表单值
+      const formApi = loginComponentRef.value?.getFormApi?.();
+      if (formApi) {
+        formApi.setFieldValue('username', rememberedData.username);
+      }
+
+      // 触发用户名失焦逻辑以加载租户
+      isUsernameBlurred.value = true;
+      handleUsernameBlur(rememberedData.username);
+    }, 100);
+  }
+});
+
+/**
+ * 用户名失焦时，查询租户列表
+ */
+async function handleUsernameBlur(username: string) {
+  if (!username?.trim() || !isUsernameBlurred.value) {
+    return;
+  }
+
+  isLoadingTenants.value = true;
+  usernameError.value = '';
+
+  try {
+    const result = await getTenantsByUsernameApi(username.trim());
+    tenants.value = result.tenants;
+
+    if (tenants.value.length === 0) {
+      usernameError.value = $t('authentication.userNotFound');
+    } else if (tenants.value.length === 1) {
+      // 单租户：不显示任何UI，后端自动匹配
+      selectedTenant.value = tenants.value[0].code;
+    } else {
+      // 多租户（2+）：选择上次登录的租户
+      const rememberedData = RememberMeHelper.decrypt();
+      const lastTenantFromRemember = rememberedData?.tenantCode;
+      const lastTenantFromStorage = localStorage.getItem(LAST_TENANT_KEY);
+      const lastTenant = lastTenantFromRemember || lastTenantFromStorage;
+
+      const lastTenantExists = tenants.value.find(t => t.code === lastTenant);
+      selectedTenant.value = lastTenantExists ? lastTenant! : tenants.value[0].code;
+
+      // 自动设置租户代码到表单
+      setTimeout(() => {
+        const formApi = loginComponentRef.value?.getFormApi?.();
+        if (formApi && selectedTenant.value) {
+          formApi.setFieldValue('tenantCode', selectedTenant.value);
+        }
+      }, 50);
+    }
+  } catch (error) {
+    console.error('查询租户失败:', error);
+    tenants.value = [];
+  } finally {
+    isLoadingTenants.value = false;
+  }
+}
+
+/**
+ * 动态表单 schema
+ */
 const formSchema = computed((): VbenFormSchema[] => {
   const schemas: VbenFormSchema[] = [
-    {
-      component: 'VbenSelect',
-      componentProps: {
-        options: MOCK_USER_OPTIONS,
-        placeholder: $t('authentication.selectAccount'),
-      },
-      fieldName: 'selectAccount',
-      label: $t('authentication.selectAccount'),
-      rules: z
-        .string()
-        .min(1, { message: $t('authentication.selectAccount') })
-        .optional()
-        .default('vben'),
-    },
+    // 用户名输入框
     {
       component: 'VbenInput',
       componentProps: {
         placeholder: $t('authentication.usernameTip'),
-      },
-      dependencies: {
-        trigger(values, form) {
-          if (values.selectAccount) {
-            const findUser = MOCK_USER_OPTIONS.find(
-              (item) => item.value === values.selectAccount,
-            );
-            if (findUser) {
-              form.setValues({
-                password: '123456',
-                username: findUser.value,
-              });
-            }
-          }
+        onBlur: (e: FocusEvent) => {
+          isUsernameBlurred.value = true;
+          const target = e.target as HTMLInputElement;
+          handleUsernameBlur(target.value);
         },
-        triggerFields: ['selectAccount'],
       },
       fieldName: 'username',
       label: $t('authentication.username'),
       rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
-    },
-    {
-      component: 'VbenInputPassword',
-      componentProps: {
-        placeholder: $t('authentication.password'),
-      },
-      fieldName: 'password',
-      label: $t('authentication.password'),
-      rules: z.string().min(1, { message: $t('authentication.passwordTip') }),
+      help: usernameError.value,
     },
   ];
 
-  // 只在启用验证码时添加验证码组件
-  if (isCaptchaEnabled) {
+  // 仅在多租户（2+）时显示租户选择下拉框
+  if (tenants.value.length >= 2) {
+    schemas.push({
+      component: 'VbenSelect',
+      componentProps: {
+        options: tenants.value.map(t => ({
+          label: `${t.name} (${t.code})`,
+          value: t.code,
+        })),
+        placeholder: $t('authentication.tenantPlaceholder'),
+        onChange: (value: string) => {
+          selectedTenant.value = value;
+        },
+      },
+      fieldName: 'tenantCode',
+      label: $t('authentication.selectTenant'),
+      defaultValue: selectedTenant.value,
+      rules: z.string().min(1, { message: $t('authentication.tenantPlaceholder') }),
+    });
+  }
+
+  // 密码输入框（无租户时禁用）
+  schemas.push({
+    component: 'VbenInputPassword',
+    componentProps: {
+      placeholder: $t('authentication.password'),
+      disabled: tenants.value.length === 0 && isUsernameBlurred.value,
+    },
+    fieldName: 'password',
+    label: $t('authentication.password'),
+    rules: z.string().min(1, { message: $t('authentication.passwordTip') }),
+  });
+
+  // 3 次失败后显示验证码（且验证码已启用）
+  if (isCaptchaEnabled && loginFailCount.value >= 3) {
     schemas.push({
       component: markRaw(SliderCaptcha),
       fieldName: 'captcha',
@@ -96,12 +169,81 @@ const formSchema = computed((): VbenFormSchema[] => {
 
   return schemas;
 });
+
+/**
+ * 自定义登录提交处理（包装 AuthenticationLogin 的默认行为）
+ */
+async function handleLogin(values: any) {
+  try {
+    const loginData: any = {
+      username: values.username,
+      password: values.password,
+    };
+
+    // 仅在多租户场景传递 tenantCode
+    if (tenants.value.length >= 2 && selectedTenant.value) {
+      loginData.tenantCode = selectedTenant.value;
+    } else if (tenants.value.length === 1) {
+      // 单租户场景，不传 tenantCode（后端自动匹配）
+    }
+
+    await authStore.authLogin(loginData);
+
+    // 登录成功后，AuthenticationLogin 组件会自动处理"记住我"
+    // 但我们需要额外保存租户代码（如果有的话）
+    // 通过更新加密存储来包含租户信息
+    const currentRemembered = RememberMeHelper.decrypt();
+    if (currentRemembered) {
+      // 更新租户代码
+      const updatedData: RememberMeData = {
+        ...currentRemembered,
+        tenantCode: selectedTenant.value || undefined,
+      };
+      RememberMeHelper.encrypt(updatedData);
+    }
+
+    // 向后兼容：保存上次登录的租户
+    if (selectedTenant.value) {
+      localStorage.setItem(LAST_TENANT_KEY, selectedTenant.value);
+    }
+
+    // 重置失败计数
+    loginFailCount.value = 0;
+  } catch (error: any) {
+    loginFailCount.value++;
+
+    // 根据错误码显示友好提示
+    const errorCode = error?.response?.data?.error;
+    const errorMessage = error?.response?.data?.message;
+
+    const errorMessages: Record<string, string> = {
+      'TENANT_NOT_FOUND': $t('authentication.tenantNotFound'),
+      'USER_NOT_FOUND': $t('authentication.userNotFound'),
+      'INVALID_CREDENTIALS': $t('authentication.invalidCredentials'),
+      'ACCOUNT_DISABLED': $t('authentication.accountDisabled'),
+      'TOO_MANY_ATTEMPTS': $t('authentication.tooManyAttempts'),
+    };
+
+    const message = errorMessages[errorCode] || errorMessage || $t('authentication.loginFailed');
+
+    notification.error({
+      message: $t('authentication.loginFailed'),
+      description: message,
+      duration: 5,
+    });
+
+    // 抛出错误以便上层处理
+    throw error;
+  }
+}
 </script>
 
 <template>
   <AuthenticationLogin
+    ref="loginComponentRef"
     :form-schema="formSchema"
-    :loading="authStore.loginLoading"
-    @submit="authStore.authLogin"
+    :loading="authStore.loginLoading || isLoadingTenants"
+    :show-remember-me="true"
+    @submit="handleLogin"
   />
 </template>

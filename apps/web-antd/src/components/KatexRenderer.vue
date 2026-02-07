@@ -59,7 +59,7 @@ watch(
   () => props.latex,
   () => {
     error.value = null;
-  }
+  },
 );
 </script>
 

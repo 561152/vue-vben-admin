@@ -15,6 +15,8 @@ import { VbenButton, VbenCheckbox } from '@vben-core/shadcn-ui';
 
 import Title from './auth-title.vue';
 import ThirdPartyLogin from './third-party-login.vue';
+import { RememberMeHelper } from './remember-me-helper';
+import type { RememberMeData } from './remember-me-helper';
 
 interface Props extends AuthenticationProps {
   formSchema?: VbenFormSchema[];
@@ -58,20 +60,25 @@ const [Form, formApi] = useVbenForm(
 );
 const router = useRouter();
 
-const REMEMBER_ME_KEY = `REMEMBER_ME_USERNAME_${location.hostname}`;
-
-const localUsername = localStorage.getItem(REMEMBER_ME_KEY) || '';
-
-const rememberMe = ref(!!localUsername);
+// 从加密存储读取"记住我"数据
+const rememberedData = RememberMeHelper.decrypt();
+const rememberMe = ref(!!rememberedData);
 
 async function handleSubmit() {
   const { valid } = await formApi.validate();
   const values = await formApi.getValues();
   if (valid) {
-    localStorage.setItem(
-      REMEMBER_ME_KEY,
-      rememberMe.value ? values?.username : '',
-    );
+    // 使用 AES 加密存储"记住我"数据
+    if (rememberMe.value) {
+      const dataToRemember: RememberMeData = {
+        username: values?.username,
+        tenantCode: values?.tenantCode,
+        timestamp: Date.now(),
+      };
+      RememberMeHelper.encrypt(dataToRemember);
+    } else {
+      RememberMeHelper.clear();
+    }
     emit('submit', values);
   }
 }
@@ -81,8 +88,12 @@ function handleGo(path: string) {
 }
 
 onMounted(() => {
-  if (localUsername) {
-    formApi.setFieldValue('username', localUsername);
+  // 自动回填用户名和租户代码（如果有）
+  if (rememberedData) {
+    formApi.setFieldValue('username', rememberedData.username);
+    if (rememberedData.tenantCode) {
+      formApi.setFieldValue('tenantCode', rememberedData.tenantCode);
+    }
   }
 });
 

@@ -164,3 +164,38 @@ export interface FeatureModule {
 export async function getFeatureModules() {
   return requestClient.get<FeatureModule[]>('/ai-studio/feature-modules');
 }
+
+// ==================== 删除确认 API ====================
+
+export interface FeatureBindingInfo {
+  featureCode: string;
+  featureName: string;
+  isSystem: boolean;
+}
+
+export interface DeleteCheckResponse {
+  canDelete: boolean;
+  runningExecutions: number;
+  featureBindings: FeatureBindingInfo[];
+  warnings: string[];
+  requiredConfirmation: string;
+  pipelineName: string;
+}
+
+/**
+ * 获取删除前检查信息
+ */
+export async function checkDeletePipeline(key: string) {
+  return requestClient.get<DeleteCheckResponse>(
+    `/ai-studio/pipelines/${key}/delete-check`,
+  );
+}
+
+/**
+ * 删除 Pipeline（带确认）
+ */
+export async function deletePipeline(key: string, confirmationText: string) {
+  return requestClient.delete(`/ai-studio/pipelines/${key}`, {
+    data: { confirmationText },
+  });
+}

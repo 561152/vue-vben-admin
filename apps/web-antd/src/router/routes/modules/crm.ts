@@ -250,29 +250,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'MediaLibrary',
-        path: 'media',
-        component: () => import('#/views/crm/media/index.vue'),
-        meta: {
-          icon: 'ant-design:picture-outlined',
-          title: '素材库',
-          appModule: 'CRM',
-          permissions: ['CRM:MEDIA:LIST'],
-        },
-      },
-      {
-        name: 'MediaStatistics',
-        path: 'media/statistics',
-        component: () => import('#/views/crm/media/statistics.vue'),
-        meta: {
-          icon: 'ant-design:bar-chart-outlined',
-          title: '素材统计',
-          appModule: 'CRM',
-          permissions: ['CRM:MEDIA:LIST'],
-          hideInMenu: true,
-        },
-      },
-      {
         name: 'MassMessage',
         path: 'mass-message',
         component: () => import('#/views/crm/mass-message/index.vue'),
@@ -447,7 +424,7 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:folder-outlined',
           title: '营销素材库',
           appModule: 'CRM',
-          permissions: ['CRM:MEDIA:LIST'],
+          permissions: ['CRM:MATERIAL:VIEW'],
         },
       },
       {
@@ -458,7 +435,7 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:bar-chart-outlined',
           title: '素材库统计',
           appModule: 'CRM',
-          permissions: ['CRM:MEDIA:LIST'],
+          permissions: ['CRM:MATERIAL:VIEW'],
           hideInMenu: true,
         },
       },

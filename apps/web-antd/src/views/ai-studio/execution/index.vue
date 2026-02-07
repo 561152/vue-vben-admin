@@ -81,6 +81,8 @@ const pagination = ref({ current: 1, pageSize: 20, total: 0 });
 
 // 功能模块筛选
 const featureModules = ref<FeatureModule[]>([]);
+// 只有当用户有功能模块权限时才显示筛选器
+const showFeatureFilter = computed(() => featureModules.value.length > 0);
 
 // Filters
 const filters = ref({
@@ -224,13 +226,19 @@ const fetchData = async () => {
   }
 };
 
-// 加载功能模块列表
+// 加载功能模块列表（根据用户权限过滤）
 const loadFeatureModules = async () => {
   try {
     const modules = await getFeatureModules();
     featureModules.value = modules || [];
-  } catch (error) {
-    console.error('Failed to load feature modules:', error);
+  } catch (error: any) {
+    // 403 或其他权限错误时不显示筛选器
+    if (error?.response?.status === 403) {
+      console.warn('No permission to view feature modules');
+    } else {
+      console.error('Failed to load feature modules:', error);
+    }
+    featureModules.value = [];
   }
 };
 
@@ -459,7 +467,8 @@ onMounted(() => {
       <!-- Filters -->
       <div class="filter-section">
         <Row :gutter="16">
-          <Col :span="4">
+          <!-- 只有当用户有功能模块权限时才显示功能模块筛选器 -->
+          <Col v-if="showFeatureFilter" :span="4">
             <Select
               v-model:value="filters.featureCode"
               placeholder="功能模块"

@@ -30,7 +30,7 @@ async function loginWithToken(page: Page) {
       prefix: STORAGE_PREFIX,
       access: accessStoreData,
       user: userStoreData,
-    }
+    },
   );
 
   await page.reload();
@@ -57,12 +57,24 @@ test.describe('AI Studio 执行详情 - 批改结果展示', () => {
     }
 
     // 截图记录
-    await page.screenshot({ path: 'test-results/execution-list.png', fullPage: true });
+    await page.screenshot({
+      path: 'test-results/execution-list.png',
+      fullPage: true,
+    });
 
     // 点击第一行的"查看"按钮
-    const viewButton = page.locator('.ant-table-row').first().locator('button').filter({ hasText: '查看' }).or(
-      page.locator('.ant-table-row').first().locator('a').filter({ hasText: '查看' })
-    );
+    const viewButton = page
+      .locator('.ant-table-row')
+      .first()
+      .locator('button')
+      .filter({ hasText: '查看' })
+      .or(
+        page
+          .locator('.ant-table-row')
+          .first()
+          .locator('a')
+          .filter({ hasText: '查看' }),
+      );
 
     if (await viewButton.isVisible().catch(() => false)) {
       await viewButton.click();
@@ -71,13 +83,17 @@ test.describe('AI Studio 执行详情 - 批改结果展示', () => {
       await page.waitForTimeout(2000);
 
       // 截图记录
-      await page.screenshot({ path: 'test-results/execution-detail.png', fullPage: true });
+      await page.screenshot({
+        path: 'test-results/execution-detail.png',
+        fullPage: true,
+      });
 
       // 检查是否包含题目批改详情
       const pageContent = await page.locator('body').innerText();
 
       // 验证页面包含关键信息（题目、得分、正确/错误等）
-      const hasQuestionInfo = pageContent.includes('题目') ||
+      const hasQuestionInfo =
+        pageContent.includes('题目') ||
         pageContent.includes('得分') ||
         pageContent.includes('正确') ||
         pageContent.includes('错误') ||
@@ -106,10 +122,16 @@ test.describe('AI Studio 执行详情 - 批改结果展示', () => {
     console.log(`找到 ${rowCount} 行执行记录`);
 
     // 截图列表页
-    await page.screenshot({ path: 'test-results/execution-list-grading.png', fullPage: true });
+    await page.screenshot({
+      path: 'test-results/execution-list-grading.png',
+      fullPage: true,
+    });
 
     // 点击第一个眼睛图标按钮（查看详情）
-    const viewButton = page.locator('button').filter({ has: page.locator('.anticon-eye') }).first();
+    const viewButton = page
+      .locator('button')
+      .filter({ has: page.locator('.anticon-eye') })
+      .first();
     if (await viewButton.isVisible().catch(() => false)) {
       await viewButton.click();
 
@@ -121,14 +143,22 @@ test.describe('AI Studio 执行详情 - 批改结果展示', () => {
       await page.waitForTimeout(500);
 
       // 截图详情页
-      await page.screenshot({ path: 'test-results/execution-detail-grading.png', fullPage: true });
+      await page.screenshot({
+        path: 'test-results/execution-detail-grading.png',
+        fullPage: true,
+      });
 
       // 尝试展开"题目批改详情"折叠面板
-      const gradingCollapse = page.locator('.ant-collapse-header').filter({ hasText: '题目批改详情' });
+      const gradingCollapse = page
+        .locator('.ant-collapse-header')
+        .filter({ hasText: '题目批改详情' });
       if (await gradingCollapse.isVisible().catch(() => false)) {
         await gradingCollapse.click();
         await page.waitForTimeout(500);
-        await page.screenshot({ path: 'test-results/execution-detail-grading-expanded.png', fullPage: true });
+        await page.screenshot({
+          path: 'test-results/execution-detail-grading-expanded.png',
+          fullPage: true,
+        });
       }
 
       // 获取页面文本

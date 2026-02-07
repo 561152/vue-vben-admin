@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import {
   Card,
   Upload,
@@ -29,14 +29,28 @@ import {
   RobotOutlined,
   QuestionCircleOutlined,
   ThunderboltOutlined,
+  CloudUploadOutlined,
 } from '@ant-design/icons-vue';
 import type { UploadFile, TableColumnsType } from 'ant-design-vue';
-import { gradeHomework, gradeWithAI, getQuestionTypeName } from '#/api/ai';
+import { io, Socket } from 'socket.io-client';
+import { useUserStore } from '#/store';
+import { autoCompressImage, formatFileSize } from '#/utils/image-utils';
+import {
+  gradeWithAI,
+  getQuestionTypeName,
+  getPresignedUploadUrl,
+  uploadToOss,
+  submitGradingTask,
+  getGradingStatus,
+} from '#/api/ai';
 import type {
   HomeworkGradingResponse,
   AIGradingResponse,
   CorrectEduQuestionType,
 } from '#/api/ai';
+
+// 用户信息
+const userStore = useUserStore();
 
 // 状态
 const isLoading = ref(false);
@@ -49,6 +63,29 @@ const useAIGrading = ref(false);
 const questionType = ref<CorrectEduQuestionType>(1);
 const standardAnswer = ref('');
 
+// 异步批改状态
+const gradingStep = ref<
+  | 'idle'
+  | 'compressing'
+  | 'uploading'
+  | 'downloading'
+  | 'ocr_scanning'
+  | 'ai_analyzing'
+  | 'saving'
+  | 'done'
+>('idle');
+const gradingPercent = ref(0);
+const currentJobId = ref('');
+const compressionInfo = ref<{
+  originalSize: number;
+  compressedSize: number;
+  compressed: boolean;
+} | null>(null);
+
+// WebSocket 连接
+let socket: Socket | null = null;
+const wsConnected = ref(false);
+
 // 题目类型选项
 const questionTypeOptions = [
   { value: 1, label: '数学计算题', desc: '加减乘除、方程求解等' },
@@ -56,6 +93,18 @@ const questionTypeOptions = [
   { value: 3, label: '数学填空题', desc: '填写数字或表达式' },
   { value: 4, label: '古诗文默写', desc: '诗词、文言文填写' },
 ];
+
+// 步骤名称映射
+const stepNames = {
+  idle: '待上传',
+  compressing: '正在压缩图片...',
+  uploading: '正在上传到云端...',
+  downloading: '正在下载图片...',
+  ocr_scanning: 'OCR 识别中...',
+  ai_analyzing: 'AI 分析中...',
+  saving: '保存结果...',
+  done: '批改完成',
+};
 
 // 表格列配置
 const columns = computed<TableColumnsType>(() => [
@@ -111,6 +160,58 @@ const getAccuracyColor = (accuracy: number) => {
   return '#ff4d4f';
 };
 
+// 初始化 WebSocket
+const initWebSocket = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://172.20.3.190:32180';
+  const wsUrl = apiBaseUrl.replace('/api', '');
+
+  socket = io(`${wsUrl}/homework-grading`, {
+    query: {
+      userId: userStore.userInfo?.id || '',
+    },
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  });
+
+  socket.on('connect', () => {
+    wsConnected.value = true;
+    console.log('WebSocket 已连接');
+  });
+
+  socket.on('disconnect', () => {
+    wsConnected.value = false;
+    console.log('WebSocket 已断开');
+  });
+
+  socket.on('connected', (data) => {
+    console.log('WebSocket 连接成功:', data);
+  });
+
+  socket.on('grading_progress', (data: { step: string; percent: number }) => {
+    console.log('批改进度:', data);
+    gradingStep.value = data.step as any;
+    gradingPercent.value = data.percent;
+  });
+
+  socket.on('grading_complete', (data: { jobId: string; result: any }) => {
+    console.log('批改完成:', data);
+    gradingStep.value = 'done';
+    gradingPercent.value = 100;
+    result.value = data.result;
+    isLoading.value = false;
+    message.success('批改完成！');
+  });
+
+  socket.on('grading_error', (data: { jobId: string; error: string }) => {
+    console.error('批改失败:', data);
+    gradingStep.value = 'idle';
+    isLoading.value = false;
+    message.error(`批改失败：${data.error}`);
+  });
+};
+
 // 处理文件选择
 const handleFileChange = (info: {
   file: UploadFile;
@@ -127,10 +228,11 @@ const handleFileChange = (info: {
   }
 
   result.value = null;
+  compressionInfo.value = null;
 };
 
-// 执行批改
-const handleGrade = async () => {
+// 异步批改流程
+const handleAsyncGrade = async () => {
   if (fileList.value.length === 0 || !fileList.value[0]?.originFileObj) {
     message.warning('请先上传作业图片');
     return;
@@ -138,31 +240,65 @@ const handleGrade = async () => {
 
   isLoading.value = true;
   result.value = null;
+  gradingStep.value = 'compressing';
+  gradingPercent.value = 5;
 
   try {
-    const formData = new FormData();
-    // 后端期望 files 字段用于 AI 批改，image 字段用于传统批改
-    const fieldName = useAIGrading.value ? 'files' : 'image';
-    formData.append(fieldName, fileList.value[0].originFileObj);
+    const originalFile = fileList.value[0].originFileObj;
 
-    if (useAIGrading.value) {
-      // 使用 AI 批改 (correct_edu)
-      result.value = await gradeWithAI(formData, {
-        useCorrectEdu: true,
-        questionType: questionType.value,
-        standardAnswer: standardAnswer.value || undefined,
-      });
-      message.success('AI 批改完成');
-    } else {
-      // 使用传统批改
-      result.value = await gradeHomework(formData);
-      message.success('批改完成');
+    // 步骤 1: 压缩图片（5% - 15%）
+    const compressResult = await autoCompressImage(originalFile, 3);
+    compressionInfo.value = {
+      originalSize: compressResult.originalSize,
+      compressedSize: compressResult.compressedSize,
+      compressed: compressResult.compressed,
+    };
+
+    if (compressResult.compressed) {
+      message.success(
+        `图片已压缩：${formatFileSize(compressResult.originalSize)} → ${formatFileSize(compressResult.compressedSize)}`
+      );
     }
+
+    gradingPercent.value = 15;
+
+    // 步骤 2: 获取签名 URL（15% - 20%）
+    gradingStep.value = 'uploading';
+    const { signedUrl, key } = await getPresignedUploadUrl({
+      filename: compressResult.file.name,
+      contentType: compressResult.file.type,
+      pathPrefix: 'homework',
+    });
+
+    gradingPercent.value = 20;
+
+    // 步骤 3: 直传到 OSS（20% - 40%）
+    await uploadToOss(signedUrl, compressResult.file);
+    message.success('上传成功');
+    gradingPercent.value = 40;
+
+    // 步骤 4: 提交批改任务（40% - 50%）
+    const { jobId } = await submitGradingTask({
+      ossKey: key,
+      useAI: useAIGrading.value,
+    });
+
+    currentJobId.value = jobId;
+    gradingPercent.value = 50;
+    message.info('已提交批改队列，请等待...');
+
+    // WebSocket 会自动推送进度，无需轮询
   } catch (error: any) {
+    console.error('批改失败:', error);
     message.error(error.message || '批改失败');
-  } finally {
+    gradingStep.value = 'idle';
     isLoading.value = false;
   }
+};
+
+// 执行批改
+const handleGrade = () => {
+  handleAsyncGrade();
 };
 
 // 清空
@@ -171,14 +307,30 @@ const handleClear = () => {
   previewUrl.value = '';
   result.value = null;
   standardAnswer.value = '';
+  gradingStep.value = 'idle';
+  gradingPercent.value = 0;
+  currentJobId.value = '';
+  compressionInfo.value = null;
 };
+
+// 生命周期
+onMounted(() => {
+  initWebSocket();
+});
+
+onBeforeUnmount(() => {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+});
 </script>
 
 <template>
   <div class="homework-page">
     <div class="page-header">
       <h2><EditOutlined /> 智能作业批改</h2>
-      <p>上传作业图片，AI自动识别并批改每道题目</p>
+      <p>上传作业图片，AI自动识别并批改每道题目（支持大文件、异步批改）</p>
     </div>
 
     <div class="content-wrapper">
@@ -202,14 +354,45 @@ const handleClear = () => {
                   <FileImageOutlined style="font-size: 48px; color: #1890ff" />
                 </p>
                 <p class="ant-upload-text">点击或拖拽作业图片到此处</p>
-                <p class="ant-upload-hint">支持 JPG、PNG 格式，建议清晰拍摄</p>
+                <p class="ant-upload-hint">
+                  支持 JPG、PNG 格式，自动压缩大图片，建议清晰拍摄
+                </p>
               </div>
             </Upload.Dragger>
           </div>
 
+          <!-- 压缩信息 -->
+          <Alert
+            v-if="compressionInfo"
+            type="success"
+            show-icon
+            class="compression-info"
+          >
+            <template #message>
+              <span v-if="compressionInfo.compressed">
+                图片已压缩：{{ formatFileSize(compressionInfo.originalSize) }}
+                → {{ formatFileSize(compressionInfo.compressedSize) }} (节省
+                {{
+                  (
+                    ((compressionInfo.originalSize -
+                      compressionInfo.compressedSize) /
+                      compressionInfo.originalSize) *
+                    100
+                  ).toFixed(1)
+                }}%)
+              </span>
+              <span v-else>
+                图片大小：{{ formatFileSize(compressionInfo.originalSize) }}
+                （无需压缩）
+              </span>
+            </template>
+          </Alert>
+
           <!-- AI 批改选项 -->
           <div class="ai-options">
-            <Divider orientation="left"> <RobotOutlined /> 批改选项 </Divider>
+            <Divider orientation="left">
+              <RobotOutlined /> 批改选项
+            </Divider>
 
             <div class="option-row">
               <span class="option-label">
@@ -278,9 +461,19 @@ const handleClear = () => {
             <li>请确保作业图片清晰、光线充足</li>
             <li>建议正面平拍，避免倾斜</li>
             <li>支持手写和打印体识别</li>
+            <li class="ai-tip">
+              <Tag color="green">异步批改</Tag>
+              支持大文件上传，批改不阻塞，实时进度推送
+            </li>
             <li v-if="useAIGrading" class="ai-tip">
               <Tag color="blue">AI 模式</Tag>
               使用百度教育 OCR 进行智能批改
+            </li>
+            <li v-if="wsConnected" class="ai-tip">
+              <Tag color="success">
+                <CheckCircleOutlined /> WebSocket 已连接
+              </Tag>
+              实时推送批改进度
             </li>
           </ul>
         </Card>
@@ -289,16 +482,42 @@ const handleClear = () => {
       <!-- 右侧：结果区 -->
       <div class="result-section">
         <Card title="批改结果" :bordered="false" class="result-card">
-          <!-- 加载中 -->
+          <!-- 加载中 / 进度条 -->
           <div v-if="isLoading" class="loading-state">
             <Spin size="large" />
-            <p>
-              {{
-                useAIGrading ? 'AI 正在分析批改中...' : '正在批改中，请稍候...'
-              }}
-            </p>
-            <p v-if="useAIGrading" class="loading-hint">
-              AI 批改可能需要较长时间，请耐心等待
+            <div class="progress-section">
+              <div class="step-text">{{ stepNames[gradingStep] }}</div>
+              <Progress
+                :percent="gradingPercent"
+                :status="gradingStep === 'done' ? 'success' : 'active'"
+                stroke-color="#1890ff"
+              />
+              <div class="progress-details">
+                <span v-if="gradingStep === 'compressing'">
+                  📦 正在压缩图片，减少上传时间...
+                </span>
+                <span v-else-if="gradingStep === 'uploading'">
+                  ⬆️ 正在上传到云端存储...
+                </span>
+                <span v-else-if="gradingStep === 'downloading'">
+                  ⬇️ 正在下载图片...
+                </span>
+                <span v-else-if="gradingStep === 'ocr_scanning'">
+                  🔍 OCR 识别中，切分题目...
+                </span>
+                <span v-else-if="gradingStep === 'ai_analyzing'">
+                  🤖 AI 分析中，智能批改...
+                </span>
+                <span v-else-if="gradingStep === 'saving'">
+                  💾 保存结果到数据库...
+                </span>
+                <span v-else-if="gradingStep === 'done'">
+                  ✅ 批改完成！
+                </span>
+              </div>
+            </div>
+            <p class="loading-hint">
+              使用异步批改，页面不会阻塞，可以继续其他操作
             </p>
           </div>
 
@@ -490,6 +709,10 @@ const handleClear = () => {
   padding: 40px 0;
 }
 
+.compression-info {
+  margin-bottom: 16px;
+}
+
 .ai-options {
   margin-bottom: 16px;
 }
@@ -563,8 +786,29 @@ const handleClear = () => {
   color: #999;
 }
 
+.progress-section {
+  margin-top: 24px;
+  width: 80%;
+  max-width: 500px;
+}
+
+.step-text {
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
+.progress-details {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}
+
 .loading-hint {
-  margin-top: 8px;
+  margin-top: 16px;
   font-size: 12px;
   color: #bbb;
 }

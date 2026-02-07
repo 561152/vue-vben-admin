@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   Form,
   Input,
@@ -14,6 +14,7 @@ import {
   Space,
   Alert,
   AutoComplete,
+  Empty,
 } from 'ant-design-vue';
 import {
   DeleteOutlined,
@@ -22,6 +23,11 @@ import {
   LinkOutlined,
   CodeOutlined,
 } from '@ant-design/icons-vue';
+import PromptBindingModal from './PromptBindingModal.vue';
+import {
+  getStepPromptBindings,
+  type PipelinePromptBinding,
+} from '#/api/ai-studio/pipeline-prompt-binding';
 
 interface InputMapping {
   [key: string]: string;
@@ -66,6 +72,7 @@ interface Props {
   node: NodeData | null;
   componentSchema?: ComponentSchema;
   availableSteps: Array<{ stepKey: string; name: string; outputSchema?: any }>;
+  pipelineKey?: string;
 }
 
 interface Emits {
@@ -86,6 +93,12 @@ const formState = ref<NodeData>({
 const inputMappings = ref<Array<{ key: string; value: string }>>([]);
 const outputMappings = ref<Array<{ key: string; value: string }>>([]);
 const activeKeys = ref(['basic', 'input', 'output', 'config', 'condition']);
+
+// 提示词绑定相关
+const showPromptBindingModal = ref(false);
+const promptBindings = ref<PipelinePromptBinding[]>([]);
+const loadingBindings = ref(false);
+const editingBinding = ref<PipelinePromptBinding | null>(null);
 
 // 模板语法提示
 const templateSuggestions = computed(() => {
@@ -116,6 +129,11 @@ const upstreamStepOptions = computed(() => {
       label: `${step.name} (${step.stepKey})`,
       value: step.stepKey,
     }));
+});
+
+// 是否为 LLM 类型步骤（显示提示词绑定）
+const isLlmStep = computed(() => {
+  return formState.value.type === 'llm' || formState.value.componentRef?.type === 'MODEL';
 });
 
 // 从 inputSchema 获取输入字段
@@ -262,7 +280,75 @@ const getConfigFieldComponent = (field: any) => {
   return 'input';
 };
 
+// 加载提示词绑定列表
+const loadPromptBindings = async () => {
+  if (!props.pipelineKey || !formState.value.stepKey) return;
+
+  loadingBindings.value = true;
+  try {
+    const bindings = await getStepPromptBindings(
+      props.pipelineKey,
+      formState.value.stepKey,
+      true,
+    );
+    promptBindings.value = bindings;
+  } catch (error) {
+    console.error('Failed to load prompt bindings:', error);
+  } finally {
+    loadingBindings.value = false;
+  }
+};
+
+// 打开提示词绑定弹窗
+const openPromptBindingModal = (binding?: PipelinePromptBinding) => {
+  editingBinding.value = binding || null;
+  showPromptBindingModal.value = true;
+};
+
+// 关闭提示词绑定弹窗
+const closePromptBindingModal = () => {
+  showPromptBindingModal.value = false;
+  editingBinding.value = null;
+};
+
+// 提示词绑定保存成功
+const handleBindingSuccess = () => {
+  loadPromptBindings();
+  closePromptBindingModal();
+};
+
+// 获取绑定类型标签颜色
+const getBindingTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    PRIMARY: 'blue',
+    FALLBACK: 'orange',
+    SHADOW: 'purple',
+  };
+  return colors[type] || 'default';
+};
+
+// 获取绑定类型显示文本
+const getBindingTypeLabel = (type: string) => {
+  const labels: Record<string, string> = {
+    PRIMARY: '主要',
+    FALLBACK: '备用',
+    SHADOW: '影子',
+  };
+  return labels[type] || type;
+};
+
 watch(() => props.node, initForm, { immediate: true });
+
+// 当节点变化时加载提示词绑定
+watch(
+  () => props.node?.stepKey,
+  (newStepKey) => {
+    if (newStepKey && isLlmStep.value) {
+      loadPromptBindings();
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -526,6 +612,64 @@ watch(() => props.node, initForm, { immediate: true });
             </Form.Item>
           </Form>
         </Collapse.Panel>
+
+        <!-- 提示词模板绑定（仅 LLM 类型）-->
+        <Collapse.Panel
+          v-if="isLlmStep"
+          key="promptBindings"
+          header="提示词模板绑定"
+        >
+          <Alert type="info" show-icon style="margin-bottom: 12px">
+            <template #message>
+              为 LLM 步骤绑定提示词模板，支持主要、备用、影子三种绑定类型
+            </template>
+          </Alert>
+
+          <!-- 绑定列表 -->
+          <div class="binding-list">
+            <div
+              v-for="binding in promptBindings"
+              :key="binding.id"
+              class="prompt-binding-item"
+            >
+              <div class="binding-header">
+                <Tag :color="getBindingTypeColor(binding.bindingType)">
+                  {{ getBindingTypeLabel(binding.bindingType) }}
+                </Tag>
+                <span class="binding-name">{{ binding.promptTemplateName }}</span>
+                <Button
+                  type="link"
+                  size="small"
+                  @click="openPromptBindingModal(binding)"
+                >
+                  编辑
+                </Button>
+              </div>
+              <div class="binding-meta">
+                <span v-if="binding.promptTemplateKey" class="template-key">
+                  {{ binding.promptTemplateKey }}
+                </span>
+                <span class="priority">优先级: {{ binding.priority }}</span>
+              </div>
+            </div>
+
+            <Empty
+              v-if="promptBindings.length === 0"
+              description="暂无提示词绑定"
+              :image="Empty.PRESENTED_IMAGE_SIMPLE"
+            />
+          </div>
+
+          <Button
+            type="dashed"
+            block
+            style="margin-top: 12px"
+            @click="openPromptBindingModal()"
+          >
+            <template #icon><PlusOutlined /></template>
+            添加提示词绑定
+          </Button>
+        </Collapse.Panel>
       </Collapse>
     </div>
 
@@ -535,6 +679,17 @@ watch(() => props.node, initForm, { immediate: true });
         <Button type="primary" @click="handleSave">保存配置</Button>
       </Space>
     </div>
+
+    <!-- 提示词绑定弹窗 -->
+    <PromptBindingModal
+      v-model:visible="showPromptBindingModal"
+      :pipeline-key="pipelineKey || ''"
+      :step-key="formState.stepKey"
+      :step-name="formState.name"
+      :editing-binding="editingBinding"
+      @success="handleBindingSuccess"
+      @cancel="closePromptBindingModal"
+    />
   </div>
 
   <div v-else class="empty-panel">
@@ -647,5 +802,52 @@ watch(() => props.node, initForm, { immediate: true });
 .empty-content {
   color: rgb(0 0 0 / 45%);
   text-align: center;
+}
+
+/* 提示词绑定样式 */
+.binding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prompt-binding-item {
+  padding: 12px;
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.prompt-binding-item:hover {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.binding-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.binding-name {
+  flex: 1;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.binding-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.template-key {
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 </style>

@@ -568,19 +568,6 @@ export interface PaginatedResponse<T> {
 }
 
 /**
- * 批改作业
- */
-export async function gradeHomework(formData: FormData) {
-  return requestClient.post<HomeworkGradingResponse>(
-    '/lms/homework/grade',
-    formData,
-    {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    },
-  );
-}
-
-/**
  * 获取批改历史
  */
 export async function getGradingHistory(params: {
@@ -815,4 +802,70 @@ export function getQuestionTypeName(type: CorrectEduQuestionType): string {
     4: '古诗文默写',
   };
   return names[type] || '未知类型';
+}
+
+// ==================== OSS 直传 + 异步批改 API ====================
+
+/**
+ * 获取 OSS 签名 URL（用于前端直传）
+ */
+export async function getPresignedUploadUrl(data: {
+  filename: string;
+  contentType: string;
+  pathPrefix?: string;
+}) {
+  return requestClient.post<{
+    signedUrl: string;
+    key: string;
+    expiresIn: number;
+  }>('/crm/media/presigned-url', data);
+}
+
+/**
+ * 上传文件到 OSS（使用签名 URL）
+ */
+export async function uploadToOss(signedUrl: string, file: File) {
+  const response = await fetch(signedUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`OSS 上传失败: ${response.statusText}`);
+  }
+
+  return response;
+}
+
+/**
+ * 提交作业批改任务（异步）
+ */
+export async function submitGradingTask(data: {
+  ossKey: string;
+  studentId?: string;
+  subjectId?: string;
+  useAI?: boolean;
+}) {
+  return requestClient.post<{
+    success: boolean;
+    message: string;
+    jobId: string;
+    status: string;
+  }>('/lms/homework/grade-by-oss', data);
+}
+
+/**
+ * 查询批改任务状态
+ */
+export async function getGradingStatus(jobId: string) {
+  return requestClient.get<{
+    jobId: string;
+    status: 'pending' | 'active' | 'completed' | 'failed';
+    progress?: number;
+    result?: HomeworkGradingResponse;
+    error?: string;
+  }>(`/lms/homework/grade-status/${jobId}`);
 }

@@ -17,15 +17,15 @@ import {
   EyeOutlined,
 } from '@ant-design/icons-vue';
 import type { TableColumnsType, TablePaginationConfig } from 'ant-design-vue';
-import { getGradingHistory } from '#/api/ai';
-import type { GradingHistoryItem } from '#/api/ai';
+import { getGradingRecords } from '#/api/grading';
+import type { GradingRecord } from '#/api/grading';
 import { generatePdf } from '#/api/print';
 
 const router = useRouter();
 
 // 状态
 const loading = ref(false);
-const dataSource = ref<GradingHistoryItem[]>([]);
+const dataSource = ref<GradingRecord[]>([]);
 const pagination = ref<TablePaginationConfig>({
   current: 1,
   pageSize: 10,
@@ -50,7 +50,7 @@ const columns: TableColumnsType = [
   },
   {
     title: '题目数',
-    dataIndex: 'questionCount',
+    dataIndex: 'totalQuestions',
     width: 80,
     align: 'center',
   },
@@ -110,7 +110,7 @@ const loadData = async () => {
   loading.value = true;
 
   try {
-    const res = await getGradingHistory({
+    const res = await getGradingRecords({
       page: pagination.value.current,
       pageSize: pagination.value.pageSize,
     });
@@ -142,9 +142,9 @@ const printingId = ref<string | null>(null);
 
 // 打印批改报告
 const handlePrint = async (
-  record: GradingHistoryItem | Record<string, any>,
+  record: GradingRecord | Record<string, any>,
 ) => {
-  printingId.value = record.id;
+  printingId.value = record.recordId;
   try {
     const printData = {
       studentName: '学生', // 实际应从学生信息获取
@@ -153,9 +153,9 @@ const handlePrint = async (
       maxScore: record.maxScore,
       accuracy: record.accuracy,
       correctCount: record.correctCount,
-      totalQuestions: record.questionCount,
+      totalQuestions: record.totalQuestions,
       processingTime: record.processingMs,
-      overallComment: `本次作业共 ${record.questionCount} 题，正确 ${record.correctCount} 题，正确率 ${(record.accuracy * 100).toFixed(1)}%`,
+      overallComment: `本次作业共 ${record.totalQuestions} 题，正确 ${record.correctCount} 题，正确率 ${(record.accuracy * 100).toFixed(1)}%`,
       strengthPoints:
         record.accuracy >= 0.8 ? ['整体表现优秀', '答题准确率高'] : [],
       improvementPoints:
@@ -187,7 +187,7 @@ onMounted(() => {
 <template>
   <div class="history-page">
     <div class="page-header">
-      <h2><HistoryOutlined /> 批改历史</h2>
+      <h2><HistoryOutlined class="header-icon" /> 批改历史</h2>
       <p>查看作业批改的历史记录</p>
     </div>
 
@@ -195,7 +195,10 @@ onMounted(() => {
       <!-- 工具栏 -->
       <div class="toolbar">
         <Space>
-          <Button :icon="ReloadOutlined" @click="handleRefresh"> 刷新 </Button>
+          <Button @click="handleRefresh">
+            <template #icon><ReloadOutlined /></template>
+            刷新
+          </Button>
         </Space>
       </div>
 
@@ -205,7 +208,7 @@ onMounted(() => {
         :data-source="dataSource"
         :pagination="pagination"
         :loading="loading"
-        row-key="id"
+        row-key="recordId"
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
@@ -232,8 +235,8 @@ onMounted(() => {
           <template v-if="column.dataIndex === 'createdAt'">
             {{ formatTime(record.createdAt) }}
           </template>
-          <template v-if="column.dataIndex === 'questionCount'">
-            <Tag color="blue">{{ record.questionCount }}</Tag>
+          <template v-if="column.dataIndex === 'totalQuestions'">
+            <Tag color="blue">{{ record.totalQuestions }}</Tag>
           </template>
           <template v-if="column.dataIndex === 'correctCount'">
             <Tag color="green">{{ record.correctCount }}</Tag>
@@ -259,7 +262,7 @@ onMounted(() => {
               <Button
                 type="link"
                 size="small"
-                @click="router.push(`/ai-tutor/grading/${record.id}`)"
+                @click="router.push(`/ai-tutor/grading/${record.recordId}`)"
               >
                 <template #icon><EyeOutlined /></template>
                 详情
@@ -301,6 +304,13 @@ onMounted(() => {
 .page-header h2 {
   margin: 0 0 8px;
   font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 20px;
 }
 
 .page-header p {

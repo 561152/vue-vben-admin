@@ -11,8 +11,8 @@ export default defineConfig(async () => {
         proxy: {
           '/api': {
             changeOrigin: true,
-            // 代理到后端 API 服务
-            target: 'http://localhost:3010',
+            // 代理到后端 API 服务 (测试环境使用 5100)
+            target: process.env.VITE_API_URL || 'http://localhost:5100',
             ws: true,
           },
         },

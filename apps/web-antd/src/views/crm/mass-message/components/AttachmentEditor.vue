@@ -22,13 +22,15 @@ import {
   FolderOpenOutlined,
 } from '@ant-design/icons-vue';
 import { uploadMedia, type WecomMedia } from '#/api/crm';
-import MediaLibraryModal from './MediaLibraryModal.vue';
+import { MaterialPicker } from '#/components';
+import type { Material, MaterialType } from '#/components';
 
 // ==================== Types ====================
 
 export interface Attachment {
   id?: string;
   type: 'image' | 'video' | 'file' | 'link' | 'miniprogram';
+  materialId?: number; // Reference to material library item (for usage tracking)
   mediaId?: number;
   ossUrl?: string;
   name?: string;
@@ -63,8 +65,8 @@ const emit = defineEmits<{
 const uploading = ref(false);
 const linkModalVisible = ref(false);
 const miniprogramModalVisible = ref(false);
-const mediaLibraryVisible = ref(false);
-const mediaLibraryType = ref<'image' | 'video' | 'file'>('image');
+const materialPickerVisible = ref(false);
+const materialPickerType = ref<MaterialType>('IMAGE');
 
 // Link form
 const linkForm = ref({
@@ -206,36 +208,59 @@ function handleTypeClick(type: string) {
   }
 }
 
-function handleOpenMediaLibrary(type: 'image' | 'video' | 'file') {
+function handleOpenMaterialPicker(type: 'image' | 'video' | 'file') {
   if (!canAddMore.value) {
     message.warning(`最多只能添加 ${MAX_COUNT.value} 个附件`);
     return;
   }
-  mediaLibraryType.value = type;
-  mediaLibraryVisible.value = true;
+  // Map types to MaterialType
+  const typeMap: Record<string, MaterialType> = {
+    image: 'IMAGE',
+    video: 'VIDEO',
+    file: 'FILE',
+  };
+  materialPickerType.value = typeMap[type] || 'IMAGE';
+  materialPickerVisible.value = true;
 }
 
-function handleMediaLibrarySelect(selectedMedia: WecomMedia[]) {
+function handleMaterialSelect(selectedMaterials: Material[]) {
   const remaining = remainingCount.value;
-  const toAdd = selectedMedia.slice(0, remaining);
+  const toAdd = selectedMaterials.slice(0, remaining);
 
-  const newAttachments: Attachment[] = toAdd.map((media) => ({
-    id: generateId(),
-    type: media.type.toLowerCase() as 'image' | 'video' | 'file',
-    mediaId: media.id,
-    ossUrl: media.ossUrl || '',
-    name: media.name,
-  }));
+  const newAttachments: Attachment[] = toAdd.map((material) => {
+    const att: Attachment = {
+      id: generateId(),
+      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link' | 'miniprogram',
+      materialId: material.id, // Add materialId for usage tracking
+    };
+
+    // Handle different material types
+    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+      // Get the first media ID if available
+      if (material.mediaIds && material.mediaIds.length > 0) {
+        att.mediaId = material.mediaIds[0];
+      }
+      att.name = material.name;
+      att.ossUrl = ''; // Will be populated by backend when needed
+    } else if (material.type === 'LINK' && material.linkUrl) {
+      att.link = {
+        title: material.linkTitle || material.name,
+        url: material.linkUrl,
+      };
+    }
+
+    return att;
+  });
 
   attachments.value = [...attachments.value, ...newAttachments];
 
-  if (selectedMedia.length > remaining) {
+  if (selectedMaterials.length > remaining) {
     message.warning(
-      `已添加 ${remaining} 个，超出数量的 ${selectedMedia.length - remaining} 个已忽略`,
+      `已添加 ${remaining} 个，超出数量的 ${selectedMaterials.length - remaining} 个已忽略`,
     );
   }
 
-  mediaLibraryVisible.value = false;
+  materialPickerVisible.value = false;
 }
 
 function handleLinkConfirm() {
@@ -491,15 +516,37 @@ function getTypeIcon(type: string) {
         <!-- Divider -->
         <div class="h-16 w-px bg-gray-200" />
 
-        <!-- Media Library buttons -->
+        <!-- Material Library buttons -->
         <Tooltip title="从素材库选择图片">
           <Button
             class="flex h-16 w-16 flex-col items-center justify-center"
             :disabled="!canAddMore"
-            @click="handleOpenMediaLibrary('image')"
+            @click="handleOpenMaterialPicker('image')"
           >
             <FolderOpenOutlined class="text-lg" />
-            <span class="mt-1 text-xs">素材库</span>
+            <span class="mt-1 text-xs">图片库</span>
+          </Button>
+        </Tooltip>
+
+        <Tooltip title="从素材库选择视频">
+          <Button
+            class="flex h-16 w-16 flex-col items-center justify-center"
+            :disabled="!canAddMore"
+            @click="handleOpenMaterialPicker('video')"
+          >
+            <FolderOpenOutlined class="text-lg" />
+            <span class="mt-1 text-xs">视频库</span>
+          </Button>
+        </Tooltip>
+
+        <Tooltip title="从素材库选择文件">
+          <Button
+            class="flex h-16 w-16 flex-col items-center justify-center"
+            :disabled="!canAddMore"
+            @click="handleOpenMaterialPicker('file')"
+          >
+            <FolderOpenOutlined class="text-lg" />
+            <span class="mt-1 text-xs">文件库</span>
           </Button>
         </Tooltip>
       </div>
@@ -604,13 +651,13 @@ function getTypeIcon(type: string) {
       </Form>
     </Modal>
 
-    <!-- Media Library Modal -->
-    <MediaLibraryModal
-      v-model:open="mediaLibraryVisible"
-      :type="mediaLibraryType"
+    <!-- Material Picker Modal -->
+    <MaterialPicker
+      v-model:open="materialPickerVisible"
+      :type="materialPickerType"
       :multiple="true"
       :max-count="remainingCount"
-      @select="handleMediaLibrarySelect"
+      @select="handleMaterialSelect"
     />
   </div>
 </template>

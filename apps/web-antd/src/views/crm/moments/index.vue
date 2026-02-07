@@ -36,11 +36,14 @@ import {
   BarChartOutlined,
   ReloadOutlined,
   FilterOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable } from '#/composables';
 import CustomerFilterDrawer from './components/CustomerFilterDrawer.vue';
+import { MaterialPicker } from '#/components';
+import type { Material, MaterialType } from '#/components';
 
 interface FilterConditions {
   tagIds: number[];
@@ -112,13 +115,29 @@ const materialsPage = ref(1);
 // Filters (用于 history 表格)
 const dateRange = ref<[unknown, unknown] | null>(null);
 
+// Attachment interface
+interface MomentsAttachment {
+  id?: string;
+  type: 'image' | 'video' | 'file' | 'link' | 'miniprogram';
+  materialId?: number; // For usage tracking
+  mediaId?: number;
+  ossUrl?: string;
+  name?: string;
+  url?: string;
+  thumbnail?: string;
+}
+
 // Create form
 const createForm = ref({
   visibleType: 'ALL' as 'ALL' | 'FILTERED',
   text: '',
-  attachments: [] as UploadFile[],
+  attachments: [] as MomentsAttachment[],
 });
 const createLoading = ref(false);
+
+// Material Picker state
+const materialPickerVisible = ref(false);
+const materialPickerType = ref<MaterialType>('ALL');
 
 // Customer filter drawer
 const filterDrawerVisible = ref(false);
@@ -291,6 +310,75 @@ const filterSummary = computed(() => {
 
 // ==================== 事件处理 ====================
 
+function generateAttachmentId(): string {
+  return `att_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function handleOpenMaterialPicker(type?: 'image' | 'video' | 'file') {
+  if (createForm.value.attachments.length >= 9) {
+    message.warning('最多只能添加 9 个附件');
+    return;
+  }
+
+  // Map types to MaterialType
+  const typeMap: Record<string, MaterialType> = {
+    image: 'IMAGE',
+    video: 'VIDEO',
+    file: 'FILE',
+  };
+
+  materialPickerType.value = type ? (typeMap[type] || 'ALL') : 'ALL';
+  materialPickerVisible.value = true;
+}
+
+function handleMaterialSelect(selectedMaterials: Material[]) {
+  const maxCount = 9;
+  const remaining = maxCount - createForm.value.attachments.length;
+  const toAdd = selectedMaterials.slice(0, remaining);
+
+  const newAttachments: MomentsAttachment[] = toAdd.map((material) => {
+    const att: MomentsAttachment = {
+      id: generateAttachmentId(),
+      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link' | 'miniprogram',
+      materialId: material.id, // Important: for usage tracking
+      name: material.name,
+    };
+
+    // Handle different material types
+    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+      if (material.mediaIds && material.mediaIds.length > 0) {
+        att.mediaId = material.mediaIds[0];
+      }
+      // Assuming we need to fetch the actual URL from backend
+      att.ossUrl = '';
+      att.thumbnail = '';
+    } else if (material.type === 'LINK' && material.linkUrl) {
+      att.url = material.linkUrl;
+    }
+
+    return att;
+  });
+
+  createForm.value.attachments = [
+    ...createForm.value.attachments,
+    ...newAttachments,
+  ];
+
+  if (selectedMaterials.length > remaining) {
+    message.warning(
+      `已添加 ${remaining} 个，超出数量的 ${selectedMaterials.length - remaining} 个已忽略`,
+    );
+  }
+
+  materialPickerVisible.value = false;
+}
+
+function handleRemoveAttachment(id: string) {
+  createForm.value.attachments = createForm.value.attachments.filter(
+    (att) => att.id !== id,
+  );
+}
+
 function handleOpenFilterDrawer() {
   filterDrawerVisible.value = true;
 }
@@ -320,10 +408,12 @@ async function handlePublish() {
       name: `朋友圈发布 - ${new Date().toLocaleString('zh-CN')}`,
       text: createForm.value.text,
       visibleType: createForm.value.visibleType,
-      attachments: createForm.value.attachments.map((f) => ({
-        type: f.type,
-        url: (f.response as { url?: string })?.url || f.url,
-        name: f.name,
+      attachments: createForm.value.attachments.map((att) => ({
+        type: att.type,
+        materialId: att.materialId, // Important: for usage tracking
+        mediaId: att.mediaId,
+        url: att.url || att.ossUrl,
+        name: att.name,
       })),
     };
 
@@ -539,20 +629,125 @@ onMounted(() => {
                 />
               </Form.Item>
 
-              <Form.Item>
-                <div class="rounded border border-dashed p-4">
-                  <div class="mb-2 text-gray-500">
-                    + 添加图片/视频/网页（仅支持pg图片格式... mp4的视频格式）
-                  </div>
-                  <div class="flex gap-2">
+              <Form.Item label="添加附件">
+                <!-- Attachment Preview List -->
+                <div
+                  v-if="createForm.attachments.length > 0"
+                  class="mb-4 flex flex-wrap gap-3"
+                >
+                  <Card
+                    v-for="att in createForm.attachments"
+                    :key="att.id"
+                    class="relative w-32"
+                    size="small"
+                    :body-style="{ padding: '8px' }"
+                  >
+                    <!-- Remove button -->
                     <Button
-                      v-for="type in attachmentTypes"
-                      :key="type.key"
-                      class="flex h-16 w-16 flex-col items-center justify-center"
+                      type="text"
+                      danger
+                      size="small"
+                      class="absolute -right-2 -top-2 z-10"
+                      shape="circle"
+                      @click="handleRemoveAttachment(att.id!)"
                     >
-                      <component :is="type.icon" class="text-lg" />
-                      <span class="mt-1 text-xs">{{ type.label }}</span>
+                      <DeleteOutlined />
                     </Button>
+
+                    <!-- Preview -->
+                    <div
+                      class="mb-2 flex h-20 items-center justify-center overflow-hidden rounded bg-gray-100"
+                    >
+                      <Image
+                        v-if="
+                          (att.type === 'image' || att.type === 'video') &&
+                          (att.ossUrl || att.thumbnail)
+                        "
+                        :src="att.ossUrl || att.thumbnail"
+                        :preview="false"
+                        class="h-full w-full object-cover"
+                      />
+                      <div
+                        v-else-if="att.type === 'link'"
+                        class="flex flex-col items-center text-gray-400"
+                      >
+                        <LinkOutlined class="text-2xl" />
+                        <span class="mt-1 text-xs">网页</span>
+                      </div>
+                      <div v-else class="flex flex-col items-center text-gray-400">
+                        <component
+                          :is="
+                            att.type === 'image'
+                              ? PictureOutlined
+                              : att.type === 'video'
+                                ? VideoCameraOutlined
+                                : FileOutlined
+                          "
+                          class="text-2xl"
+                        />
+                        <span class="mt-1 text-xs">{{ att.type }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="truncate text-xs text-gray-600">
+                      {{ att.name || '附件' }}
+                    </div>
+                  </Card>
+                </div>
+
+                <div class="rounded border border-dashed p-4">
+                  <div class="mb-2 text-sm text-gray-500">
+                    + 添加图片/视频/网页
+                    <span
+                      v-if="createForm.attachments.length >= 9"
+                      class="text-red-500"
+                    >
+                      （已达最大数量 9）
+                    </span>
+                    <span v-else class="text-gray-400">
+                      （还可添加 {{ 9 - createForm.attachments.length }} 个）
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <Button
+                      class="flex h-16 w-16 flex-col items-center justify-center"
+                      :disabled="createForm.attachments.length >= 9"
+                      @click="handleOpenMaterialPicker('image')"
+                    >
+                      <PictureOutlined class="text-lg" />
+                      <span class="mt-1 text-xs">图片</span>
+                    </Button>
+
+                    <Button
+                      class="flex h-16 w-16 flex-col items-center justify-center"
+                      :disabled="createForm.attachments.length >= 9"
+                      @click="handleOpenMaterialPicker('video')"
+                    >
+                      <VideoCameraOutlined class="text-lg" />
+                      <span class="mt-1 text-xs">视频</span>
+                    </Button>
+
+                    <Button
+                      class="flex h-16 w-16 flex-col items-center justify-center"
+                      :disabled="createForm.attachments.length >= 9"
+                      @click="handleOpenMaterialPicker('file')"
+                    >
+                      <FileOutlined class="text-lg" />
+                      <span class="mt-1 text-xs">文件</span>
+                    </Button>
+
+                    <Button
+                      class="flex h-16 w-16 flex-col items-center justify-center"
+                      :disabled="createForm.attachments.length >= 9"
+                      @click="handleOpenMaterialPicker()"
+                    >
+                      <FolderOpenOutlined class="text-lg" />
+                      <span class="mt-1 text-xs">素材库</span>
+                    </Button>
+                  </div>
+                  <div class="mt-2 text-xs text-gray-400">
+                    支持 jpg/png 图片，mp4 视频，最多 9 个附件
                   </div>
                 </div>
               </Form.Item>
@@ -788,6 +983,15 @@ onMounted(() => {
       v-model:open="filterDrawerVisible"
       :initial-conditions="filterConditions"
       @confirm="handleFilterConfirm"
+    />
+
+    <!-- Material Picker Modal -->
+    <MaterialPicker
+      v-model:open="materialPickerVisible"
+      :type="materialPickerType"
+      :multiple="true"
+      :max-count="9 - createForm.attachments.length"
+      @select="handleMaterialSelect"
     />
   </div>
 </template>

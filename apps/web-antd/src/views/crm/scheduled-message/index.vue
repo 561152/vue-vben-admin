@@ -22,11 +22,14 @@ import {
   DeleteOutlined,
   EditOutlined,
   BarChartOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import { requestClient } from '#/api/request';
 import { useCrudTable, useModalForm } from '#/composables';
 import dayjs from 'dayjs';
+import { MaterialPicker } from '#/components';
+import type { Material, MaterialType } from '#/components';
 
 // ==================== 类型定义 ====================
 
@@ -41,12 +44,22 @@ interface ScheduledMessage {
   createdAt: string;
 }
 
+interface MessageAttachment {
+  id?: string;
+  type: 'image' | 'video' | 'file' | 'link';
+  materialId?: number; // For usage tracking
+  mediaId?: number;
+  url?: string;
+  name?: string;
+}
+
 interface FormState {
   name: string;
   content: string;
   scheduledAt: dayjs.Dayjs | undefined;
   targetType: 'CUSTOMER' | 'TAG' | 'ALL';
   targetIds: number[];
+  attachments: MessageAttachment[];
 }
 
 // ==================== 常量 ====================
@@ -100,18 +113,34 @@ const { tableProps, fetchData } = useCrudTable<ScheduledMessage>({
 
 // ==================== Modal 逻辑 ====================
 
+// Material Picker state
+const materialPickerVisible = ref(false);
+const materialPickerType = ref<MaterialType>('ALL');
+
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<FormState>({
     createApi: async (data) => {
       await requestClient.post('/scheduled-messages', {
         ...data,
         scheduledAt: data.scheduledAt?.toISOString(),
+        attachments: data.attachments.map((att) => ({
+          type: att.type,
+          materialId: att.materialId,
+          mediaId: att.mediaId,
+          url: att.url,
+        })),
       });
     },
     updateApi: async (id, data) => {
       await requestClient.put(`/scheduled-messages/${id}`, {
         ...data,
         scheduledAt: data.scheduledAt?.toISOString(),
+        attachments: data.attachments.map((att) => ({
+          type: att.type,
+          materialId: att.materialId,
+          mediaId: att.mediaId,
+          url: att.url,
+        })),
       });
     },
     initialValues: () => ({
@@ -120,9 +149,55 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       scheduledAt: undefined,
       targetType: 'CUSTOMER',
       targetIds: [],
+      attachments: [],
     }),
     afterSubmit: fetchData,
   });
+
+// ==================== 素材选择逻辑 ====================
+
+function generateAttachmentId(): string {
+  return `att_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function handleOpenMaterialPicker() {
+  materialPickerType.value = 'ALL';
+  materialPickerVisible.value = true;
+}
+
+function handleMaterialSelect(selectedMaterials: Material[]) {
+  const newAttachments: MessageAttachment[] = selectedMaterials.map((material) => {
+    const att: MessageAttachment = {
+      id: generateAttachmentId(),
+      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link',
+      materialId: material.id, // Important: for usage tracking
+      name: material.name,
+    };
+
+    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+      if (material.mediaIds && material.mediaIds.length > 0) {
+        att.mediaId = material.mediaIds[0];
+      }
+    } else if (material.type === 'LINK' && material.linkUrl) {
+      att.url = material.linkUrl;
+    }
+
+    return att;
+  });
+
+  formState.value.attachments = [
+    ...formState.value.attachments,
+    ...newAttachments,
+  ];
+
+  materialPickerVisible.value = false;
+}
+
+function handleRemoveAttachment(id: string) {
+  formState.value.attachments = formState.value.attachments.filter(
+    (att) => att.id !== id,
+  );
+}
 
 // ==================== 事件处理 ====================
 
@@ -133,6 +208,7 @@ function handleEdit(record: ScheduledMessage) {
     scheduledAt: dayjs(record.scheduledAt),
     targetType: record.targetType,
     targetIds: [],
+    attachments: [],
   });
 }
 
@@ -299,8 +375,35 @@ onMounted(fetchData);
             placeholder="选择发送目标类型"
           />
         </Form.Item>
+        <Form.Item label="附件">
+          <div
+            v-if="formState.attachments.length > 0"
+            class="mb-2 flex flex-wrap gap-2"
+          >
+            <Tag
+              v-for="att in formState.attachments"
+              :key="att.id"
+              closable
+              @close="handleRemoveAttachment(att.id!)"
+            >
+              {{ att.name || att.type }}
+            </Tag>
+          </div>
+          <Button @click="handleOpenMaterialPicker">
+            <FolderOpenOutlined /> 选择素材
+          </Button>
+        </Form.Item>
       </Form>
     </Modal>
+
+    <!-- Material Picker Modal -->
+    <MaterialPicker
+      v-model:open="materialPickerVisible"
+      :type="materialPickerType"
+      :multiple="true"
+      :max-count="9"
+      @select="handleMaterialSelect"
+    />
   </div>
 </template>
 

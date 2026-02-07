@@ -16,6 +16,7 @@ import {
   Input,
   Upload,
   Image,
+  Tabs,
 } from 'ant-design-vue';
 import {
   SaveOutlined,
@@ -26,6 +27,7 @@ import {
   PictureOutlined,
 } from '@ant-design/icons-vue';
 import SchemaForm from './components/SchemaForm.vue';
+import PromptDebugger from './components/PromptDebugger.vue';
 import {
   getPipelineByKey,
   updateRuntimeConfig,
@@ -33,9 +35,13 @@ import {
   type Pipeline,
   type ExecutionSubmitResponse,
 } from '#/api/ai-studio/pipeline';
+import type { PipelineDefinition } from '#/api/ai-studio/pipeline';
 import { requestClient } from '#/api/request';
 
 const route = useRoute();
+
+// 当前活动标签页
+const activeTab = ref('config');
 const router = useRouter();
 
 const pipelineKey = route.params.key as string;
@@ -417,428 +423,464 @@ onBeforeUnmount(() => {
 
       <!-- 主内容区域 -->
       <div class="main-content">
-        <!-- Step 1: 配置参数 -->
-        <Card class="step-card" :class="{ active: currentStep === 1 }">
-          <template #title>
-            <div class="card-title">
-              <span class="step-badge">步骤 1</span>
-              <span class="title-text">配置流程参数</span>
-            </div>
-          </template>
-          <div v-if="pipeline?.formSchema" class="form-container">
-            <SchemaForm
-              ref="schemaFormRef"
-              v-model="config"
-              :schema="pipeline.formSchema"
-              @validate="
-                (valid, errors) => {
-                  if (!valid) {
-                    console.error('参数验证失败:', errors);
-                  }
-                }
-              "
-            />
-          </div>
-          <Empty
-            v-else-if="pipeline && !pipeline.formSchema"
-            description="该流程无需配置参数"
-          />
-        </Card>
-
-        <!-- Step 2: 测试运行 -->
-        <Card class="step-card" :class="{ active: currentStep === 2 }">
-          <template #title>
-            <div class="card-title">
-              <span class="step-badge">步骤 2</span>
-              <span class="title-text">测试运行</span>
-            </div>
-          </template>
-          <Alert
-            message="测试模式"
-            description="使用当前配置同步执行流程。请在下方输入测试数据。"
-            type="info"
-            show-icon
-            class="test-tip"
-          />
-
-          <!-- 粘贴提示 -->
-          <div class="paste-hint" v-if="!testParams.imageUrl">
-            <div class="paste-hint-icon">📋</div>
-            <div class="paste-hint-text">
-              <strong>快捷方式</strong>：复制图片后按 <kbd>Ctrl+V</kbd> 直接粘贴
-            </div>
-          </div>
-
-          <!-- 测试参数输入 -->
-          <div class="test-form-container">
-            <div class="form-section-title">
-              <span class="icon">📝</span>
-              <span>测试输入参数</span>
-            </div>
-            <Form
-              ref="testFormRef"
-              :model="testParams"
-              layout="vertical"
-              class="test-form"
-            >
-              <FormItem
-                label="客户反馈图片地址"
-                name="imageUrl"
-                :rules="[
-                  { required: true, message: '请输入图片URL或上传图片' },
-                ]"
-              >
-                <Space direction="vertical" style="width: 100%" :size="12">
-                  <!-- URL输入框和操作按钮 -->
-                  <div class="image-input-row">
-                    <Input
-                      v-model:value="testParams.imageUrl"
-                      placeholder="https://example.com/feedback-image.jpg"
-                      size="large"
-                      @change="handleImageUrlChange(testParams.imageUrl)"
-                    >
-                      <template #prefix>
-                        <PictureOutlined style="color: #8c8c8c" />
-                      </template>
-                    </Input>
-                    <!-- 使用 FormItemRest 包裹 Upload，避免 FormItem 收集多个字段 -->
-                    <FormItemRest>
-                      <Upload
-                        :before-upload="handleImageUpload"
-                        accept="image/*"
-                        :show-upload-list="false"
-                      >
-                        <Button size="large" :loading="uploading">
-                          <template #icon><UploadOutlined /></template>
-                          {{ uploading ? '上传中...' : '上传图片' }}
-                        </Button>
-                      </Upload>
-                    </FormItemRest>
-                    <FormItemRest>
-                      <Button
-                        size="large"
-                        danger
-                        v-if="testParams.imageUrl"
-                        @click="handleClearImage"
-                      >
-                        清除
-                      </Button>
-                    </FormItemRest>
-                  </div>
-
-                  <!-- 图片预览 -->
-                  <div v-if="imagePreviewUrl" class="image-preview-container">
-                    <div class="preview-label">图片预览：</div>
-                    <Image
-                      :src="imagePreviewUrl"
-                      :width="200"
-                      :preview="true"
-                      fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-                    />
-                  </div>
-
-                  <div class="field-tip">
-                    💡 支持三种方式：
-                    <br />• 直接输入图片URL <br />• 点击"上传图片"选择本地文件
-                    <br />• <strong>按 Ctrl+V 粘贴剪贴板中的图片</strong> ⭐
-                  </div>
-                </Space>
-              </FormItem>
-
-              <FormItem label="文字反馈（可选）" name="feedbackText">
-                <Input.TextArea
-                  v-model:value="testParams.feedbackText"
-                  placeholder="客户的文字反馈内容..."
-                  :rows="3"
-                  size="large"
+        <Tabs v-model:active-key="activeTab" type="card">
+          <!-- Tab 1: 流程配置 -->
+          <Tabs.TabPane key="config" tab="流程配置">
+            <!-- Step 1: 配置参数 -->
+            <Card class="step-card" :class="{ active: currentStep === 1 }">
+              <template #title>
+                <div class="card-title">
+                  <span class="step-badge">步骤 1</span>
+                  <span class="title-text">配置流程参数</span>
+                </div>
+              </template>
+              <div v-if="pipeline?.formSchema" class="form-container">
+                <SchemaForm
+                  ref="schemaFormRef"
+                  v-model="config"
+                  :schema="pipeline.formSchema"
+                  @validate="
+                    (valid, errors) => {
+                      if (!valid) {
+                        console.error('参数验证失败:', errors);
+                      }
+                    }
+                  "
                 />
-              </FormItem>
-
-              <div class="form-row">
-                <FormItem
-                  label="客户ID"
-                  name="customerId"
-                  :rules="[{ required: true, message: '请输入客户ID' }]"
-                  class="form-col"
-                >
-                  <Input
-                    v-model:value="testParams.customerId"
-                    placeholder="C12345"
-                    size="large"
-                  />
-                </FormItem>
-
-                <FormItem
-                  label="租户ID"
-                  name="tenantId"
-                  :rules="[{ required: true, message: '请输入租户ID' }]"
-                  class="form-col"
-                >
-                  <Input
-                    v-model:value="testParams.tenantId"
-                    placeholder="1"
-                    size="large"
-                  />
-                </FormItem>
               </div>
-            </Form>
-          </div>
+              <Empty
+                v-else-if="pipeline && !pipeline.formSchema"
+                description="该流程无需配置参数"
+              />
+            </Card>
 
-          <div class="test-action">
-            <Button
-              type="primary"
-              @click="handleTest"
-              :loading="testing"
-              size="large"
-              block
-            >
-              <template #icon><ThunderboltOutlined /></template>
-              {{ testing ? '执行中...' : '立即测试' }}
-            </Button>
-            <div
-              v-if="!pipeline?.formSchema"
-              style="
-                margin-top: 8px;
-                font-size: 12px;
-                color: #8c8c8c;
-                text-align: center;
-              "
-            >
-              提示：该流程无需配置参数，可直接测试
-            </div>
-          </div>
-        </Card>
+            <!-- Step 2: 测试运行 -->
+            <Card class="step-card" :class="{ active: currentStep === 2 }">
+              <template #title>
+                <div class="card-title">
+                  <span class="step-badge">步骤 2</span>
+                  <span class="title-text">测试运行</span>
+                </div>
+              </template>
+              <Alert
+                message="测试模式"
+                description="使用当前配置同步执行流程。请在下方输入测试数据。"
+                type="info"
+                show-icon
+                class="test-tip"
+              />
 
-        <!-- Step 3: 执行结果 -->
-        <Card
-          class="step-card result-card"
-          :class="{ active: currentStep === 3 }"
-          v-if="testResult"
-        >
-          <template #title>
-            <div class="card-title">
-              <span class="step-badge">步骤 3</span>
-              <span class="title-text">执行结果</span>
-            </div>
-          </template>
-
-          <!-- 执行状态 -->
-          <Alert
-            :type="
-              testResult.status === 'COMPLETED'
-                ? 'success'
-                : testResult.status === 'FAILED'
-                  ? 'error'
-                  : 'info'
-            "
-            show-icon
-            class="status-alert"
-          >
-            <template #message>
-              <div class="status-header">
-                <span class="status-label">执行状态：</span>
-                <Tag
-                  :color="
-                    testResult.status === 'COMPLETED'
-                      ? 'success'
-                      : testResult.status === 'FAILED'
-                        ? 'error'
-                        : 'processing'
-                  "
-                  class="status-tag"
-                >
-                  {{
-                    testResult.status === 'COMPLETED'
-                      ? '✓ 成功'
-                      : testResult.status === 'FAILED'
-                        ? '✗ 失败'
-                        : '⋯ 进行中'
-                  }}
-                </Tag>
-              </div>
-            </template>
-            <template #description>
-              <div class="execution-info">
-                <div>执行ID：{{ testResult.executionId }}</div>
-                <div v-if="testResult.jobId">
-                  任务ID：{{ testResult.jobId }}
+              <!-- 粘贴提示 -->
+              <div class="paste-hint" v-if="!testParams.imageUrl">
+                <div class="paste-hint-icon">📋</div>
+                <div class="paste-hint-text">
+                  <strong>快捷方式</strong>：复制图片后按
+                  <kbd>Ctrl+V</kbd> 直接粘贴
                 </div>
               </div>
-            </template>
-          </Alert>
 
-          <!-- 分析结果（成功时显示） -->
-          <div
-            v-if="testResult.result && testResult.status === 'COMPLETED'"
-            class="result-container"
-          >
-            <div class="result-section">
-              <div class="section-title">
-                <span class="icon">🎯</span>
-                <span>情感分析</span>
-              </div>
-              <div v-if="testResult.result.sentiment" class="sentiment-result">
-                <Tag
-                  :color="
-                    testResult.result.sentiment === 'satisfied'
-                      ? 'green'
-                      : testResult.result.sentiment === 'neutral'
-                        ? 'blue'
-                        : testResult.result.sentiment === 'dissatisfied'
-                          ? 'orange'
-                          : 'red'
-                  "
-                  class="sentiment-tag"
+              <!-- 测试参数输入 -->
+              <div class="test-form-container">
+                <div class="form-section-title">
+                  <span class="icon">📝</span>
+                  <span>测试输入参数</span>
+                </div>
+                <Form
+                  ref="testFormRef"
+                  :model="testParams"
+                  layout="vertical"
+                  class="test-form"
                 >
-                  {{
-                    testResult.result.sentiment === 'satisfied'
-                      ? '😊 满意'
-                      : testResult.result.sentiment === 'neutral'
-                        ? '😐 一般'
-                        : testResult.result.sentiment === 'dissatisfied'
-                          ? '😟 不满意'
-                          : '😠 非常不满'
-                  }}
-                </Tag>
-                <span v-if="testResult.result.confidence" class="confidence">
-                  置信度：{{ (testResult.result.confidence * 100).toFixed(1) }}%
-                </span>
-                <Tag
-                  v-if="testResult.result.priority"
-                  :color="
-                    testResult.result.priority === 'high'
-                      ? 'red'
-                      : testResult.result.priority === 'medium'
-                        ? 'orange'
-                        : 'green'
-                  "
-                  class="priority-tag"
+                  <FormItem
+                    label="客户反馈图片地址"
+                    name="imageUrl"
+                    :rules="[
+                      { required: true, message: '请输入图片URL或上传图片' },
+                    ]"
+                  >
+                    <Space direction="vertical" style="width: 100%" :size="12">
+                      <!-- URL输入框和操作按钮 -->
+                      <div class="image-input-row">
+                        <Input
+                          v-model:value="testParams.imageUrl"
+                          placeholder="https://example.com/feedback-image.jpg"
+                          size="large"
+                          @change="handleImageUrlChange(testParams.imageUrl)"
+                        >
+                          <template #prefix>
+                            <PictureOutlined style="color: #8c8c8c" />
+                          </template>
+                        </Input>
+                        <!-- 使用 FormItemRest 包裹 Upload，避免 FormItem 收集多个字段 -->
+                        <FormItemRest>
+                          <Upload
+                            :before-upload="handleImageUpload"
+                            accept="image/*"
+                            :show-upload-list="false"
+                          >
+                            <Button size="large" :loading="uploading">
+                              <template #icon><UploadOutlined /></template>
+                              {{ uploading ? '上传中...' : '上传图片' }}
+                            </Button>
+                          </Upload>
+                        </FormItemRest>
+                        <FormItemRest>
+                          <Button
+                            size="large"
+                            danger
+                            v-if="testParams.imageUrl"
+                            @click="handleClearImage"
+                          >
+                            清除
+                          </Button>
+                        </FormItemRest>
+                      </div>
+
+                      <!-- 图片预览 -->
+                      <div
+                        v-if="imagePreviewUrl"
+                        class="image-preview-container"
+                      >
+                        <div class="preview-label">图片预览：</div>
+                        <Image
+                          :src="imagePreviewUrl"
+                          :width="200"
+                          :preview="true"
+                          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                        />
+                      </div>
+
+                      <div class="field-tip">
+                        💡 支持三种方式：
+                        <br />• 直接输入图片URL <br />•
+                        点击"上传图片"选择本地文件 <br />•
+                        <strong>按 Ctrl+V 粘贴剪贴板中的图片</strong> ⭐
+                      </div>
+                    </Space>
+                  </FormItem>
+
+                  <FormItem label="文字反馈（可选）" name="feedbackText">
+                    <Input.TextArea
+                      v-model:value="testParams.feedbackText"
+                      placeholder="客户的文字反馈内容..."
+                      :rows="3"
+                      size="large"
+                    />
+                  </FormItem>
+
+                  <div class="form-row">
+                    <FormItem
+                      label="客户ID"
+                      name="customerId"
+                      :rules="[{ required: true, message: '请输入客户ID' }]"
+                      class="form-col"
+                    >
+                      <Input
+                        v-model:value="testParams.customerId"
+                        placeholder="C12345"
+                        size="large"
+                      />
+                    </FormItem>
+
+                    <FormItem
+                      label="租户ID"
+                      name="tenantId"
+                      :rules="[{ required: true, message: '请输入租户ID' }]"
+                      class="form-col"
+                    >
+                      <Input
+                        v-model:value="testParams.tenantId"
+                        placeholder="1"
+                        size="large"
+                      />
+                    </FormItem>
+                  </div>
+                </Form>
+              </div>
+
+              <div class="test-action">
+                <Button
+                  type="primary"
+                  @click="handleTest"
+                  :loading="testing"
+                  size="large"
+                  block
                 >
-                  优先级：{{
-                    testResult.result.priority === 'high'
-                      ? '高'
-                      : testResult.result.priority === 'medium'
-                        ? '中'
-                        : '低'
-                  }}
-                </Tag>
-              </div>
-            </div>
-
-            <!-- OCR 文字识别 -->
-            <div v-if="testResult.result.extractedText" class="result-section">
-              <div class="section-title">
-                <span class="icon">📝</span>
-                <span>OCR 文字提取</span>
-              </div>
-              <div class="text-box">
-                {{ testResult.result.extractedText }}
-              </div>
-            </div>
-
-            <!-- 图像分析 -->
-            <div v-if="testResult.result.imageAnalysis" class="result-section">
-              <div class="section-title">
-                <span class="icon">🖼️</span>
-                <span>图像分析</span>
-              </div>
-              <div class="analysis-items">
+                  <template #icon><ThunderboltOutlined /></template>
+                  {{ testing ? '执行中...' : '立即测试' }}
+                </Button>
                 <div
-                  v-if="testResult.result.imageAnalysis.productCondition"
-                  class="analysis-item"
+                  v-if="!pipeline?.formSchema"
+                  style="
+                    margin-top: 8px;
+                    font-size: 12px;
+                    color: #8c8c8c;
+                    text-align: center;
+                  "
                 >
-                  <span class="label">产品状态：</span>
-                  <span class="value">{{
-                    testResult.result.imageAnalysis.productCondition
-                  }}</span>
+                  提示：该流程无需配置参数，可直接测试
                 </div>
+              </div>
+            </Card>
+
+            <!-- Step 3: 执行结果 -->
+            <Card
+              class="step-card result-card"
+              :class="{ active: currentStep === 3 }"
+              v-if="testResult"
+            >
+              <template #title>
+                <div class="card-title">
+                  <span class="step-badge">步骤 3</span>
+                  <span class="title-text">执行结果</span>
+                </div>
+              </template>
+
+              <!-- 执行状态 -->
+              <Alert
+                :type="
+                  testResult.status === 'COMPLETED'
+                    ? 'success'
+                    : testResult.status === 'FAILED'
+                      ? 'error'
+                      : 'info'
+                "
+                show-icon
+                class="status-alert"
+              >
+                <template #message>
+                  <div class="status-header">
+                    <span class="status-label">执行状态：</span>
+                    <Tag
+                      :color="
+                        testResult.status === 'COMPLETED'
+                          ? 'success'
+                          : testResult.status === 'FAILED'
+                            ? 'error'
+                            : 'processing'
+                      "
+                      class="status-tag"
+                    >
+                      {{
+                        testResult.status === 'COMPLETED'
+                          ? '✓ 成功'
+                          : testResult.status === 'FAILED'
+                            ? '✗ 失败'
+                            : '⋯ 进行中'
+                      }}
+                    </Tag>
+                  </div>
+                </template>
+                <template #description>
+                  <div class="execution-info">
+                    <div>执行ID：{{ testResult.executionId }}</div>
+                    <div v-if="testResult.jobId">
+                      任务ID：{{ testResult.jobId }}
+                    </div>
+                  </div>
+                </template>
+              </Alert>
+
+              <!-- 分析结果（成功时显示） -->
+              <div
+                v-if="testResult.result && testResult.status === 'COMPLETED'"
+                class="result-container"
+              >
+                <div class="result-section">
+                  <div class="section-title">
+                    <span class="icon">🎯</span>
+                    <span>情感分析</span>
+                  </div>
+                  <div
+                    v-if="testResult.result.sentiment"
+                    class="sentiment-result"
+                  >
+                    <Tag
+                      :color="
+                        testResult.result.sentiment === 'satisfied'
+                          ? 'green'
+                          : testResult.result.sentiment === 'neutral'
+                            ? 'blue'
+                            : testResult.result.sentiment === 'dissatisfied'
+                              ? 'orange'
+                              : 'red'
+                      "
+                      class="sentiment-tag"
+                    >
+                      {{
+                        testResult.result.sentiment === 'satisfied'
+                          ? '😊 满意'
+                          : testResult.result.sentiment === 'neutral'
+                            ? '😐 一般'
+                            : testResult.result.sentiment === 'dissatisfied'
+                              ? '😟 不满意'
+                              : '😠 非常不满'
+                      }}
+                    </Tag>
+                    <span
+                      v-if="testResult.result.confidence"
+                      class="confidence"
+                    >
+                      置信度：{{
+                        (testResult.result.confidence * 100).toFixed(1)
+                      }}%
+                    </span>
+                    <Tag
+                      v-if="testResult.result.priority"
+                      :color="
+                        testResult.result.priority === 'high'
+                          ? 'red'
+                          : testResult.result.priority === 'medium'
+                            ? 'orange'
+                            : 'green'
+                      "
+                      class="priority-tag"
+                    >
+                      优先级：{{
+                        testResult.result.priority === 'high'
+                          ? '高'
+                          : testResult.result.priority === 'medium'
+                            ? '中'
+                            : '低'
+                      }}
+                    </Tag>
+                  </div>
+                </div>
+
+                <!-- OCR 文字识别 -->
                 <div
-                  v-if="testResult.result.imageAnalysis.emotionalTone"
-                  class="analysis-item"
+                  v-if="testResult.result.extractedText"
+                  class="result-section"
                 >
-                  <span class="label">情感基调：</span>
-                  <span class="value">{{
-                    testResult.result.imageAnalysis.emotionalTone
-                  }}</span>
+                  <div class="section-title">
+                    <span class="icon">📝</span>
+                    <span>OCR 文字提取</span>
+                  </div>
+                  <div class="text-box">
+                    {{ testResult.result.extractedText }}
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- 问题列表 -->
-            <div
-              v-if="
-                testResult.result.issues && testResult.result.issues.length > 0
-              "
-              class="result-section"
-            >
-              <div class="section-title">
-                <span class="icon">⚠️</span>
-                <span>发现的问题</span>
-              </div>
-              <ul class="issue-list">
-                <li v-for="(issue, idx) in testResult.result.issues" :key="idx">
-                  {{ issue }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- 行动建议 -->
-            <div
-              v-if="
-                testResult.result.actionPlan &&
-                testResult.result.actionPlan.length > 0
-              "
-              class="result-section"
-            >
-              <div class="section-title">
-                <span class="icon">💡</span>
-                <span>行动建议</span>
-              </div>
-              <ul class="action-list">
-                <li
-                  v-for="(action, idx) in testResult.result.actionPlan"
-                  :key="idx"
+                <!-- 图像分析 -->
+                <div
+                  v-if="testResult.result.imageAnalysis"
+                  class="result-section"
                 >
-                  {{ action }}
-                </li>
-              </ul>
-            </div>
+                  <div class="section-title">
+                    <span class="icon">🖼️</span>
+                    <span>图像分析</span>
+                  </div>
+                  <div class="analysis-items">
+                    <div
+                      v-if="testResult.result.imageAnalysis.productCondition"
+                      class="analysis-item"
+                    >
+                      <span class="label">产品状态：</span>
+                      <span class="value">{{
+                        testResult.result.imageAnalysis.productCondition
+                      }}</span>
+                    </div>
+                    <div
+                      v-if="testResult.result.imageAnalysis.emotionalTone"
+                      class="analysis-item"
+                    >
+                      <span class="label">情感基调：</span>
+                      <span class="value">{{
+                        testResult.result.imageAnalysis.emotionalTone
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
 
-            <!-- 原始数据（折叠） -->
-            <details class="raw-json">
-              <summary>查看原始JSON数据</summary>
-              <pre>{{ JSON.stringify(testResult.result, null, 2) }}</pre>
-            </details>
-          </div>
+                <!-- 问题列表 -->
+                <div
+                  v-if="
+                    testResult.result.issues &&
+                    testResult.result.issues.length > 0
+                  "
+                  class="result-section"
+                >
+                  <div class="section-title">
+                    <span class="icon">⚠️</span>
+                    <span>发现的问题</span>
+                  </div>
+                  <ul class="issue-list">
+                    <li
+                      v-for="(issue, idx) in testResult.result.issues"
+                      :key="idx"
+                    >
+                      {{ issue }}
+                    </li>
+                  </ul>
+                </div>
 
-          <!-- 错误详情（失败时显示） -->
-          <div
-            v-if="testResult.result && testResult.status === 'FAILED'"
-            class="error-container"
-          >
-            <Alert
-              type="error"
-              :message="testResult.result.error || '执行失败'"
-              show-icon
-              class="error-alert"
+                <!-- 行动建议 -->
+                <div
+                  v-if="
+                    testResult.result.actionPlan &&
+                    testResult.result.actionPlan.length > 0
+                  "
+                  class="result-section"
+                >
+                  <div class="section-title">
+                    <span class="icon">💡</span>
+                    <span>行动建议</span>
+                  </div>
+                  <ul class="action-list">
+                    <li
+                      v-for="(action, idx) in testResult.result.actionPlan"
+                      :key="idx"
+                    >
+                      {{ action }}
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- 原始数据（折叠） -->
+                <details class="raw-json">
+                  <summary>查看原始JSON数据</summary>
+                  <pre>{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+                </details>
+              </div>
+
+              <!-- 错误详情（失败时显示） -->
+              <div
+                v-if="testResult.result && testResult.status === 'FAILED'"
+                class="error-container"
+              >
+                <Alert
+                  type="error"
+                  :message="testResult.result.error || '执行失败'"
+                  show-icon
+                  class="error-alert"
+                />
+                <details class="error-details">
+                  <summary>查看错误详情</summary>
+                  <pre>{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+                </details>
+              </div>
+            </Card>
+
+            <!-- 空状态（未测试时） -->
+            <Card class="step-card empty-card" v-else>
+              <template #title>
+                <div class="card-title">
+                  <span class="step-badge">步骤 3</span>
+                  <span class="title-text">执行结果</span>
+                </div>
+              </template>
+              <Empty description="运行测试后查看结果" />
+            </Card>
+          </Tabs.TabPane>
+
+          <!-- Tab 2: 提示词预览 -->
+          <Tabs.TabPane key="prompt-debug" tab="提示词预览">
+            <PromptDebugger
+              :pipeline-key="pipelineKey"
+              :steps="(pipeline?.definition as PipelineDefinition)?.steps || []"
             />
-            <details class="error-details">
-              <summary>查看错误详情</summary>
-              <pre>{{ JSON.stringify(testResult.result, null, 2) }}</pre>
-            </details>
-          </div>
-        </Card>
-
-        <!-- 空状态（未测试时） -->
-        <Card class="step-card empty-card" v-else>
-          <template #title>
-            <div class="card-title">
-              <span class="step-badge">步骤 3</span>
-              <span class="title-text">执行结果</span>
-            </div>
-          </template>
-          <Empty description="运行测试后查看结果" />
-        </Card>
+          </Tabs.TabPane>
+        </Tabs>
       </div>
     </Spin>
   </div>

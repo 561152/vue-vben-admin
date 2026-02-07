@@ -29,6 +29,7 @@ import {
   TeamOutlined,
   ExperimentOutlined,
   BarChartOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import {
@@ -47,6 +48,8 @@ import {
   type WecomEmployee,
   type EmployeeCustomer,
 } from '#/api/crm';
+import { MaterialPicker } from '#/components';
+import type { Material, MaterialType } from '#/components';
 import { useCrudTable } from '#/composables';
 import {
   messageStatusOptions,
@@ -60,6 +63,15 @@ import dayjs from 'dayjs';
 
 interface MessageFilters {
   status?: string;
+}
+
+interface MessageAttachment {
+  id?: string;
+  type: 'image' | 'video' | 'file' | 'link';
+  materialId?: number; // For usage tracking
+  mediaId?: number;
+  url?: string;
+  name?: string;
 }
 
 // ==================== 表格列定义 ====================
@@ -144,6 +156,7 @@ const customerFormState = ref({
   textContent: '',
   templateId: undefined as number | undefined,
   isBatch: false,
+  attachments: [] as MessageAttachment[],
 });
 
 const employeeFormState = ref({
@@ -151,6 +164,7 @@ const employeeFormState = ref({
   textContent: '',
   templateId: undefined as number | undefined,
   allowSelect: false,
+  attachments: [] as MessageAttachment[],
 });
 
 const testFormState = ref({
@@ -158,7 +172,13 @@ const testFormState = ref({
   customerId: undefined as number | undefined,
   textContent: '',
   templateId: undefined as number | undefined,
+  attachments: [] as MessageAttachment[],
 });
+
+// Material Picker state
+const materialPickerVisible = ref(false);
+const materialPickerType = ref<MaterialType>('ALL');
+const materialPickerTarget = ref<'customer' | 'employee' | 'test'>('customer');
 
 const employeeLoading = ref(false);
 const employeeCustomersLoading = ref(false);
@@ -246,6 +266,75 @@ async function fetchEmployeeCustomers(wecomUserId: string) {
   }
 }
 
+// ==================== 素材选择逻辑 ====================
+
+function generateAttachmentId(): string {
+  return `att_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function handleOpenMaterialPicker(target: 'customer' | 'employee' | 'test') {
+  materialPickerTarget.value = target;
+  materialPickerType.value = 'ALL';
+  materialPickerVisible.value = true;
+}
+
+function handleMaterialSelect(selectedMaterials: Material[]) {
+  const newAttachments: MessageAttachment[] = selectedMaterials.map((material) => {
+    const att: MessageAttachment = {
+      id: generateAttachmentId(),
+      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link',
+      materialId: material.id, // Important: for usage tracking
+      name: material.name,
+    };
+
+    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+      if (material.mediaIds && material.mediaIds.length > 0) {
+        att.mediaId = material.mediaIds[0];
+      }
+    } else if (material.type === 'LINK' && material.linkUrl) {
+      att.url = material.linkUrl;
+    }
+
+    return att;
+  });
+
+  // Add to appropriate form based on target
+  if (materialPickerTarget.value === 'customer') {
+    customerFormState.value.attachments = [
+      ...customerFormState.value.attachments,
+      ...newAttachments,
+    ];
+  } else if (materialPickerTarget.value === 'employee') {
+    employeeFormState.value.attachments = [
+      ...employeeFormState.value.attachments,
+      ...newAttachments,
+    ];
+  } else {
+    testFormState.value.attachments = [
+      ...testFormState.value.attachments,
+      ...newAttachments,
+    ];
+  }
+
+  materialPickerVisible.value = false;
+}
+
+function handleRemoveAttachment(target: 'customer' | 'employee' | 'test', id: string) {
+  if (target === 'customer') {
+    customerFormState.value.attachments = customerFormState.value.attachments.filter(
+      (att) => att.id !== id,
+    );
+  } else if (target === 'employee') {
+    employeeFormState.value.attachments = employeeFormState.value.attachments.filter(
+      (att) => att.id !== id,
+    );
+  } else {
+    testFormState.value.attachments = testFormState.value.attachments.filter(
+      (att) => att.id !== id,
+    );
+  }
+}
+
 // ==================== 发送逻辑 ====================
 
 function handleOpenSendModal() {
@@ -255,18 +344,21 @@ function handleOpenSendModal() {
     textContent: '',
     templateId: undefined,
     isBatch: false,
+    attachments: [],
   };
   employeeFormState.value = {
     wecomUserIds: [],
     textContent: '',
     templateId: undefined,
     allowSelect: false,
+    attachments: [],
   };
   testFormState.value = {
     selectedEmployeeId: undefined,
     customerId: undefined,
     textContent: '',
     templateId: undefined,
+    attachments: [],
   };
   employeeCustomers.value = [];
   sendModalVisible.value = true;
@@ -292,14 +384,20 @@ async function handleCustomerSend() {
       message.warning('请选择客户');
       return;
     }
-    if (!form.textContent && !form.templateId) {
-      message.warning('请输入消息内容或选择模板');
+    if (!form.textContent && !form.templateId && !form.attachments.length) {
+      message.warning('请输入消息内容、选择模板或添加附件');
       return;
     }
     const res = await sendBatchDirectMessages({
       customerIds: form.customerIds,
       textContent: form.textContent || undefined,
       templateId: form.templateId,
+      attachments: form.attachments.map((att) => ({
+        type: att.type,
+        materialId: att.materialId,
+        mediaId: att.mediaId,
+        url: att.url,
+      })),
     });
     message.success(`成功发送 ${res.successCount}/${res.totalCount} 条消息`);
   } else {
@@ -307,14 +405,20 @@ async function handleCustomerSend() {
       message.warning('请选择客户');
       return;
     }
-    if (!form.textContent && !form.templateId) {
-      message.warning('请输入消息内容或选择模板');
+    if (!form.textContent && !form.templateId && !form.attachments.length) {
+      message.warning('请输入消息内容、选择模板或添加附件');
       return;
     }
     await sendDirectMessage({
       customerId: form.customerId,
       textContent: form.textContent || undefined,
       templateId: form.templateId,
+      attachments: form.attachments.map((att) => ({
+        type: att.type,
+        materialId: att.materialId,
+        mediaId: att.mediaId,
+        url: att.url,
+      })),
     });
     message.success('消息已发送');
   }
@@ -326,8 +430,8 @@ async function handleEmployeeSend() {
     message.warning('请选择员工');
     return;
   }
-  if (!form.textContent && !form.templateId) {
-    message.warning('请输入消息内容或选择模板');
+  if (!form.textContent && !form.templateId && !form.attachments.length) {
+    message.warning('请输入消息内容、选择模板或添加附件');
     return;
   }
   const res = await sendToEmployees({
@@ -335,6 +439,12 @@ async function handleEmployeeSend() {
     textContent: form.textContent || undefined,
     templateId: form.templateId,
     allowSelect: form.allowSelect,
+    attachments: form.attachments.map((att) => ({
+      type: att.type,
+      materialId: att.materialId,
+      mediaId: att.mediaId,
+      url: att.url,
+    })),
   });
   const successCount = res.results.filter((r) => r.status === 'SENT').length;
   if (res.success) {
@@ -352,14 +462,20 @@ async function handleTestSend() {
     message.warning('请选择测试客户');
     return;
   }
-  if (!form.textContent && !form.templateId) {
-    message.warning('请输入消息内容或选择模板');
+  if (!form.textContent && !form.templateId && !form.attachments.length) {
+    message.warning('请输入消息内容、选择模板或添加附件');
     return;
   }
   const res = await sendTestMessage({
     customerId: form.customerId,
     textContent: form.textContent || undefined,
     templateId: form.templateId,
+    attachments: form.attachments.map((att) => ({
+      type: att.type,
+      materialId: att.materialId,
+      mediaId: att.mediaId,
+      url: att.url,
+    })),
   });
   if (res.status === 'SENT') {
     message.success('测试消息已发送');
@@ -544,7 +660,7 @@ onMounted(() => {
               @change="(v) => handleTemplateChange(v, 'customer')"
             />
           </Form.Item>
-          <Form.Item label="消息内容" required>
+          <Form.Item label="消息内容">
             <Input.TextArea
               v-model:value="customerFormState.textContent"
               placeholder="请输入消息内容"
@@ -552,6 +668,24 @@ onMounted(() => {
               :maxlength="2048"
               show-count
             />
+          </Form.Item>
+          <Form.Item label="附件">
+            <div
+              v-if="customerFormState.attachments.length > 0"
+              class="mb-2 flex flex-wrap gap-2"
+            >
+              <Tag
+                v-for="att in customerFormState.attachments"
+                :key="att.id"
+                closable
+                @close="handleRemoveAttachment('customer', att.id!)"
+              >
+                {{ att.name || att.type }}
+              </Tag>
+            </div>
+            <Button @click="handleOpenMaterialPicker('customer')">
+              <FolderOpenOutlined /> 选择素材
+            </Button>
           </Form.Item>
         </Form>
       </div>
@@ -607,7 +741,7 @@ onMounted(() => {
               @change="(v) => handleTemplateChange(v, 'employee')"
             />
           </Form.Item>
-          <Form.Item label="消息内容" required>
+          <Form.Item label="消息内容">
             <Input.TextArea
               v-model:value="employeeFormState.textContent"
               placeholder="请输入消息内容"
@@ -615,6 +749,24 @@ onMounted(() => {
               :maxlength="2048"
               show-count
             />
+          </Form.Item>
+          <Form.Item label="附件">
+            <div
+              v-if="employeeFormState.attachments.length > 0"
+              class="mb-2 flex flex-wrap gap-2"
+            >
+              <Tag
+                v-for="att in employeeFormState.attachments"
+                :key="att.id"
+                closable
+                @close="handleRemoveAttachment('employee', att.id!)"
+              >
+                {{ att.name || att.type }}
+              </Tag>
+            </div>
+            <Button @click="handleOpenMaterialPicker('employee')">
+              <FolderOpenOutlined /> 选择素材
+            </Button>
           </Form.Item>
         </Form>
       </div>
@@ -675,7 +827,7 @@ onMounted(() => {
               @change="(v) => handleTemplateChange(v, 'test')"
             />
           </Form.Item>
-          <Form.Item label="消息内容" required>
+          <Form.Item label="消息内容">
             <Input.TextArea
               v-model:value="testFormState.textContent"
               placeholder="请输入消息内容"
@@ -684,9 +836,36 @@ onMounted(() => {
               show-count
             />
           </Form.Item>
+          <Form.Item label="附件">
+            <div
+              v-if="testFormState.attachments.length > 0"
+              class="mb-2 flex flex-wrap gap-2"
+            >
+              <Tag
+                v-for="att in testFormState.attachments"
+                :key="att.id"
+                closable
+                @close="handleRemoveAttachment('test', att.id!)"
+              >
+                {{ att.name || att.type }}
+              </Tag>
+            </div>
+            <Button @click="handleOpenMaterialPicker('test')">
+              <FolderOpenOutlined /> 选择素材
+            </Button>
+          </Form.Item>
         </Form>
       </div>
     </Modal>
+
+    <!-- Material Picker Modal -->
+    <MaterialPicker
+      v-model:open="materialPickerVisible"
+      :type="materialPickerType"
+      :multiple="true"
+      :max-count="9"
+      @select="handleMaterialSelect"
+    />
 
     <!-- 详情 Drawer -->
     <Drawer v-model:open="detailDrawerVisible" title="消息详情" width="400">

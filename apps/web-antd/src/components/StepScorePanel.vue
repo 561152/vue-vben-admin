@@ -4,7 +4,9 @@
       <a-space direction="vertical" style="width: 100%">
         <div v-for="(step, index) in steps" :key="index" class="score-step">
           <div class="step-header">
-            <span class="step-label">{{ step.label || `步骤 ${index + 1}` }}</span>
+            <span class="step-label">{{
+              step.label || `步骤 ${index + 1}`
+            }}</span>
             <span class="step-score">
               <a-input-number
                 v-model:value="step.score"
@@ -23,7 +25,9 @@
         <a-divider />
         <div class="total-score">
           <span>总分</span>
-          <span class="score-value">{{ totalScore }} / {{ maxTotalScore }}</span>
+          <span class="score-value"
+            >{{ totalScore }} / {{ maxTotalScore }}</span
+          >
         </div>
       </a-space>
     </a-card>
@@ -32,7 +36,12 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { Card as ACard, Space as ASpace, InputNumber as AInputNumber, Divider as ADivider } from 'ant-design-vue';
+import {
+  Card as ACard,
+  Space as ASpace,
+  InputNumber as AInputNumber,
+  Divider as ADivider,
+} from 'ant-design-vue';
 
 interface Step {
   label?: string;

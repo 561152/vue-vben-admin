@@ -120,7 +120,7 @@
         <List :data-source="currentReport.summary">
           <template #renderItem="{ item }">
             <ListItem>
-              <CheckCircleOutlined class="text-green-500 mr-2" />
+              <CheckCircleOutlined class="mr-2 text-green-500" />
               {{ item }}
             </ListItem>
           </template>
@@ -148,7 +148,9 @@
           <Card>
             <Statistic
               title="学习时长"
-              :value="formatStudyTime(currentReport.studyTimeStats.totalMinutes)"
+              :value="
+                formatStudyTime(currentReport.studyTimeStats.totalMinutes)
+              "
             >
               <template #prefix>⏱️</template>
               <template #suffix>
@@ -222,7 +224,8 @@
       >
         <Row :gutter="16">
           <Col
-            v-for="achievement in currentReport.achievementStats.recentAchievements"
+            v-for="achievement in currentReport.achievementStats
+              .recentAchievements"
             :key="achievement.id"
             :span="8"
           >
@@ -242,7 +245,7 @@
         <List :data-source="currentReport.suggestions">
           <template #renderItem="{ item }">
             <ListItem>
-              <BulbOutlined class="text-yellow-500 mr-2" />
+              <BulbOutlined class="mr-2 text-yellow-500" />
               {{ item }}
             </ListItem>
           </template>
@@ -471,7 +474,8 @@ const renderCharts = () => {
     currentReport.value.wrongQuestionStats.totalCount > 0
   ) {
     const chart = echarts.init(wrongQuestionChartRef.value);
-    const typeDistribution = currentReport.value.wrongQuestionStats.typeDistribution;
+    const typeDistribution =
+      currentReport.value.wrongQuestionStats.typeDistribution;
     const data = Object.entries(typeDistribution).map(([type, count]) => ({
       name: getQuestionTypeLabel(type),
       value: count,
@@ -556,25 +560,25 @@ const getQuestionTypeLabel = (type: string): string => {
 
 .report-content {
   h2 {
+    margin-bottom: 0;
     font-size: 24px;
     font-weight: 600;
-    margin-bottom: 0;
   }
 }
 
 .achievement-card {
-  text-align: center;
   height: 100%;
+  text-align: center;
 
   .achievement-icon {
-    font-size: 48px;
     margin-bottom: 12px;
+    font-size: 48px;
   }
 
   h4 {
+    margin-bottom: 8px;
     font-size: 16px;
     font-weight: 600;
-    margin-bottom: 8px;
   }
 }
 </style>

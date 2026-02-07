@@ -1,5 +1,11 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+/**
+ * AI 学习医生路由 - Phase 1 重组版
+ * 保持 5 个核心功能，增强以下模块：
+ * 1. 诊断中心：合并试卷深度分析功能
+ * 2. 复诊追踪：合并错题本+错题审核功能
+ */
 const routes: RouteRecordRaw[] = [
   {
     meta: {
@@ -12,6 +18,7 @@ const routes: RouteRecordRaw[] = [
     path: '/ai-doctor',
     redirect: '/ai-doctor/diagnosis',
     children: [
+      // ⭐ 1. 诊断中心（增强：合并试卷分析功能）
       {
         name: 'DiagnosisCenter',
         path: 'diagnosis',
@@ -26,6 +33,8 @@ const routes: RouteRecordRaw[] = [
           ],
         },
       },
+
+      // 2. 学习处方
       {
         name: 'PrescriptionList',
         path: 'prescription',
@@ -40,6 +49,21 @@ const routes: RouteRecordRaw[] = [
           ],
         },
       },
+
+      // ⭐ 3. 复诊追踪（增强：合并错题本+错题审核）
+      {
+        name: 'FollowUpTracking',
+        path: 'follow-up',
+        component: () => import('#/views/ai-doctor/follow-up/index.vue'),
+        meta: {
+          icon: 'ant-design:reload-outlined',
+          title: '复诊追踪',
+          appModule: 'AI_DOCTOR',
+          permissions: ['AI_DOCTOR:FOLLOW_UP:VIEW'],
+        },
+      },
+
+      // 4. AI 咨询师
       {
         name: 'CounselorChat',
         path: 'counselor',
@@ -51,17 +75,22 @@ const routes: RouteRecordRaw[] = [
           permissions: ['AI_DOCTOR:COUNSELOR:SESSION'],
         },
       },
+
+      // 4.1 常见问题 FAQ（咨询师子页面）
       {
-        name: 'FollowUpTracking',
-        path: 'follow-up',
-        component: () => import('#/views/ai-doctor/follow-up/index.vue'),
+        name: 'CounselorFAQ',
+        path: 'counselor/faq',
+        component: () => import('#/views/ai-doctor/counselor/faq/index.vue'),
         meta: {
-          icon: 'ant-design:history-outlined',
-          title: '复诊追踪',
+          icon: 'ant-design:question-circle-outlined',
+          title: '常见问题',
           appModule: 'AI_DOCTOR',
-          permissions: ['AI_DOCTOR:FOLLOW_UP:VIEW'],
+          permissions: ['AI_DOCTOR:COUNSELOR:SESSION'],
+          hideInMenu: true, // 隐藏在菜单中，但保留路由
         },
       },
+
+      // 5. 家长报告
       {
         name: 'ParentReport',
         path: 'parent-report',

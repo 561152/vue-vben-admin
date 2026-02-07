@@ -39,7 +39,7 @@ watch(
   () => props.modelValue,
   (newValue) => {
     localValue.value = newValue;
-  }
+  },
 );
 
 const handleChange = () => {

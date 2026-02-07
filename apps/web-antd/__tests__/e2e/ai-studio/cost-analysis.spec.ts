@@ -30,7 +30,7 @@ async function loginWithToken(page: Page) {
       prefix: STORAGE_PREFIX,
       access: accessStoreData,
       user: userStoreData,
-    }
+    },
   );
 
   await page.reload();
@@ -70,7 +70,10 @@ test.describe('AI Studio 成本分析页面', () => {
       await page.waitForSelector('.cost-dashboard', { timeout: 10000 });
     } catch (e) {
       // 如果页面没有加载，截图并跳过
-      await page.screenshot({ path: 'test-results/cost-analysis-page-not-loaded.png', fullPage: true });
+      await page.screenshot({
+        path: 'test-results/cost-analysis-page-not-loaded.png',
+        fullPage: true,
+      });
       console.log('页面未完全加载，可能登录状态有问题');
       test.skip();
       return;
@@ -80,17 +83,26 @@ test.describe('AI Studio 成本分析页面', () => {
     await page.waitForTimeout(2000);
 
     // 截图记录
-    await page.screenshot({ path: 'test-results/cost-analysis-page.png', fullPage: true });
+    await page.screenshot({
+      path: 'test-results/cost-analysis-page.png',
+      fullPage: true,
+    });
 
     // 验证关键数据区域不包含 [object Object] (只检查可见文本)
     const visibleText = await page.locator('body').innerText();
     expect(visibleText).not.toContain('[object Object]');
 
     // 验证 Token 总消耗统计卡片显示
-    const tokenStat = page.locator('.ant-statistic-title').filter({ hasText: 'Token 总消耗' });
+    const tokenStat = page
+      .locator('.ant-statistic-title')
+      .filter({ hasText: 'Token 总消耗' });
     if (await tokenStat.isVisible().catch(() => false)) {
       // 获取 Token 总消耗卡片的数值文本
-      const tokenValue = await page.locator('.ant-statistic').filter({ hasText: 'Token 总消耗' }).locator('.ant-statistic-content-value').textContent();
+      const tokenValue = await page
+        .locator('.ant-statistic')
+        .filter({ hasText: 'Token 总消耗' })
+        .locator('.ant-statistic-content-value')
+        .textContent();
       console.log('Token 总消耗值:', tokenValue);
 
       // 验证数值不是 [object Object]
@@ -99,17 +111,29 @@ test.describe('AI Studio 成本分析页面', () => {
       expect(tokenValue!.length).toBeGreaterThan(0);
 
       // 验证总成本卡片
-      const costValue = await page.locator('.ant-statistic').filter({ hasText: '总成本' }).locator('.ant-statistic-content-value').textContent();
+      const costValue = await page
+        .locator('.ant-statistic')
+        .filter({ hasText: '总成本' })
+        .locator('.ant-statistic-content-value')
+        .textContent();
       console.log('总成本值:', costValue);
       expect(costValue).not.toContain('[object Object]');
 
       // 验证输入 Token 卡片
-      const promptValue = await page.locator('.ant-statistic').filter({ hasText: '输入 Token' }).locator('.ant-statistic-content-value').textContent();
+      const promptValue = await page
+        .locator('.ant-statistic')
+        .filter({ hasText: '输入 Token' })
+        .locator('.ant-statistic-content-value')
+        .textContent();
       console.log('输入 Token 值:', promptValue);
       expect(promptValue).not.toContain('[object Object]');
 
       // 验证输出 Token 卡片
-      const completionValue = await page.locator('.ant-statistic').filter({ hasText: '输出 Token' }).locator('.ant-statistic-content-value').textContent();
+      const completionValue = await page
+        .locator('.ant-statistic')
+        .filter({ hasText: '输出 Token' })
+        .locator('.ant-statistic-content-value')
+        .textContent();
       console.log('输出 Token 值:', completionValue);
       expect(completionValue).not.toContain('[object Object]');
     }
@@ -136,13 +160,19 @@ test.describe('AI Studio 成本分析页面', () => {
     }
 
     await timeRangeSelect.click();
-    await page.locator('.ant-select-item').filter({ hasText: '最近30天' }).click();
+    await page
+      .locator('.ant-select-item')
+      .filter({ hasText: '最近30天' })
+      .click();
 
     // 等待数据刷新
     await page.waitForTimeout(1000);
 
     // 截图记录
-    await page.screenshot({ path: 'test-results/cost-analysis-30d.png', fullPage: true });
+    await page.screenshot({
+      path: 'test-results/cost-analysis-30d.png',
+      fullPage: true,
+    });
 
     // 验证页面仍然正常显示，没有 [object Object] (只检查可见文本)
     const visibleText = await page.locator('body').innerText();
@@ -154,11 +184,14 @@ test.describe('AI Studio 成本分析页面', () => {
     const token = getAdminToken();
 
     // 直接测试 API
-    const apiResponse = await request.get('http://localhost:5100/api/ai-studio/cost?timeRange=7d', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
+    const apiResponse = await request.get(
+      'http://localhost:5100/api/ai-studio/cost?timeRange=7d',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     // 如果返回 401，说明认证方式不同，跳过此测试
     if (apiResponse.status() === 401) {
