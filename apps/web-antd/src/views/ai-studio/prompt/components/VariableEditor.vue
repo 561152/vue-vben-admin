@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { computed, ref, watch } from 'vue';
 
 import {
@@ -216,17 +216,16 @@ const columns = [
 </script>
 
 <template>
-  <Card
-    size="small"
-    :title="
+  <Card size="small">
+    <template #title>
       <Space>
         <span>变量定义</span>
         <Tooltip title="定义提示词中使用的变量，支持从模板自动提取">
           <QuestionCircleOutlined />
         </Tooltip>
       </Space>
-    "
-    :extra="
+    </template>
+    <template #extra>
       <Space>
         <Button type="dashed" size="small" @click="autoExtractVariables">
           自动提取
@@ -236,8 +235,7 @@ const columns = [
           添加变量
         </Button>
       </Space>
-    "
-  >
+    </template>
     <Table
       :columns="columns"
       :data-source="variables"
@@ -329,7 +327,7 @@ const columns = [
     <div class="mt-3">
       <Typography.Text type="secondary" class="text-xs">
         提示：变量名只能包含字母、数字、下划点和点号，且不能以数字开头。使用
-        <code>{{ '{{变量名}}' }}</code>
+        <code v-pre>{{变量名}}</code>
         语法在模板中引用变量。
       </Typography.Text>
     </div>

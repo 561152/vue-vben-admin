@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { computed, ref, watch } from 'vue';
 
 import {
@@ -352,20 +352,20 @@ watch(
               <Input.TextArea
                 v-if="variable.type === 'text'"
                 v-model:value="testData[variable.name]"
-                :placeholder="输入 ${variable.name} 的值"
+                :placeholder="'输入 ' + variable.name + ' 的值'"
                 :rows="3"
               />
               <Input.TextArea
                 v-else-if="variable.type === 'json'"
                 v-model:value="testData[variable.name]"
-                :placeholder="输入 JSON 格式的值"
+                placeholder="输入 JSON 格式的值"
                 :rows="3"
               />
               <Input
                 v-else-if="variable.type === 'number'"
                 v-model:value="testData[variable.name]"
                 type="number"
-                :placeholder="输入数字"
+                placeholder="输入数字"
               />
               <Switch
                 v-else-if="variable.type === 'boolean'"
@@ -374,7 +374,7 @@ watch(
               <Input
                 v-else
                 v-model:value="testData[variable.name]"
-                :placeholder="输入 ${variable.name} 的值"
+                :placeholder="'输入 ' + variable.name + ' 的值'"
               />
             </div>
           </div>
@@ -397,13 +397,13 @@ watch(
             <Collapse.Panel
               v-for="[name, info] in variableReplacements"
               :key="name"
-              :header="
+            >
+              <template #header>
                 <Space>
-                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                  <CheckCircleOutlined :style="{ color: '#52c41a' }" />
                   <span>{{ name }}</span>
                 </Space>
-              "
-            >
+              </template>
               <div class="trace-detail">
                 <div class="trace-item">
                   <Typography.Text type="secondary">原始值:</Typography.Text>

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { computed, ref, watch } from 'vue';
 import {
   BugOutlined,
@@ -417,10 +417,8 @@ watch(
         <Row :gutter="24">
           <!-- 左侧：测试数据 -->
           <Col :span="8">
-            <Card
-              size="small"
-              title="测试数据"
-              :extra="
+            <Card size="small" title="测试数据">
+              <template #extra>
                 <Space>
                   <Button size="small" @click="generateAutoData">
                     <PlayCircleOutlined />
@@ -431,8 +429,7 @@ watch(
                     保存用例
                   </Button>
                 </Space>
-              "
-            >
+              </template>
               <!-- 测试用例切换 -->
               <div v-if="testCases.length > 0" class="test-cases mb-3">
                 <Select
@@ -494,17 +491,16 @@ watch(
 
           <!-- 右侧：渲染结果 -->
           <Col :span="16">
-            <Card
-              size="small"
-              :title="
+            <Card size="small">
+              <template #title>
                 <Space>
                   <span>渲染结果</span>
                   <Tag v-if="selectedPrompt">
                     {{ selectedPrompt.name }}
                   </Tag>
                 </Space>
-              "
-              :extra="
+              </template>
+              <template #extra>
                 <Space>
                   <Switch
                     v-model:checked="highlightVars"
@@ -523,8 +519,7 @@ watch(
                     复制
                   </Button>
                 </Space>
-              "
-            >
+              </template>
               <!-- 统计信息 -->
               <div v-if="tokenCost" class="stats-bar mb-3">
                 <Space>
@@ -545,7 +540,7 @@ watch(
               <Alert
                 v-if="securityRisks.length > 0"
                 type="warning"
-                :message="检测到安全风险"
+                message="检测到安全风险"
                 class="mb-3"
               >
                 <template #description>

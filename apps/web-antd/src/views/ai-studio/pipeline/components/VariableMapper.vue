@@ -54,9 +54,9 @@ interface Props {
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  'update:modelValue': [value: Record<string, string>];
-  change: [value: Record<string, string>];
-};
+  (e: 'update:modelValue', value: Record<string, string>): void;
+  (e: 'change', value: Record<string, string>): void;
+}>();
 
 // ==================== 状态 ====================
 

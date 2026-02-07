@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { computed, ref } from 'vue';
 
 import {
@@ -206,16 +206,15 @@ const handleCopyLink = () => {
 
         <!-- 右侧：预览 -->
         <Col :span="16">
-          <Card
-            size="small"
-            :title="
+          <Card size="small">
+            <template #title>
               <Space>
                 <ExportOutlined />
                 <span>预览</span>
-                <Tag color="blue">{{ formatOptions.find(o => o.value === activeFormat)?.label }}</Tag>
+                <Tag color="blue">{{ formatOptions.find((o: any) => o.value === activeFormat)?.label }}</Tag>
               </Space>
-            "
-            :extra="
+            </template>
+            <template #extra>
               <Space>
                 <Button size="small" @click="handleCopy">
                   <CopyOutlined />
@@ -226,8 +225,7 @@ const handleCopyLink = () => {
                   下载
                 </Button>
               </Space>
-            "
-          >
+            </template>
             <pre class="export-preview">{{ previewContent }}</pre>
           </Card>
         </Col>
