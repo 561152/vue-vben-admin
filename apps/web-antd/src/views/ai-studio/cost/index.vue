@@ -80,6 +80,8 @@ const timeRange = ref('7d');
 const dateRange = ref<any[]>([]);
 const selectedModule = ref('all');
 const activeTab = ref('overview');
+const accessDenied = ref(false);
+const errorMessage = ref('');
 
 const overview = ref<CostOverview>({
   totalTokens: 0,
@@ -289,6 +291,8 @@ const dailyCostColumns = [
 // 获取成本数据
 const fetchCostData = async () => {
   loading.value = true;
+  accessDenied.value = false;
+  errorMessage.value = '';
   try {
     const response = await requestClient.get('/ai-studio/cost', {
       params: {
@@ -301,7 +305,10 @@ const fetchCostData = async () => {
     });
 
     console.log('API Response:', JSON.stringify(response, null, 2));
-    console.log('Overview totalTokens type:', typeof response.overview?.totalTokens);
+    console.log(
+      'Overview totalTokens type:',
+      typeof response.overview?.totalTokens,
+    );
     console.log('Overview totalTokens value:', response.overview?.totalTokens);
 
     if (response.overview) {
@@ -319,121 +326,45 @@ const fetchCostData = async () => {
     if (response.users) {
       userCosts.value = response.users;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to fetch cost data:', error);
-    // Mock data for demo
-    overview.value = {
-      totalTokens: 2580000,
-      totalCost: 45.6,
-      promptTokens: 1720000,
-      completionTokens: 860000,
-      avgCostPerExecution: 0.036,
-      tokensTrend: 15.2,
-      costTrend: 12.8,
-    };
 
-    moduleCosts.value = [
-      {
-        module: 'ai-tutor',
-        moduleName: 'AI-Tutor 智能辅导',
-        tokens: 1250000,
-        cost: 22.5,
-        executions: 520,
-        avgTokensPerExecution: 2403,
-        percentage: 48.5,
-      },
-      {
-        module: 'ai-doctor',
-        moduleName: 'AI-Doctor 学习诊断',
-        tokens: 850000,
-        cost: 15.3,
-        executions: 280,
-        avgTokensPerExecution: 3035,
-        percentage: 33.5,
-      },
-      {
-        module: 'ai-studio',
-        moduleName: 'AI-Studio 流程编排',
-        tokens: 480000,
-        cost: 7.8,
-        executions: 156,
-        avgTokensPerExecution: 3076,
-        percentage: 18.0,
-      },
-    ];
-
-    modelCosts.value = [
-      {
-        model: 'qwen-vl-plus',
-        provider: '阿里云',
-        tokens: 1200000,
-        promptTokens: 800000,
-        completionTokens: 400000,
-        cost: 18.5,
-        calls: 450,
-        avgLatency: 1250,
-      },
-      {
-        model: 'deepseek-chat',
-        provider: 'DeepSeek',
-        tokens: 850000,
-        promptTokens: 560000,
-        completionTokens: 290000,
-        cost: 8.5,
-        calls: 380,
-        avgLatency: 980,
-      },
-      {
-        model: 'baidu-edu-ocr',
-        provider: '百度云',
-        tokens: 530000,
-        promptTokens: 530000,
+    // 检查是否是403权限错误
+    if (error.response?.status === 403) {
+      accessDenied.value = true;
+      errorMessage.value = error.response?.data?.message || '您没有权限访问此数据，请联系管理员分配权限。';
+      // 清空数据
+      overview.value = {
+        totalTokens: 0,
+        totalCost: 0,
+        promptTokens: 0,
         completionTokens: 0,
-        cost: 18.6,
-        calls: 265,
-        avgLatency: 850,
-      },
-    ];
+        avgCostPerExecution: 0,
+        tokensTrend: 0,
+        costTrend: 0,
+      };
+      moduleCosts.value = [];
+      modelCosts.value = [];
+      dailyCosts.value = [];
+      userCosts.value = [];
+      return;
+    }
 
-    dailyCosts.value = Array.from({ length: 7 }, (_, i) => ({
-      date: dayjs()
-        .subtract(6 - i, 'day')
-        .format('YYYY-MM-DD'),
-      tokens: Math.round(300000 + Math.random() * 200000),
-      cost: 5 + Math.random() * 10,
-      executions: Math.round(100 + Math.random() * 100),
-    }));
-
-    userCosts.value = [
-      {
-        userId: 1,
-        username: 'teacher_zhang',
-        tokens: 580000,
-        cost: 10.5,
-        executions: 120,
-      },
-      {
-        userId: 2,
-        username: 'teacher_li',
-        tokens: 420000,
-        cost: 7.6,
-        executions: 95,
-      },
-      {
-        userId: 3,
-        username: 'teacher_wang',
-        tokens: 380000,
-        cost: 6.8,
-        executions: 88,
-      },
-      {
-        userId: 4,
-        username: 'admin',
-        tokens: 320000,
-        cost: 5.8,
-        executions: 75,
-      },
-    ];
+    // 其他错误不显示mock数据，显示空状态
+    errorMessage.value = '数据加载失败，请稍后重试';
+    overview.value = {
+      totalTokens: 0,
+      totalCost: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      avgCostPerExecution: 0,
+      tokensTrend: 0,
+      costTrend: 0,
+    };
+    moduleCosts.value = [];
+    modelCosts.value = [];
+    dailyCosts.value = [];
+    userCosts.value = [];
   } finally {
     loading.value = false;
   }
@@ -460,40 +391,64 @@ onMounted(() => {
 
 <template>
   <div class="cost-dashboard">
-    <!-- 筛选条件 -->
-    <Card class="filter-card">
-      <Space>
-        <span>时间范围:</span>
-        <Select
-          v-model:value="timeRange"
-          :options="timeRangeOptions"
-          style="width: 120px"
-          @change="handleTimeRangeChange"
-        />
-        <DatePicker.RangePicker
-          v-if="timeRange === 'custom'"
-          v-model:value="dateRange"
-          @change="fetchCostData"
-        />
-        <span style="margin-left: 16px">模块:</span>
-        <Select
-          v-model:value="selectedModule"
-          :options="moduleOptions"
-          style="width: 180px"
-          @change="fetchCostData"
-        />
-        <Button type="text" @click="fetchCostData">
-          <template #icon><ReloadOutlined /></template>
-          刷新
-        </Button>
-        <Button @click="exportReport">
-          <template #icon><DownloadOutlined /></template>
-          导出报告
-        </Button>
-      </Space>
+    <!-- 无权限访问提示 -->
+    <Card v-if="accessDenied" class="access-denied-card">
+      <div class="access-denied-content">
+        <div class="access-denied-icon">🔒</div>
+        <div class="access-denied-message">
+          <h3>无权访问</h3>
+          <p>{{ errorMessage }}</p>
+          <p class="hint">请联系管理员分配 <strong>AI_STUDIO:METRICS:COST</strong> 权限</p>
+        </div>
+      </div>
     </Card>
 
-    <Spin :spinning="loading">
+    <!-- 错误提示 -->
+    <Card v-else-if="errorMessage" class="error-card">
+      <div class="error-content">
+        <div class="error-icon">⚠️</div>
+        <div class="error-message">
+          <p>{{ errorMessage }}</p>
+          <Button type="link" @click="fetchCostData">重试</Button>
+        </div>
+      </div>
+    </Card>
+
+    <template v-else>
+      <!-- 筛选条件 -->
+      <Card class="filter-card">
+        <Space>
+          <span>时间范围:</span>
+          <Select
+            v-model:value="timeRange"
+            :options="timeRangeOptions"
+            style="width: 120px"
+            @change="handleTimeRangeChange"
+          />
+          <DatePicker.RangePicker
+            v-if="timeRange === 'custom'"
+            v-model:value="dateRange"
+            @change="fetchCostData"
+          />
+          <span style="margin-left: 16px">模块:</span>
+          <Select
+            v-model:value="selectedModule"
+            :options="moduleOptions"
+            style="width: 180px"
+            @change="fetchCostData"
+          />
+          <Button type="text" @click="fetchCostData">
+            <template #icon><ReloadOutlined /></template>
+            刷新
+          </Button>
+          <Button @click="exportReport">
+            <template #icon><DownloadOutlined /></template>
+            导出报告
+          </Button>
+        </Space>
+      </Card>
+
+      <Spin :spinning="loading">
       <!-- 总览统计 -->
       <Row :gutter="16" class="stats-row">
         <Col :span="6">
@@ -711,6 +666,7 @@ onMounted(() => {
         </Row>
       </Card>
     </Spin>
+    </template>
   </div>
 </template>
 
@@ -727,6 +683,63 @@ export default {
 
 .filter-card {
   margin-bottom: 16px;
+}
+
+.access-denied-card {
+  margin-bottom: 16px;
+  border: 1px solid #ffccc7;
+  background: #fff2f0;
+}
+
+.access-denied-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.access-denied-icon {
+  font-size: 48px;
+  flex-shrink: 0;
+}
+
+.access-denied-message h3 {
+  color: #cf1322;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.access-denied-message p {
+  color: #595959;
+  margin-bottom: 4px;
+}
+
+.access-denied-message .hint {
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.error-card {
+  margin-bottom: 16px;
+  border: 1px solid #ffd591;
+  background: #fffbe6;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.error-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
 }
 
 .stats-row {
