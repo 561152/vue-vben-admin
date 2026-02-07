@@ -1,29 +1,25 @@
 <script lang="ts" setup>
-import { ref, onMounted, h } from 'vue';
-import { useRouter } from 'vue-router';
+import { Row, Col, Card, Table, Tag, Empty } from 'ant-design-vue';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Button,
-  Progress,
-  Tag,
-  Spin,
-  Empty,
-} from 'ant-design-vue';
-import {
-  ArrowLeftOutlined,
   TeamOutlined,
   UserOutlined,
   PlusOutlined,
   ClusterOutlined,
   RiseOutlined,
 } from '@ant-design/icons-vue';
-import { requestClient } from '#/api/request';
 
-const router = useRouter();
+import {
+  StatisticCardRow,
+  RankingTable,
+  TrendBarChart,
+  DistributionTable,
+  StatisticsPageLayout,
+  type StatisticItem,
+  type RankingColumn,
+  type DistributionColumn,
+  type TrendItem,
+} from '#/components/statistics';
+import { useStatistics, formatDate } from '#/hooks/useStatistics';
 
 // ==================== 类型定义 ====================
 
@@ -81,14 +77,21 @@ interface EmptyGroup {
   createdAt: string;
 }
 
-// ==================== 状态 ====================
+// ==================== 数据加载 ====================
 
-const loading = ref(false);
-const overview = ref<GroupOverview | null>(null);
-const memberAnalysis = ref<MemberAnalysis | null>(null);
-const emptyGroups = ref<EmptyGroup[]>([]);
+interface GroupStats {
+  overview: GroupOverview;
+  memberAnalysis: MemberAnalysis;
+  emptyGroups: EmptyGroup[];
+}
 
-// ==================== 成员类型映射 ====================
+const { loading, data } = useStatistics<GroupStats>({
+  overview: '/groups/statistics/overview',
+  memberAnalysis: '/groups/statistics/member-analysis',
+  emptyGroups: '/groups/statistics/empty',
+});
+
+// ==================== 映射 ====================
 
 const memberTypeMap: Record<string, string> = {
   CUSTOMER: '客户',
@@ -96,380 +99,174 @@ const memberTypeMap: Record<string, string> = {
   EXTERNAL: '外部联系人',
 };
 
-// ==================== 表格列定义 ====================
+const memberTypeColorMap: Record<string, string> = {
+  CUSTOMER: 'blue',
+  EMPLOYEE: 'green',
+  EXTERNAL: 'orange',
+};
 
-const topGroupColumns = [
-  { title: '排名', key: 'rank', width: 60 },
+// ==================== 统计卡片配置 ====================
+
+const overviewCards = computed<StatisticItem[]>(() => [
+  {
+    title: '总分组数',
+    value: data.overview.value?.totalGroups || 0,
+    prefixIcon: ClusterOutlined,
+  },
+  {
+    title: '活跃分组',
+    value: data.overview.value?.activeGroups || 0,
+    prefixIcon: TeamOutlined,
+    valueColor: '#52c41a',
+  },
+  {
+    title: '空分组',
+    value: data.overview.value?.emptyGroups || 0,
+    valueColor: '#ff4d4f',
+  },
+  {
+    title: '总成员数',
+    value: data.overview.value?.totalMembers || 0,
+    prefixIcon: UserOutlined,
+    valueColor: '#1890ff',
+  },
+  {
+    title: '本周新增分组',
+    value: data.overview.value?.newGroupsWeek || 0,
+    prefixIcon: PlusOutlined,
+    valueColor: '#722ed1',
+  },
+  {
+    title: '本周新增成员',
+    value: data.overview.value?.newMembersWeek || 0,
+    prefixIcon: RiseOutlined,
+    valueColor: '#13c2c2',
+  },
+]);
+
+// ==================== 表格列配置 ====================
+
+const topGroupColumns: RankingColumn[] = [
+  { title: '排名', key: 'rank', width: 60, isRank: true },
   { title: '群名称', dataIndex: 'groupName', key: 'groupName' },
   { title: '成员数', dataIndex: 'memberCount', key: 'memberCount', width: 100 },
   { title: '群主', dataIndex: 'owner', key: 'owner', width: 120 },
 ];
 
-const distributionColumns = [
+const distributionColumns: DistributionColumn[] = [
   { title: '成员规模', dataIndex: 'range', key: 'range' },
   { title: '群数量', dataIndex: 'count', key: 'count' },
 ];
 
-const memberTypeColumns = [
-  { title: '成员类型', key: 'type' },
+const memberTypeColumns: DistributionColumn[] = [
+  { title: '成员类型', key: 'type', dataIndex: 'type', valueMap: memberTypeMap, isTag: true },
   { title: '数量', dataIndex: 'count', key: 'count' },
-  { title: '占比', key: 'percentage' },
+  { title: '占比', key: 'percentage', dataIndex: 'percentage', showProgress: true },
 ];
 
-const activeGroupColumns = [
+const activeGroupColumns: DistributionColumn[] = [
   { title: '群名称', dataIndex: 'groupName', key: 'groupName' },
   { title: '近期新增', dataIndex: 'recentJoins', key: 'recentJoins' },
   { title: '总成员', dataIndex: 'totalMembers', key: 'totalMembers' },
 ];
 
-const emptyGroupColumns = [
-  { title: '群名称', dataIndex: 'name', key: 'name' },
-  { title: '群主', dataIndex: 'owner', key: 'owner' },
-  { title: '创建时间', key: 'createdAt' },
-];
+// ==================== 趋势数据 ====================
 
-// ==================== 数据加载 ====================
+const trendData = computed<TrendItem[]>(() =>
+  (data.overview.value?.dailyTrend || []).map((item) => ({
+    date: item.date,
+    value: item.newMembers,
+    value2: item.newGroups,
+  })),
+);
+</script>
 
-async function loadData() {
-  loading.value = true;
-  try {
-    const [overviewRes, analysisRes, emptyRes] = await Promise.all([
-      requestClient.get<GroupOverview>('/groups/statistics/overview'),
-      requestClient.get<MemberAnalysis>('/groups/statistics/member-analysis'),
-      requestClient.get<EmptyGroup[]>('/groups/statistics/empty'),
-    ]);
-    overview.value = overviewRes;
-    memberAnalysis.value = analysisRes;
-    emptyGroups.value = emptyRes;
-  } catch (error) {
-    console.error('加载统计数据失败:', error);
-  } finally {
-    loading.value = false;
-  }
-}
+<script lang="ts">
+import { computed } from 'vue';
 
-function goBack() {
-  router.push('/crm/group');
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('zh-CN');
-}
-
-// ==================== 生命周期 ====================
-
-onMounted(loadData);
+export default {
+  name: 'GroupStatistics',
+};
 </script>
 
 <template>
-  <div class="p-5">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <Button @click="goBack">
-          <template #icon><ArrowLeftOutlined /></template>
-        </Button>
-        <h2 class="m-0 text-xl font-bold">客户分组统计</h2>
-      </div>
-    </div>
+  <StatisticsPageLayout title="客户分组统计" back-path="/crm/group" :loading="loading">
+    <!-- 概览统计卡片 -->
+    <StatisticCardRow :items="overviewCards" />
 
-    <Spin :spinning="loading">
-      <!-- 概览统计卡片 -->
-      <Row :gutter="16" class="mb-4">
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="总分组数"
-              :value="overview?.totalGroups || 0"
-              :prefix="h(ClusterOutlined)"
-            />
-          </Card>
-        </Col>
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="活跃分组"
-              :value="overview?.activeGroups || 0"
-              :prefix="h(TeamOutlined)"
-              :value-style="{ color: '#52c41a' }"
-            />
-          </Card>
-        </Col>
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="空分组"
-              :value="overview?.emptyGroups || 0"
-              :value-style="{ color: '#ff4d4f' }"
-            />
-          </Card>
-        </Col>
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="总成员数"
-              :value="overview?.totalMembers || 0"
-              :prefix="h(UserOutlined)"
-              :value-style="{ color: '#1890ff' }"
-            />
-          </Card>
-        </Col>
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="本周新增分组"
-              :value="overview?.newGroupsWeek || 0"
-              :prefix="h(PlusOutlined)"
-              :value-style="{ color: '#722ed1' }"
-            />
-          </Card>
-        </Col>
-        <Col :span="4">
-          <Card>
-            <Statistic
-              title="本周新增成员"
-              :value="overview?.newMembersWeek || 0"
-              :prefix="h(RiseOutlined)"
-              :value-style="{ color: '#13c2c2' }"
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <!-- 平均成员数和今日数据 -->
-      <Row :gutter="16" class="mb-4">
-        <Col :span="8">
-          <Card title="分组规模">
-            <div
-              class="flex flex-col items-center justify-center"
-              style="height: 140px"
-            >
-              <div class="text-4xl font-bold text-blue-500">
-                {{ overview?.avgMembersPerGroup || 0 }}
-              </div>
-              <div class="mt-2 text-gray-500">平均每组成员数</div>
+    <!-- 平均成员数和今日数据 -->
+    <Row :gutter="16" class="mb-4">
+      <Col :span="8">
+        <Card title="分组规模">
+          <div class="flex flex-col items-center justify-center" style="height: 140px">
+            <div class="text-4xl font-bold text-blue-500">
+              {{ data.overview.value?.avgMembersPerGroup || 0 }}
             </div>
-          </Card>
-        </Col>
-        <Col :span="8">
-          <Card title="今日数据">
-            <div class="flex items-center justify-around" style="height: 140px">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-purple-500">
-                  {{ overview?.newGroupsToday || 0 }}
-                </div>
-                <div class="text-gray-500">新建分组</div>
+            <div class="mt-2 text-gray-500">平均每组成员数</div>
+          </div>
+        </Card>
+      </Col>
+      <Col :span="8">
+        <Card title="今日数据">
+          <div class="flex items-center justify-around" style="height: 140px">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-purple-500">
+                {{ data.overview.value?.newGroupsToday || 0 }}
               </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-cyan-500">
-                  {{ overview?.newMembersToday || 0 }}
-                </div>
-                <div class="text-gray-500">新增成员</div>
+              <div class="text-gray-500">新建分组</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-cyan-500">
+                {{ data.overview.value?.newMembersToday || 0 }}
               </div>
+              <div class="text-gray-500">新增成员</div>
             </div>
-          </Card>
-        </Col>
-        <Col :span="8">
-          <Card title="成员规模分布">
-            <Table
-              :columns="distributionColumns"
-              :data-source="
-                (overview?.memberDistribution || []).map((item, index) => ({
-                  ...item,
-                  key: index,
-                }))
-              "
-              :pagination="false"
-              size="small"
-              :scroll="{ y: 120 }"
-            />
-          </Card>
-        </Col>
-      </Row>
+          </div>
+        </Card>
+      </Col>
+      <Col :span="8">
+        <DistributionTable
+          title="成员规模分布"
+          :data-source="data.overview.value?.memberDistribution || []"
+          :columns="distributionColumns"
+          :scroll-y="120"
+        />
+      </Col>
+    </Row>
 
-      <!-- 热门分组排行 -->
-      <Row :gutter="16" class="mb-4">
-        <Col :span="12">
-          <Card title="成员最多分组 TOP10">
-            <Table
-              :columns="topGroupColumns"
-              :data-source="
-                (overview?.topGroups || []).map((item, index) => ({
-                  ...item,
-                  key: index,
-                }))
-              "
-              :pagination="false"
-              size="small"
-            >
-              <template #bodyCell="{ column, index }">
-                <template v-if="column.key === 'rank'">
-                  <span
-                    :class="{
-                      'font-bold text-yellow-500': index === 0,
-                      'font-bold text-gray-400': index === 1,
-                      'font-bold text-amber-600': index === 2,
-                    }"
-                  >
-                    {{ index + 1 }}
-                  </span>
-                </template>
-              </template>
-            </Table>
-          </Card>
-        </Col>
-        <Col :span="12">
-          <Card title="近7日趋势">
-            <div
-              v-if="overview?.dailyTrend?.length"
-              class="flex items-end justify-around"
-              style="height: 240px"
-            >
-              <div
-                v-for="(item, index) in overview.dailyTrend"
-                :key="index"
-                class="flex flex-col items-center"
-              >
-                <div class="mb-1 text-xs text-blue-500">
-                  {{ item.newMembers }}
-                </div>
-                <div
-                  class="w-8 rounded-t bg-blue-500"
-                  :style="{
-                    height: `${Math.max(10, (item.newMembers / Math.max(...overview.dailyTrend.map((d) => d.newMembers), 1)) * 140)}px`,
-                  }"
-                />
-                <div
-                  class="w-8 bg-purple-500"
-                  :style="{
-                    height: `${Math.max(5, (item.newGroups / Math.max(...overview.dailyTrend.map((d) => d.newGroups), 1)) * 40)}px`,
-                  }"
-                />
-                <div class="mt-2 text-xs text-gray-400">
-                  {{ item.date.slice(5) }}
-                </div>
-              </div>
-            </div>
-            <div class="mt-2 flex justify-center gap-4 text-xs">
-              <span
-                ><span
-                  class="mr-1 inline-block h-2 w-2 rounded bg-blue-500"
-                ></span
-                >新增成员</span
-              >
-              <span
-                ><span
-                  class="mr-1 inline-block h-2 w-2 rounded bg-purple-500"
-                ></span
-                >新建分组</span
-              >
-            </div>
-            <Empty
-              v-if="!overview?.dailyTrend?.length"
-              description="暂无数据"
-            />
-          </Card>
-        </Col>
-      </Row>
+    <!-- 热门分组排行和趋势 -->
+    <Row :gutter="16" class="mb-4">
+      <Col :span="12">
+        <RankingTable
+          title="成员最多分组 TOP10"
+          :data-source="data.overview.value?.topGroups || []"
+          :columns="topGroupColumns"
+        />
+      </Col>
+      <Col :span="12">
+        <TrendBarChart
+          title="近7日趋势"
+          :data="trendData"
+          label="新增成员"
+          label2="新建分组"
+          color="#3b82f6"
+          color2="#a855f7"
+        />
+      </Col>
+    </Row>
 
-      <!-- 成员分析 -->
-      <Row :gutter="16" class="mb-4">
-        <Col :span="8">
-          <Card title="成员类型分布">
-            <Table
-              :columns="memberTypeColumns"
-              :data-source="
-                (memberAnalysis?.byMemberType || []).map((item, index) => ({
-                  ...item,
-                  key: index,
-                }))
-              "
-              :pagination="false"
-              size="small"
-            >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'type'">
-                  <Tag
-                    :color="
-                      record.type === 'CUSTOMER'
-                        ? 'blue'
-                        : record.type === 'EMPLOYEE'
-                          ? 'green'
-                          : 'orange'
-                    "
-                  >
-                    {{ memberTypeMap[record.type] || record.type }}
-                  </Tag>
-                </template>
-                <template v-if="column.key === 'percentage'">
-                  <Progress
-                    :percent="record.percentage"
-                    :size="60"
-                    :stroke-color="
-                      record.percentage >= 50 ? '#52c41a' : '#1890ff'
-                    "
-                  />
-                </template>
-              </template>
-            </Table>
-            <Empty
-              v-if="!memberAnalysis?.byMemberType?.length"
-              description="暂无数据"
-            />
-          </Card>
-        </Col>
-        <Col :span="8">
-          <Card title="最近活跃分组 (本周)">
-            <Table
-              :columns="activeGroupColumns"
-              :data-source="
-                (memberAnalysis?.topActiveGroups || [])
-                  .slice(0, 5)
-                  .map((item, index) => ({ ...item, key: index }))
-              "
-              :pagination="false"
-              size="small"
-            />
-            <Empty
-              v-if="!memberAnalysis?.topActiveGroups?.length"
-              description="暂无数据"
-            />
-          </Card>
-        </Col>
-        <Col :span="8">
-          <Card title="空分组列表">
-            <Table
-              :columns="emptyGroupColumns"
-              :data-source="
-                emptyGroups
-                  .slice(0, 5)
-                  .map((item, index) => ({ ...item, key: index }))
-              "
-              :pagination="false"
-              size="small"
-            >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'createdAt'">
-                  {{ formatDate(record.createdAt) }}
-                </template>
-              </template>
-            </Table>
-            <Empty v-if="!emptyGroups.length" description="没有空分组" />
-          </Card>
-        </Col>
-      </Row>
-
-      <!-- 成员增长趋势 -->
-      <Card title="成员增长趋势 (近7日)">
-        <div v-if="memberAnalysis?.memberGrowthTrend?.length">
+    <!-- 成员分析 -->
+    <Row :gutter="16" class="mb-4">
+      <Col :span="8">
+        <Card title="成员类型分布">
           <Table
             :columns="[
-              { title: '日期', dataIndex: 'date', key: 'date' },
-              { title: '新增', dataIndex: 'joins', key: 'joins' },
-              { title: '退出', dataIndex: 'leaves', key: 'leaves' },
-              { title: '净增长', key: 'netGrowth' },
+              { title: '成员类型', key: 'type' },
+              { title: '数量', dataIndex: 'count', key: 'count' },
+              { title: '占比', key: 'percentage' },
             ]"
             :data-source="
-              memberAnalysis.memberGrowthTrend.map((item, index) => ({
+              (data.memberAnalysis.value?.byMemberType || []).map((item, index) => ({
                 ...item,
                 key: index,
               }))
@@ -478,26 +275,85 @@ onMounted(loadData);
             size="small"
           >
             <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'netGrowth'">
-                <span
-                  :class="
-                    record.netGrowth >= 0 ? 'text-green-500' : 'text-red-500'
-                  "
-                >
-                  {{ record.netGrowth >= 0 ? '+' : '' }}{{ record.netGrowth }}
-                </span>
+              <template v-if="column.key === 'type'">
+                <Tag :color="memberTypeColorMap[record.type] || 'default'">
+                  {{ memberTypeMap[record.type] || record.type }}
+                </Tag>
+              </template>
+              <template v-if="column.key === 'percentage'">
+                {{ record.percentage }}%
               </template>
             </template>
           </Table>
-        </div>
-        <Empty v-else description="暂无数据" />
-      </Card>
-    </Spin>
-  </div>
-</template>
+          <Empty
+            v-if="!data.memberAnalysis.value?.byMemberType?.length"
+            description="暂无数据"
+          />
+        </Card>
+      </Col>
+      <Col :span="8">
+        <DistributionTable
+          title="最近活跃分组 (本周)"
+          :data-source="(data.memberAnalysis.value?.topActiveGroups || []).slice(0, 5)"
+          :columns="activeGroupColumns"
+        />
+      </Col>
+      <Col :span="8">
+        <Card title="空分组列表">
+          <Table
+            :columns="[
+              { title: '群名称', dataIndex: 'name', key: 'name' },
+              { title: '群主', dataIndex: 'owner', key: 'owner' },
+              { title: '创建时间', key: 'createdAt' },
+            ]"
+            :data-source="
+              (data.emptyGroups.value || [])
+                .slice(0, 5)
+                .map((item, index) => ({ ...item, key: index }))
+            "
+            :pagination="false"
+            size="small"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'createdAt'">
+                {{ formatDate(record.createdAt) }}
+              </template>
+            </template>
+          </Table>
+          <Empty v-if="!data.emptyGroups.value?.length" description="没有空分组" />
+        </Card>
+      </Col>
+    </Row>
 
-<script lang="ts">
-export default {
-  name: 'GroupStatistics',
-};
-</script>
+    <!-- 成员增长趋势 -->
+    <Card title="成员增长趋势 (近7日)">
+      <div v-if="data.memberAnalysis.value?.memberGrowthTrend?.length">
+        <Table
+          :columns="[
+            { title: '日期', dataIndex: 'date', key: 'date' },
+            { title: '新增', dataIndex: 'joins', key: 'joins' },
+            { title: '退出', dataIndex: 'leaves', key: 'leaves' },
+            { title: '净增长', key: 'netGrowth' },
+          ]"
+          :data-source="
+            data.memberAnalysis.value.memberGrowthTrend.map((item, index) => ({
+              ...item,
+              key: index,
+            }))
+          "
+          :pagination="false"
+          size="small"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'netGrowth'">
+              <span :class="record.netGrowth >= 0 ? 'text-green-500' : 'text-red-500'">
+                {{ record.netGrowth >= 0 ? '+' : '' }}{{ record.netGrowth }}
+              </span>
+            </template>
+          </template>
+        </Table>
+      </div>
+      <Empty v-else description="暂无数据" />
+    </Card>
+  </StatisticsPageLayout>
+</template>

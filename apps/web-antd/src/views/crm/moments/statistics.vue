@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Button,
   Card,
   Row,
   Col,
-  Statistic,
   Table,
   Tag,
   DatePicker,
@@ -14,13 +13,21 @@ import {
   message,
 } from 'ant-design-vue';
 import {
-  ArrowLeftOutlined,
   LikeOutlined,
   CommentOutlined,
   ReloadOutlined,
   SyncOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+
+import {
+  StatisticCardRow,
+  RankingTable,
+  StatisticsPageLayout,
+  type StatisticItem,
+  type RankingColumn,
+} from '#/components/statistics';
+import { formatDateTime } from '#/hooks/useStatistics';
 
 // ==================== 类型定义 ====================
 
@@ -87,40 +94,47 @@ const statusMap: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: '已取消', color: 'default' },
 };
 
-const interactionColumns = [
-  {
-    title: '任务名称',
-    dataIndex: 'momentTaskName',
-    key: 'momentTaskName',
-    width: 200,
-  },
-  {
-    title: '客户ID',
-    dataIndex: 'externalUserid',
-    key: 'externalUserid',
-    width: 150,
-  },
-  {
-    title: '互动类型',
-    dataIndex: 'interactionType',
-    key: 'interactionType',
-    width: 100,
-  },
-  { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
-  { title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
-];
+// ==================== 统计卡片配置 ====================
 
-const topCustomerColumns = [
-  { title: '排名', key: 'rank', width: 60 },
+const overviewCards = computed<StatisticItem[]>(() => [
+  { title: '总任务数', value: statistics.value?.totalTasks || 0 },
+  { title: '今日任务', value: statistics.value?.todayTasks || 0, valueColor: '#1890ff' },
+  { title: '本周任务', value: statistics.value?.weekTasks || 0 },
+  { title: '已完成', value: statistics.value?.completedTasks || 0, valueColor: '#3f8600' },
+  { title: '失败', value: statistics.value?.failedTasks || 0, valueColor: '#cf1322' },
+  { title: '待处理', value: statistics.value?.pendingTasks || 0, valueColor: '#faad14' },
+]);
+
+const interactionCards = computed<StatisticItem[]>(() => [
+  {
+    title: '总点赞数',
+    value: statistics.value?.totalLikes || 0,
+    prefixIcon: LikeOutlined,
+    valueColor: '#1890ff',
+  },
+  {
+    title: '总评论数',
+    value: statistics.value?.totalComments || 0,
+    prefixIcon: CommentOutlined,
+    valueColor: '#52c41a',
+  },
+]);
+
+// ==================== 表格列配置 ====================
+
+const topCustomerColumns: RankingColumn[] = [
+  { title: '排名', key: 'rank', width: 60, isRank: true },
   { title: '客户ID', dataIndex: 'externalUserid', key: 'externalUserid' },
   { title: '点赞数', dataIndex: 'likeCount', key: 'likeCount', width: 100 },
-  {
-    title: '评论数',
-    dataIndex: 'commentCount',
-    key: 'commentCount',
-    width: 100,
-  },
-  { title: '总互动', key: 'total', width: 100 },
+  { title: '评论数', dataIndex: 'commentCount', key: 'commentCount', width: 100 },
+];
+
+const interactionColumns = [
+  { title: '任务名称', dataIndex: 'momentTaskName', key: 'momentTaskName', width: 200 },
+  { title: '客户ID', dataIndex: 'externalUserid', key: 'externalUserid', width: 150 },
+  { title: '互动类型', dataIndex: 'interactionType', key: 'interactionType', width: 100 },
+  { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
+  { title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
 ];
 
 // ==================== API ====================
@@ -128,10 +142,7 @@ const topCustomerColumns = [
 async function fetchStatistics() {
   loading.value = true;
   try {
-    const res = await requestClient.get<MomentStatistics>(
-      '/moments/statistics',
-    );
-    statistics.value = res;
+    statistics.value = await requestClient.get<MomentStatistics>('/moments/statistics');
   } catch (e) {
     console.error(e);
   } finally {
@@ -142,23 +153,17 @@ async function fetchStatistics() {
 async function fetchInteractions() {
   interactionsLoading.value = true;
   try {
-    const params: Record<string, unknown> = {
-      page: interactionsPage.value,
-      pageSize: 10,
-    };
-    if (filterType.value) {
-      params.interactionType = filterType.value;
-    }
+    const params: Record<string, unknown> = { page: interactionsPage.value, pageSize: 10 };
+    if (filterType.value) params.interactionType = filterType.value;
     if (filterDateRange.value) {
       params.startDate = filterDateRange.value[0];
       params.endDate = filterDateRange.value[1];
     }
 
-    const res = await requestClient.get<{
-      items: InteractionRecord[];
-      total: number;
-    }>('/moments/interactions', { params });
-
+    const res = await requestClient.get<{ items: InteractionRecord[]; total: number }>(
+      '/moments/interactions',
+      { params },
+    );
     interactions.value = res.items || [];
     interactionsTotal.value = res.total || 0;
   } catch (e) {
@@ -171,13 +176,10 @@ async function fetchInteractions() {
 async function fetchTopCustomers() {
   topCustomersLoading.value = true;
   try {
-    const res = await requestClient.get<TopCustomer[]>(
-      '/moments/top-customers',
-      {
+    topCustomers.value =
+      (await requestClient.get<TopCustomer[]>('/moments/top-customers', {
         params: { limit: 10 },
-      },
-    );
-    topCustomers.value = res || [];
+      })) || [];
   } catch (e) {
     console.error(e);
   } finally {
@@ -188,17 +190,13 @@ async function fetchTopCustomers() {
 async function handleRetryFailed() {
   try {
     loading.value = true;
-    const res = await requestClient.post<{
-      total: number;
-      succeeded: number;
-      failed: number;
-    }>('/moments/retry-failed');
-    message.success(
-      `重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`,
+    const res = await requestClient.post<{ total: number; succeeded: number; failed: number }>(
+      '/moments/retry-failed',
     );
+    message.success(`重试完成：成功 ${res.succeeded} 条，失败 ${res.failed} 条`);
     fetchStatistics();
-  } catch (e: any) {
-    message.error(e.message || '重试失败');
+  } catch (e: unknown) {
+    message.error((e as Error).message || '重试失败');
   } finally {
     loading.value = false;
   }
@@ -207,14 +205,12 @@ async function handleRetryFailed() {
 async function handleSyncInteractions() {
   try {
     loading.value = true;
-    const res = await requestClient.post<{ synced: number }>(
-      '/moments/sync-interactions',
-    );
+    const res = await requestClient.post<{ synced: number }>('/moments/sync-interactions');
     message.success(`已同步 ${res.synced} 个任务的互动数据`);
     fetchStatistics();
     fetchInteractions();
-  } catch (e: any) {
-    message.error(e.message || '同步失败');
+  } catch (e: unknown) {
+    message.error((e as Error).message || '同步失败');
   } finally {
     loading.value = false;
   }
@@ -230,21 +226,6 @@ function handleInteractionPageChange(page: number) {
 function handleSearch() {
   interactionsPage.value = 1;
   fetchInteractions();
-}
-
-function goBack() {
-  window.history.back();
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 function getInteractionTypeLabel(type: string): string {
@@ -264,16 +245,15 @@ onMounted(() => {
 });
 </script>
 
+<script lang="ts">
+export default {
+  name: 'MomentStatistics',
+};
+</script>
+
 <template>
-  <div class="p-5">
-    <!-- Header -->
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center">
-        <Button type="text" @click="goBack">
-          <ArrowLeftOutlined />
-        </Button>
-        <h2 class="ml-2 text-xl font-bold">朋友圈数据统计</h2>
-      </div>
+  <StatisticsPageLayout title="朋友圈数据统计" :loading="loading">
+    <template #actions>
       <Space>
         <Button @click="handleSyncInteractions" :loading="loading">
           <SyncOutlined /> 同步互动数据
@@ -288,79 +268,32 @@ onMounted(() => {
           <ReloadOutlined /> 重试失败任务 ({{ statistics?.failedTasks }})
         </Button>
       </Space>
-    </div>
+    </template>
 
     <!-- Statistics Cards -->
-    <Row :gutter="16" class="mb-4" v-if="statistics">
-      <Col :span="4">
-        <Card>
-          <Statistic title="总任务数" :value="statistics.totalTasks" />
-        </Card>
-      </Col>
-      <Col :span="4">
-        <Card>
-          <Statistic
-            title="今日任务"
-            :value="statistics.todayTasks"
-            :value-style="{ color: '#1890ff' }"
-          />
-        </Card>
-      </Col>
-      <Col :span="4">
-        <Card>
-          <Statistic title="本周任务" :value="statistics.weekTasks" />
-        </Card>
-      </Col>
-      <Col :span="4">
-        <Card>
-          <Statistic
-            title="已完成"
-            :value="statistics.completedTasks"
-            :value-style="{ color: '#3f8600' }"
-          />
-        </Card>
-      </Col>
-      <Col :span="4">
-        <Card>
-          <Statistic
-            title="失败"
-            :value="statistics.failedTasks"
-            :value-style="{ color: '#cf1322' }"
-          />
-        </Card>
-      </Col>
-      <Col :span="4">
-        <Card>
-          <Statistic
-            title="待处理"
-            :value="statistics.pendingTasks"
-            :value-style="{ color: '#faad14' }"
-          />
-        </Card>
-      </Col>
-    </Row>
+    <StatisticCardRow v-if="statistics" :items="overviewCards" />
 
     <!-- Interaction Stats -->
     <Row :gutter="16" class="mb-4" v-if="statistics">
       <Col :span="6">
         <Card>
           <div class="flex items-center justify-between">
-            <Statistic title="总点赞数" :value="statistics.totalLikes">
+            <a-statistic title="总点赞数" :value="statistics.totalLikes">
               <template #prefix>
                 <LikeOutlined class="text-blue-500" />
               </template>
-            </Statistic>
+            </a-statistic>
           </div>
         </Card>
       </Col>
       <Col :span="6">
         <Card>
           <div class="flex items-center justify-between">
-            <Statistic title="总评论数" :value="statistics.totalComments">
+            <a-statistic title="总评论数" :value="statistics.totalComments">
               <template #prefix>
                 <CommentOutlined class="text-green-500" />
               </template>
-            </Statistic>
+            </a-statistic>
           </div>
         </Card>
       </Col>
@@ -393,44 +326,18 @@ onMounted(() => {
         <Table.Column title="日期" dataIndex="date" key="date" />
         <Table.Column title="任务数" dataIndex="taskCount" key="taskCount" />
         <Table.Column title="点赞数" dataIndex="likeCount" key="likeCount" />
-        <Table.Column
-          title="评论数"
-          dataIndex="commentCount"
-          key="commentCount"
-        />
+        <Table.Column title="评论数" dataIndex="commentCount" key="commentCount" />
       </Table>
     </Card>
 
     <Row :gutter="16" class="mb-4">
       <!-- Top Customers -->
       <Col :span="12">
-        <Card title="活跃客户排行">
-          <Table
-            :columns="topCustomerColumns"
-            :data-source="topCustomers"
-            :loading="topCustomersLoading"
-            :pagination="false"
-            size="small"
-            row-key="externalUserid"
-          >
-            <template #bodyCell="{ column, record, index }">
-              <template v-if="column.key === 'rank'">
-                <span
-                  :class="{
-                    'font-bold text-yellow-500': index === 0,
-                    'font-bold text-gray-400': index === 1,
-                    'font-bold text-orange-400': index === 2,
-                  }"
-                >
-                  {{ index + 1 }}
-                </span>
-              </template>
-              <template v-if="column.key === 'total'">
-                {{ record.likeCount + record.commentCount }}
-              </template>
-            </template>
-          </Table>
-        </Card>
+        <RankingTable
+          title="活跃客户排行"
+          :data-source="topCustomers"
+          :columns="topCustomerColumns"
+        />
       </Col>
 
       <!-- Recent Interactions -->
@@ -478,12 +385,12 @@ onMounted(() => {
                 </Tag>
               </template>
               <template v-if="column.key === 'createdAt'">
-                {{ formatDate(record.createdAt) }}
+                {{ formatDateTime(record.createdAt) }}
               </template>
             </template>
           </Table>
         </Card>
       </Col>
     </Row>
-  </div>
+  </StatisticsPageLayout>
 </template>
