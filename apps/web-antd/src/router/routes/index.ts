@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { mergeRouteModules, traverseTreeValues } from '@vben/utils';
 
-import { coreRoutes, fallbackNotFoundRoute } from './core';
+import { coreRoutes, fallbackNotFoundRoute, forbiddenRoute } from './core';
 
 const dynamicRouteFiles = import.meta.glob('./modules/**/*.ts', {
   eager: true,
@@ -26,6 +26,7 @@ const externalRoutes: RouteRecordRaw[] = [];
 const routes: RouteRecordRaw[] = [
   ...coreRoutes,
   ...externalRoutes,
+  forbiddenRoute,
   fallbackNotFoundRoute,
 ];
 

@@ -137,12 +137,12 @@ function setupAccessGuard(router: Router) {
         return { name: 'Forbidden', replace: true };
       }
 
-      // 第二层：检查权限码
+      // 第二层：检查权限码（只需拥有任一权限即可）
       if (permissions && permissions.length > 0) {
-        const hasAllPerms = permissions.every((perm) => hasPermission(perm));
-        if (!hasAllPerms) {
-          console.warn(`[权限] 缺少权限: ${permissions.join(', ')}`);
-          return { name: 'Forbidden', replace: true };
+        const hasAnyPerm = permissions.some((perm) => hasPermission(perm));
+        if (!hasAnyPerm) {
+          console.warn(`[权限] 缺少权限，需要以下任一权限: ${permissions.join(', ')}`);
+          return '/403';
         }
       }
 
