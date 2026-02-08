@@ -390,10 +390,7 @@ export async function updateMessageTemplate(
   id: number,
   data: UpdateMessageTemplateDto,
 ) {
-  return requestClient.put<MessageTemplate>(
-    `/messaging/template/${id}`,
-    data,
-  );
+  return requestClient.put<MessageTemplate>(`/messaging/template/${id}`, data);
 }
 
 export async function deleteMessageTemplate(id: number) {

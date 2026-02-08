@@ -40,7 +40,11 @@ test.describe('CRM 菜单重构验证', () => {
         );
         localStorage.setItem(`${prefix}-core-user`, JSON.stringify(userStore));
       },
-      { prefix: STORE_PREFIX, accessStore: accessStoreData, userStore: userStoreData },
+      {
+        prefix: STORE_PREFIX,
+        accessStore: accessStoreData,
+        userStore: userStoreData,
+      },
     );
 
     // 刷新页面使认证状态生效

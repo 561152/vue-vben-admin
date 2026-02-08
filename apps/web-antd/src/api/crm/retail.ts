@@ -97,9 +97,12 @@ export interface StartSopResponse {
  * Get member level statistics
  */
 export async function getMemberStats(params?: { levels?: string[] }) {
-  return requestClient.get<MemberStatsResponse>('/marketing/retail/member-stats', {
-    params,
-  });
+  return requestClient.get<MemberStatsResponse>(
+    '/marketing/retail/member-stats',
+    {
+      params,
+    },
+  );
 }
 
 /**
@@ -126,7 +129,10 @@ export async function startCustomerSop(data: {
   customerIds: string[];
   sopCode: string;
 }) {
-  return requestClient.post<StartSopResponse>('/marketing/retail/sop/start', data);
+  return requestClient.post<StartSopResponse>(
+    '/marketing/retail/sop/start',
+    data,
+  );
 }
 
 /**
