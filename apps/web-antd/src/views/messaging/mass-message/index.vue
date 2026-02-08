@@ -253,7 +253,7 @@ watch(
 const router = useRouter();
 
 function goToStatistics() {
-  router.push('/crm/mass-message/statistics');
+  router.push('/messaging/mass-message/statistics');
 }
 
 onMounted(() => {

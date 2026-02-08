@@ -233,7 +233,7 @@ function handleReset() {
 }
 
 function goToStatistics() {
-  router.push('/crm/customer/statistics');
+  router.push('/customer/list/statistics');
 }
 
 // ==================== 生命周期 ====================

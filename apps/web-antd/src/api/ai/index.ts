@@ -818,7 +818,7 @@ export async function getPresignedUploadUrl(data: {
     signedUrl: string;
     key: string;
     expiresIn: number;
-  }>('/crm/media/presigned-url', data);
+  }>('/messaging/media/presigned-url', data);
 }
 
 /**

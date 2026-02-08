@@ -182,7 +182,7 @@ async function fetchStatistics() {
   loading.value = true;
   try {
     const res = await requestClient.get<DirectMessageStatistics>(
-      '/crm/direct-messages/statistics/overview',
+      '/messaging/direct/statistics/overview',
     );
     statistics.value = res;
   } catch (e) {
@@ -205,7 +205,7 @@ async function fetchMessageHistory() {
     const res = await requestClient.get<{
       items: MessageHistory[];
       total: number;
-    }>('/crm/direct-messages/statistics/history', { params });
+    }>('/messaging/direct/statistics/history', { params });
     messageHistory.value = res.items || [];
     historyTotal.value = res.total || 0;
   } catch (e) {
@@ -219,7 +219,7 @@ async function fetchSenderRanking() {
   senderRankingLoading.value = true;
   try {
     const res = await requestClient.get<SenderRanking[]>(
-      '/crm/direct-messages/statistics/sender-ranking',
+      '/messaging/direct/statistics/sender-ranking',
       { params: { period: rankingPeriod.value, limit: 10 } },
     );
     senderRanking.value = res || [];
@@ -234,7 +234,7 @@ async function handleRetryFailed() {
   retryLoading.value = true;
   try {
     const res = await requestClient.post<{ retried: number; failed: number }>(
-      '/crm/direct-messages/statistics/retry-failed',
+      '/messaging/direct/statistics/retry-failed',
     );
     if (res.retried > 0) {
       await Promise.all([fetchStatistics(), fetchMessageHistory()]);

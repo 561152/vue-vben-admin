@@ -172,7 +172,7 @@ async function fetchData() {
     const res = await requestClient.get<{
       items: EmployeeTask[];
       total: number;
-    }>('/crm/employee-tasks', { params });
+    }>('/operations/employee-task', { params });
 
     dataSource.value = res.items || [];
     total.value = res.total || 0;
@@ -198,7 +198,7 @@ function showDetail(record: EmployeeTask) {
 
 async function dispatchTask(id: number) {
   try {
-    await requestClient.post(`/crm/employee-tasks/${id}/dispatch`);
+    await requestClient.post(`/operations/employee-task/${id}/dispatch`);
     fetchData();
   } catch (error) {
     console.error('Failed to dispatch task:', error);
@@ -207,7 +207,7 @@ async function dispatchTask(id: number) {
 
 async function cancelTask(id: number) {
   try {
-    await requestClient.delete(`/crm/employee-tasks/${id}`);
+    await requestClient.delete(`/operations/employee-task/${id}`);
     fetchData();
   } catch (error) {
     console.error('Failed to cancel task:', error);
@@ -215,7 +215,7 @@ async function cancelTask(id: number) {
 }
 
 function goToStatistics() {
-  router.push('/crm/employee-task/statistics');
+  router.push('/operations/employee-task/statistics');
 }
 
 onMounted(fetchData);

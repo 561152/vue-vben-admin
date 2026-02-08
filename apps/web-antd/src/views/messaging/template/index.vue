@@ -182,7 +182,7 @@ function handleReset() {
 const router = useRouter();
 
 function goToStatistics() {
-  router.push('/crm/message-template/statistics');
+  router.push('/messaging/template/statistics');
 }
 
 // ==================== 生命周期 ====================

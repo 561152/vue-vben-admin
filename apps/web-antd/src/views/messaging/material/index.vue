@@ -195,7 +195,7 @@ const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
     const res = await requestClient.get<{
       data: MaterialItem[];
       total: number;
-    }>('/crm/materials', { params: apiParams });
+    }>('/messaging/material', { params: apiParams });
     return { items: res.data || [], total: res.total || 0 };
   },
   deleteApi: async (id) => {
@@ -209,7 +209,7 @@ const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<MaterialFormState>({
     createApi: async (data) => {
-      await requestClient.post('/crm/materials', {
+      await requestClient.post('/messaging/material', {
         name: data.name,
         description: data.description || undefined,
         type: data.type,
@@ -256,7 +256,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
 async function fetchCategories() {
   try {
     const res = await requestClient.get<CategoryItem[]>(
-      '/crm/materials/categories/tree',
+      '/messaging/material/categories/tree',
     );
     categories.value = flattenCategories(res);
   } catch (e) {
@@ -285,7 +285,7 @@ async function handleCreateCategory() {
   }
 
   try {
-    await requestClient.post('/crm/materials/categories', {
+    await requestClient.post('/messaging/material/categories', {
       name: categoryFormState.value.name,
       parentId: categoryFormState.value.parentId || undefined,
     });
@@ -327,7 +327,7 @@ function formatDate(dateStr: string) {
 }
 
 function goToStatistics() {
-  router.push('/crm/material-library/statistics');
+  router.push('/messaging/material/statistics');
 }
 
 // ==================== 生命周期 ====================

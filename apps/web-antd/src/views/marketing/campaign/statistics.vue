@@ -245,7 +245,7 @@ async function fetchOverview() {
   try {
     loading.value = true;
     overview.value = await requestClient.get<StatisticsOverview>(
-      '/crm/campaigns/statistics/overview',
+      '/marketing/campaign/statistics/overview',
     );
   } catch (error) {
     message.error('获取统计数据失败');
@@ -259,7 +259,7 @@ async function fetchHistory() {
     const response = await requestClient.get<{
       items: CampaignHistoryRecord[];
       total: number;
-    }>('/crm/campaigns/statistics/history', {
+    }>('/marketing/campaign/statistics/history', {
       params: {
         page: historyPage.value,
         pageSize: historyPageSize.value,
@@ -275,7 +275,7 @@ async function fetchHistory() {
 async function fetchAudiencePerformance() {
   try {
     audiencePerformance.value = await requestClient.get<AudiencePerformance[]>(
-      '/crm/campaigns/statistics/audience-performance',
+      '/marketing/campaign/statistics/audience-performance',
       {
         params: { period: performancePeriod.value, limit: 10 },
       },
@@ -290,7 +290,7 @@ async function retryFailed() {
     const result = await requestClient.post<{
       retried: number;
       failed: number;
-    }>('/crm/campaigns/statistics/retry-failed');
+    }>('/marketing/campaign/statistics/retry-failed');
     if (result.retried > 0) {
       message.success(`已重试 ${result.retried} 个活动`);
       fetchOverview();
@@ -314,7 +314,7 @@ function handlePeriodChange() {
 }
 
 function goBack() {
-  router.push('/crm/campaign');
+  router.push('/marketing/campaign');
 }
 
 function refresh() {

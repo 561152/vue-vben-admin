@@ -155,13 +155,13 @@ async function loadData() {
   try {
     const [overviewRes, sizeRes, usageRes, healthRes] = await Promise.all([
       requestClient.get<StatisticsOverview>(
-        '/crm/audiences/statistics/overview',
+        '/marketing/audience/statistics/overview',
       ),
       requestClient.get<SizeAnalysis>(
-        '/crm/audiences/statistics/size-analysis',
+        '/marketing/audience/statistics/size-analysis',
       ),
-      requestClient.get<UsageAnalysis>('/crm/audiences/statistics/usage'),
-      requestClient.get<HealthStatus>('/crm/audiences/statistics/health'),
+      requestClient.get<UsageAnalysis>('/marketing/audience/statistics/usage'),
+      requestClient.get<HealthStatus>('/marketing/audience/statistics/health'),
     ]);
     overview.value = overviewRes;
     sizeAnalysis.value = sizeRes;
@@ -175,7 +175,7 @@ async function loadData() {
 }
 
 function goBack() {
-  router.push('/crm/campaign');
+  router.push('/marketing/campaign');
 }
 
 function formatDateTime(dateStr: string | null): string {

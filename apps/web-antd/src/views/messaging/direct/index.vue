@@ -529,7 +529,7 @@ watch(
 const router = useRouter();
 
 function goToStatistics() {
-  router.push('/crm/direct-message/statistics');
+  router.push('/messaging/direct/statistics');
 }
 
 // ==================== 生命周期 ====================

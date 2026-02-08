@@ -105,9 +105,12 @@ const memberColumns = [
 
 const { tableProps, fetchData, handleDelete } = useCrudTable<GroupItem>({
   fetchApi: async (params) =>
-    requestClient.get<{ items: GroupItem[]; total: number }>('/customer/group', {
-      params: { page: params.page, pageSize: params.pageSize },
-    }),
+    requestClient.get<{ items: GroupItem[]; total: number }>(
+      '/customer/group',
+      {
+        params: { page: params.page, pageSize: params.pageSize },
+      },
+    ),
   deleteApi: async (id) => {
     await requestClient.delete(`/groups/${id}`);
   },
@@ -213,7 +216,7 @@ async function handleRemoveMember(memberId: number) {
 }
 
 function goToStatistics() {
-  router.push('/crm/group/statistics');
+  router.push('/customer/group/statistics');
 }
 
 // ==================== 生命周期 ====================

@@ -204,12 +204,16 @@ export async function getPendingFollowUps(params?: {
   daysAhead?: number;
   limit?: number;
 }) {
-  return requestClient.get<FollowUp[]>('/customer/follow-up/pending', { params });
+  return requestClient.get<FollowUp[]>('/customer/follow-up/pending', {
+    params,
+  });
 }
 
 export async function getFollowUpStats(customerId?: number) {
   const params = customerId ? { customerId } : {};
-  return requestClient.get<FollowUpStats>('/customer/follow-up/stats', { params });
+  return requestClient.get<FollowUpStats>('/customer/follow-up/stats', {
+    params,
+  });
 }
 
 export async function createFollowUp(data: {
@@ -306,13 +310,13 @@ export interface BatchSendResult {
 
 export async function getDirectMessages(params?: Record<string, unknown>) {
   return requestClient.get<PaginatedResponse<DirectMessage>>(
-    '/crm/direct-messages',
+    '/messaging/direct',
     { params },
   );
 }
 
 export async function getDirectMessage(id: number) {
-  return requestClient.get<DirectMessage>(`/crm/direct-messages/${id}`);
+  return requestClient.get<DirectMessage>(`/messaging/direct/${id}`);
 }
 
 export async function getCustomerMessages(
@@ -320,20 +324,17 @@ export async function getCustomerMessages(
   params?: { page?: number; pageSize?: number },
 ) {
   return requestClient.get<PaginatedResponse<DirectMessage>>(
-    `/crm/customers/${customerId}/messages`,
+    `/customer/list/${customerId}/messages`,
     { params },
   );
 }
 
 export async function sendDirectMessage(data: SendDirectMessageDto) {
-  return requestClient.post<DirectMessage>('/crm/direct-messages/send', data);
+  return requestClient.post<DirectMessage>('/messaging/direct/send', data);
 }
 
 export async function sendBatchDirectMessages(data: SendBatchDirectMessageDto) {
-  return requestClient.post<BatchSendResult>(
-    '/crm/direct-messages/batch',
-    data,
-  );
+  return requestClient.post<BatchSendResult>('/messaging/direct/batch', data);
 }
 
 // ==================== Message Template Types ====================
@@ -372,17 +373,17 @@ export interface UpdateMessageTemplateDto {
 
 export async function getMessageTemplates(params?: Record<string, unknown>) {
   return requestClient.get<PaginatedResponse<MessageTemplate>>(
-    '/crm/message-templates',
+    '/messaging/template',
     { params },
   );
 }
 
 export async function getMessageTemplate(id: number) {
-  return requestClient.get<MessageTemplate>(`/crm/message-templates/${id}`);
+  return requestClient.get<MessageTemplate>(`/messaging/template/${id}`);
 }
 
 export async function createMessageTemplate(data: CreateMessageTemplateDto) {
-  return requestClient.post<MessageTemplate>('/crm/message-templates', data);
+  return requestClient.post<MessageTemplate>('/messaging/template', data);
 }
 
 export async function updateMessageTemplate(
@@ -390,13 +391,13 @@ export async function updateMessageTemplate(
   data: UpdateMessageTemplateDto,
 ) {
   return requestClient.put<MessageTemplate>(
-    `/crm/message-templates/${id}`,
+    `/messaging/template/${id}`,
     data,
   );
 }
 
 export async function deleteMessageTemplate(id: number) {
-  return requestClient.delete(`/crm/message-templates/${id}`);
+  return requestClient.delete(`/messaging/template/${id}`);
 }
 
 // ==================== Media Types ====================
@@ -429,13 +430,13 @@ export interface PresignedUrlResponse {
 // ==================== Media API ====================
 
 export async function getMediaList(params?: Record<string, unknown>) {
-  return requestClient.get<PaginatedResponse<WecomMedia>>('/crm/media', {
+  return requestClient.get<PaginatedResponse<WecomMedia>>('/messaging/media', {
     params,
   });
 }
 
 export async function getMedia(id: number) {
-  return requestClient.get<WecomMedia>(`/crm/media/${id}`);
+  return requestClient.get<WecomMedia>(`/messaging/media/${id}`);
 }
 
 export async function uploadMedia(file: File, data?: UploadMediaDto) {
@@ -444,20 +445,23 @@ export async function uploadMedia(file: File, data?: UploadMediaDto) {
   if (data?.type) formData.append('type', data.type);
   if (data?.name) formData.append('name', data.name);
 
-  return requestClient.post<WecomMedia>('/crm/media/upload', formData, {
+  return requestClient.post<WecomMedia>('/messaging/media/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 }
 
 export async function deleteMedia(id: number) {
-  return requestClient.delete(`/crm/media/${id}`);
+  return requestClient.delete(`/messaging/media/${id}`);
 }
 
 export async function getPresignedUrl(filename: string, contentType: string) {
-  return requestClient.post<PresignedUrlResponse>('/crm/media/presigned-url', {
-    filename,
-    contentType,
-  });
+  return requestClient.post<PresignedUrlResponse>(
+    '/messaging/media/presigned-url',
+    {
+      filename,
+      contentType,
+    },
+  );
 }
 
 export async function refreshWecomMediaId(id: number) {
@@ -465,7 +469,7 @@ export async function refreshWecomMediaId(id: number) {
     mediaId: number;
     wecomMediaId: string;
     expiresAt: string;
-  }>(`/crm/media/${id}/refresh`);
+  }>(`/messaging/media/${id}/refresh`);
 }
 
 // ==================== Mass Message Types ====================
@@ -514,14 +518,14 @@ export interface PreviewMassMessageResponse {
 
 export async function quickSendMassMessage(data: QuickSendDto) {
   return requestClient.post<QuickSendResponse>(
-    '/crm/mass-messages/quick-send',
+    '/messaging/mass-message/quick-send',
     data,
   );
 }
 
 export async function previewMassMessage(data: PreviewMassMessageDto) {
   return requestClient.post<PreviewMassMessageResponse>(
-    '/crm/mass-messages/preview',
+    '/messaging/mass-message/preview',
     data,
   );
 }
@@ -582,7 +586,7 @@ export interface SendTestMessageDto {
 
 export async function getEmployees(params?: Record<string, unknown>) {
   return requestClient.get<PaginatedResponse<WecomEmployee>>(
-    '/crm/direct-messages/employees',
+    '/messaging/direct/employees',
     { params },
   );
 }
@@ -592,18 +596,18 @@ export async function getEmployeeCustomers(
   params?: Record<string, unknown>,
 ) {
   return requestClient.get<PaginatedResponse<EmployeeCustomer>>(
-    `/crm/direct-messages/employees/${wecomUserId}/customers`,
+    `/messaging/direct/employees/${wecomUserId}/customers`,
     { params },
   );
 }
 
 export async function sendToEmployees(data: SendToEmployeesDto) {
   return requestClient.post<SendToEmployeesResponse>(
-    '/crm/direct-messages/send-to-employees',
+    '/messaging/direct/send-to-employees',
     data,
   );
 }
 
 export async function sendTestMessage(data: SendTestMessageDto) {
-  return requestClient.post<DirectMessage>('/crm/direct-messages/test', data);
+  return requestClient.post<DirectMessage>('/messaging/direct/test', data);
 }

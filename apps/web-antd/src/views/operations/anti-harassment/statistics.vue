@@ -185,7 +185,7 @@ async function loadData() {
 }
 
 function goBack() {
-  router.push('/crm/anti-harassment');
+  router.push('/operations/anti-harassment');
 }
 
 function formatDate(dateStr: string | null): string {

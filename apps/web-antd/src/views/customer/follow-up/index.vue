@@ -314,7 +314,7 @@ function formatRelativeTime(time: string | null) {
 }
 
 function goToStatistics() {
-  router.push('/crm/follow-up/statistics');
+  router.push('/customer/follow-up/statistics');
 }
 
 // ==================== 生命周期 ====================

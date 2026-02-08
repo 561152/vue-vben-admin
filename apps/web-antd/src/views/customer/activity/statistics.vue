@@ -259,7 +259,7 @@ const trendColumns = [
 async function loadOverview() {
   try {
     overviewData.value = await requestClient.get(
-      '/crm/customer-activities/statistics/overview',
+      '/customer/activity/statistics/overview',
     );
   } catch (error) {
     console.error('Failed to load overview:', error);
@@ -269,7 +269,7 @@ async function loadOverview() {
 async function loadTypeAnalysis() {
   try {
     typeAnalysisData.value = await requestClient.get(
-      '/crm/customer-activities/statistics/type-analysis',
+      '/customer/activity/statistics/type-analysis',
     );
   } catch (error) {
     console.error('Failed to load type analysis:', error);
@@ -279,7 +279,7 @@ async function loadTypeAnalysis() {
 async function loadEngagement() {
   try {
     engagementData.value = await requestClient.get(
-      '/crm/customer-activities/statistics/engagement',
+      '/customer/activity/statistics/engagement',
     );
   } catch (error) {
     console.error('Failed to load engagement:', error);
@@ -289,7 +289,7 @@ async function loadEngagement() {
 async function loadChannel() {
   try {
     channelData.value = await requestClient.get(
-      '/crm/customer-activities/statistics/channel',
+      '/customer/activity/statistics/channel',
     );
   } catch (error) {
     console.error('Failed to load channel:', error);

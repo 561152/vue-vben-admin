@@ -97,7 +97,7 @@ export interface StartSopResponse {
  * Get member level statistics
  */
 export async function getMemberStats(params?: { levels?: string[] }) {
-  return requestClient.get<MemberStatsResponse>('/crm/retail/member-stats', {
+  return requestClient.get<MemberStatsResponse>('/marketing/retail/member-stats', {
     params,
   });
 }
@@ -107,7 +107,7 @@ export async function getMemberStats(params?: { levels?: string[] }) {
  */
 export async function getReferralLeaderboard(params?: { limit?: number }) {
   return requestClient.get<ReferralLeaderboardResponse>(
-    '/crm/retail/referral/leaderboard',
+    '/marketing/retail/referral/leaderboard',
     { params },
   );
 }
@@ -126,7 +126,7 @@ export async function startCustomerSop(data: {
   customerIds: string[];
   sopCode: string;
 }) {
-  return requestClient.post<StartSopResponse>('/crm/retail/sop/start', data);
+  return requestClient.post<StartSopResponse>('/marketing/retail/sop/start', data);
 }
 
 /**
@@ -148,7 +148,7 @@ export async function getCustomerSopProgress(
  */
 export async function generateReferralCode(customerId: string) {
   return requestClient.post<GenerateReferralCodeResponse>(
-    '/crm/retail/referral/generate',
+    '/marketing/retail/referral/generate',
     { customerId },
   );
 }

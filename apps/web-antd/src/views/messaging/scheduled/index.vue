@@ -261,7 +261,7 @@ function formatDate(date: string) {
 const router = useRouter();
 
 function goToStatistics() {
-  router.push('/crm/scheduled-message/statistics');
+  router.push('/messaging/scheduled/statistics');
 }
 
 // ==================== 生命周期 ====================

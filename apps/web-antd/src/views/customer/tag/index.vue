@@ -96,7 +96,7 @@ function handleEdit(record: TagItem) {
 }
 
 function goToStatistics() {
-  router.push('/crm/tag/statistics');
+  router.push('/customer/tag/statistics');
 }
 
 // ==================== 生命周期 ====================

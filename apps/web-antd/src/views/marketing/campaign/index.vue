@@ -112,7 +112,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<CampaignItem>({
     const response = await requestClient.get<{
       list: CampaignItem[];
       total: number;
-    }>('/crm/campaigns', {
+    }>('/marketing/campaign', {
       params: { page: params.page, pageSize: params.pageSize },
     });
     return { items: response.list || [], total: response.total || 0 };
@@ -127,7 +127,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<CampaignItem>({
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<CampaignFormState>({
     createApi: async (data) => {
-      await requestClient.post('/crm/campaigns', data);
+      await requestClient.post('/marketing/campaign', data);
     },
     updateApi: async (id, data) => {
       await requestClient.put(`/crm/campaigns/${id}`, data);
@@ -159,11 +159,11 @@ function showDetail(record: CampaignItem) {
 }
 
 function goToStatistics() {
-  router.push('/crm/campaign/statistics');
+  router.push('/marketing/campaign/statistics');
 }
 
 function goToAudienceStatistics() {
-  router.push('/crm/audience/statistics');
+  router.push('/marketing/audience/statistics');
 }
 
 // ==================== 生命周期 ====================

@@ -246,7 +246,7 @@ const urgentTasksColumns = [
 async function loadOverview() {
   try {
     overviewData.value = await requestClient.get(
-      '/crm/employee-tasks/statistics/overview',
+      '/operations/employee-task/statistics/overview',
     );
   } catch (error) {
     console.error('Failed to load overview:', error);
@@ -256,7 +256,7 @@ async function loadOverview() {
 async function loadPerformance() {
   try {
     performanceData.value = await requestClient.get(
-      '/crm/employee-tasks/statistics/employee-performance',
+      '/operations/employee-task/statistics/employee-performance',
     );
   } catch (error) {
     console.error('Failed to load performance:', error);
@@ -266,7 +266,7 @@ async function loadPerformance() {
 async function loadTypeAnalysis() {
   try {
     typeAnalysisData.value = await requestClient.get(
-      '/crm/employee-tasks/statistics/task-type-analysis',
+      '/operations/employee-task/statistics/task-type-analysis',
     );
   } catch (error) {
     console.error('Failed to load type analysis:', error);
@@ -276,7 +276,7 @@ async function loadTypeAnalysis() {
 async function loadTimeliness() {
   try {
     timelinessData.value = await requestClient.get(
-      '/crm/employee-tasks/statistics/timeliness',
+      '/operations/employee-task/statistics/timeliness',
     );
   } catch (error) {
     console.error('Failed to load timeliness:', error);

@@ -135,7 +135,7 @@ async function fetchStatistics() {
   loading.value = true;
   try {
     const res = await requestClient.get<MaterialStatistics>(
-      '/crm/materials/statistics/overview',
+      '/messaging/material/statistics/overview',
     );
     statistics.value = res;
   } catch (e) {
@@ -148,7 +148,7 @@ async function fetchStatistics() {
 async function fetchPopularMaterials() {
   try {
     const res = await requestClient.get<PopularMaterial[]>(
-      '/crm/materials/statistics/popular',
+      '/messaging/material/statistics/popular',
       { params: { limit: 10 } },
     );
     popularMaterials.value = res || [];
@@ -163,7 +163,7 @@ async function fetchUsageRecords() {
     const res = await requestClient.get<{
       items: UsageRecord[];
       total: number;
-    }>('/crm/materials/statistics/usage-records', {
+    }>('/messaging/material/statistics/usage-records', {
       params: { page: usageRecordsPage.value, pageSize: 10 },
     });
     usageRecords.value = res.items || [];
@@ -179,7 +179,7 @@ async function fetchUsageRanking() {
   usageRankingLoading.value = true;
   try {
     const res = await requestClient.get<UsageRanking[]>(
-      '/crm/materials/statistics/usage-ranking',
+      '/messaging/material/statistics/usage-ranking',
       { params: { period: rankingPeriod.value, limit: 10 } },
     );
     usageRanking.value = res || [];

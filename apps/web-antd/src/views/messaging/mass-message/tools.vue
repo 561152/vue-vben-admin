@@ -17,8 +17,8 @@ const tools = [
       '企业统一选择要发送的客户，由添加客户的成员确认后发送给客户。消息内容仅管理员和负责人可创建。',
     icon: UserOutlined,
     actions: [
-      { label: '新建消息', path: '/crm/mass-message' },
-      { label: '群发记录', path: '/crm/mass-message/history' },
+      { label: '新建消息', path: '/messaging/mass-message' },
+      { label: '群发记录', path: '/messaging/mass-message/history' },
     ],
   },
   {
@@ -28,8 +28,8 @@ const tools = [
       '管理员或负责人统一创建内容，群主收到通知后，可选择他管理的客户群并群发。',
     icon: TeamOutlined,
     actions: [
-      { label: '新建消息', path: '/crm/group-message/create' },
-      { label: '群发记录', path: '/crm/group-message/history' },
+      { label: '新建消息', path: '/messaging/group-message/create' },
+      { label: '群发记录', path: '/messaging/group-message/history' },
     ],
   },
   {
@@ -39,8 +39,8 @@ const tools = [
       '管理员或负责人编辑内容，选择可见的客户，成员确认后，可将内容发表到客户的朋友圈。还可与客户进行评论互动。',
     icon: ShareAltOutlined,
     actions: [
-      { label: '新建内容', path: '/crm/moments/create' },
-      { label: '企业发表记录', path: '/crm/moments/history' },
+      { label: '新建内容', path: '/messaging/moments/create' },
+      { label: '企业发表记录', path: '/messaging/moments/history' },
     ],
   },
 ];

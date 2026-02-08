@@ -137,10 +137,10 @@ async function loadData() {
   try {
     const [overviewRes, analysisRes] = await Promise.all([
       requestClient.get<TemplateOverview>(
-        '/crm/message-templates/statistics/overview',
+        '/messaging/template/statistics/overview',
       ),
       requestClient.get<UsageAnalysis>(
-        '/crm/message-templates/statistics/usage-analysis',
+        '/messaging/template/statistics/usage-analysis',
       ),
     ]);
     overview.value = overviewRes;
@@ -153,7 +153,7 @@ async function loadData() {
 }
 
 function goBack() {
-  router.push('/crm/message-template');
+  router.push('/messaging/template');
 }
 
 function formatDate(dateStr: string): string {

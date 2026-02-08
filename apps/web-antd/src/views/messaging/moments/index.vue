@@ -554,7 +554,7 @@ async function handleRetryFailed() {
 }
 
 function goToStatistics() {
-  router.push('/crm/moments/statistics');
+  router.push('/messaging/moments/statistics');
 }
 
 // ==================== 生命周期 ====================

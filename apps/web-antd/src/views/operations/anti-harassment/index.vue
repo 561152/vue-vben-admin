@@ -358,19 +358,19 @@ async function handleToggleRule(rule: AntiHarassmentRule) {
 
 // Navigation
 function goToWhitelist() {
-  router.push('/crm/anti-harassment/whitelist');
+  router.push('/operations/anti-harassment/whitelist');
 }
 
 function goToBlacklist() {
-  router.push('/crm/anti-harassment/blacklist');
+  router.push('/operations/anti-harassment/blacklist');
 }
 
 function goToViolations() {
-  router.push('/crm/anti-harassment/violations');
+  router.push('/operations/anti-harassment/violations');
 }
 
 function goToStatistics() {
-  router.push('/crm/anti-harassment/statistics');
+  router.push('/operations/anti-harassment/statistics');
 }
 
 // ==================== 生命周期 ====================

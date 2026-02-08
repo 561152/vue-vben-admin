@@ -180,13 +180,13 @@ async function loadData() {
   try {
     const [overviewRes, analysisRes, performanceRes] = await Promise.all([
       requestClient.get<MassMessageOverview>(
-        '/crm/mass-messages/statistics/overview',
+        '/messaging/mass-message/statistics/overview',
       ),
       requestClient.get<SendAnalysis>(
-        '/crm/mass-messages/statistics/send-analysis',
+        '/messaging/mass-message/statistics/send-analysis',
       ),
       requestClient.get<CampaignPerformance>(
-        '/crm/mass-messages/statistics/campaign-performance',
+        '/messaging/mass-message/statistics/campaign-performance',
       ),
     ]);
     overview.value = overviewRes;
@@ -200,7 +200,7 @@ async function loadData() {
 }
 
 function goBack() {
-  router.push('/crm/mass-message');
+  router.push('/messaging/mass-message');
 }
 
 // ==================== 生命周期 ====================
