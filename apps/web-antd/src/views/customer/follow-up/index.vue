@@ -197,7 +197,7 @@ const activeTab = ref('dashboard');
 
 async function fetchStats() {
   try {
-    stats.value = await requestClient.get<FollowUpStats>('/follow-ups/stats');
+    stats.value = await requestClient.get<FollowUpStats>('/customer/follow-up/stats');
   } catch (e) {
     console.error(e);
   }
@@ -206,7 +206,7 @@ async function fetchStats() {
 async function fetchTodayData() {
   try {
     todayData.value =
-      await requestClient.get<TodayFollowUp>('/follow-ups/today');
+      await requestClient.get<TodayFollowUp>('/customer/follow-up/today');
   } catch (e) {
     console.error(e);
   }
@@ -277,7 +277,7 @@ async function handleSubmit() {
 
 async function handleMarkCompleted(id: number) {
   try {
-    await requestClient.put(`/follow-ups/${id}/complete`);
+    await requestClient.put(`/customer/follow-up/${id}/complete`);
     message.success('已标记完成');
     refreshAll();
   } catch (e) {
@@ -287,7 +287,7 @@ async function handleMarkCompleted(id: number) {
 
 async function handleDelete(id: number) {
   try {
-    await requestClient.delete(`/follow-ups/${id}`);
+    await requestClient.delete(`/customer/follow-up/${id}`);
     message.success('删除成功');
     refreshAll();
   } catch (e) {

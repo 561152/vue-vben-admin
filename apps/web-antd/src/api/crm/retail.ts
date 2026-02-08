@@ -119,7 +119,7 @@ export async function getReferralLeaderboard(params?: { limit?: number }) {
  * Get SOP statistics
  */
 export async function getSopStats(sopCode: string) {
-  return requestClient.get<SopStats>(`/crm/retail/sop/${sopCode}/stats`);
+  return requestClient.get<SopStats>(`/marketing/retail/sop/${sopCode}/stats`);
 }
 
 /**
@@ -144,7 +144,7 @@ export async function getCustomerSopProgress(
 ) {
   const params = sopCode ? { sopCode } : {};
   return requestClient.get<CustomerSopProgress>(
-    `/crm/retail/sop/progress/${customerId}`,
+    `/marketing/retail/sop/progress/${customerId}`,
     { params },
   );
 }
@@ -167,7 +167,7 @@ export async function getReferralRelationships(
   params?: { page?: number; pageSize?: number },
 ) {
   return requestClient.get<ReferralRelationshipsResponse>(
-    `/crm/retail/referral/relationships/${customerId}`,
+    `/marketing/retail/referral/relationships/${customerId}`,
     { params },
   );
 }

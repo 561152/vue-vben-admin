@@ -118,7 +118,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<CampaignItem>({
     return { items: response.list || [], total: response.total || 0 };
   },
   deleteApi: async (id) => {
-    await requestClient.delete(`/crm/campaigns/${id}`);
+    await requestClient.delete(`/marketing/campaign/${id}`);
   },
 });
 
@@ -130,7 +130,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       await requestClient.post('/marketing/campaign', data);
     },
     updateApi: async (id, data) => {
-      await requestClient.put(`/crm/campaigns/${id}`, data);
+      await requestClient.put(`/marketing/campaign/${id}`, data);
     },
     initialValues: () => ({
       name: '',

@@ -162,7 +162,7 @@ const { tableProps, filters, search, resetFilters, fetchData, handleDelete } =
       );
     },
     deleteApi: async (id) => {
-      await requestClient.delete(`/customers/${id}`);
+      await requestClient.delete(`/customer/list/${id}`);
     },
   });
 
@@ -180,7 +180,7 @@ const {
     await requestClient.post('/customer/list', data);
   },
   updateApi: async (id, data) => {
-    await requestClient.put(`/customers/${id}`, data);
+    await requestClient.put(`/customer/list/${id}`, data);
   },
   initialValues: () => ({
     name: '',

@@ -199,7 +199,7 @@ const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
     return { items: res.data || [], total: res.total || 0 };
   },
   deleteApi: async (id) => {
-    await requestClient.delete(`/crm/materials/${id}`);
+    await requestClient.delete(`/messaging/material/${id}`);
   },
   initialFilters: { status: 'ACTIVE' },
 });
@@ -223,7 +223,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       });
     },
     updateApi: async (id, data) => {
-      await requestClient.put(`/crm/materials/${id}`, {
+      await requestClient.put(`/messaging/material/${id}`, {
         name: data.name,
         description: data.description || undefined,
         type: data.type,

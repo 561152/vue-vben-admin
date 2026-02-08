@@ -112,7 +112,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<GroupItem>({
       },
     ),
   deleteApi: async (id) => {
-    await requestClient.delete(`/groups/${id}`);
+    await requestClient.delete(`/customer/group/${id}`);
   },
 });
 
@@ -124,7 +124,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       await requestClient.post('/customer/group', data);
     },
     updateApi: async (id, data) => {
-      await requestClient.put(`/groups/${id}`, data);
+      await requestClient.put(`/customer/group/${id}`, data);
     },
     initialValues: () => ({
       name: '',
@@ -165,7 +165,7 @@ async function fetchMembers(groupId: number) {
   membersLoading.value = true;
   try {
     members.value = await requestClient.get<MemberItem[]>(
-      `/groups/${groupId}/members`,
+      `/customer/group/${groupId}/members`,
     );
   } catch (e) {
     console.error(e);
@@ -188,7 +188,7 @@ function handleAddMember() {
 async function handleAddMemberSubmit() {
   if (!currentGroup.value || !selectedCustomerId.value) return;
   try {
-    await requestClient.post(`/groups/${currentGroup.value.id}/members`, {
+    await requestClient.post(`/customer/group/${currentGroup.value.id}/members`, {
       customerId: selectedCustomerId.value,
     });
     message.success('添加成功');
@@ -205,7 +205,7 @@ async function handleRemoveMember(memberId: number) {
   if (!currentGroup.value) return;
   try {
     await requestClient.delete(
-      `/groups/${currentGroup.value.id}/members/${memberId}`,
+      `/customer/group/${currentGroup.value.id}/members/${memberId}`,
     );
     message.success('移除成功');
     await fetchMembers(currentGroup.value.id);

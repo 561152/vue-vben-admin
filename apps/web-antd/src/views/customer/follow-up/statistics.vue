@@ -215,7 +215,7 @@ export default {
 <template>
   <StatisticsPageLayout
     title="跟进统计分析"
-    back-path="/crm/follow-up"
+    back-path="/customer/follow-up"
     :loading="loading"
   >
     <!-- 概览统计卡片 -->

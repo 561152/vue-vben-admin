@@ -203,7 +203,7 @@ export default {
 <template>
   <StatisticsPageLayout
     title="客户分组统计"
-    back-path="/crm/group"
+    back-path="/customer/group"
     :loading="loading"
   >
     <!-- 概览统计卡片 -->

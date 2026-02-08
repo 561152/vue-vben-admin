@@ -218,7 +218,7 @@ export default {
 <template>
   <StatisticsPageLayout
     title="标签统计分析"
-    back-path="/crm/tag"
+    back-path="/customer/tag"
     :loading="loading"
   >
     <!-- 概览统计卡片 -->

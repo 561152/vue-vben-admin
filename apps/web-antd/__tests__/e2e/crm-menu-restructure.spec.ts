@@ -124,6 +124,44 @@ test.describe('CRM 菜单重构验证', () => {
       await page.waitForLoadState('networkidle');
       expect(page.url()).toContain('/operations/wecom-sync');
     });
+
+    test('消息中心模块 - /messaging/material', async ({ page }) => {
+      await page.goto(`${BASE_URL}/messaging/material`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/messaging/material');
+    });
+
+    test('会员分析模块 - /marketing/member-analysis', async ({ page }) => {
+      await page.goto(`${BASE_URL}/marketing/member-analysis`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/marketing/member-analysis');
+    });
+  });
+
+  test.describe('统计页面访问测试', () => {
+    test('客户统计 - /customer/list/statistics', async ({ page }) => {
+      await page.goto(`${BASE_URL}/customer/list/statistics`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/customer/list/statistics');
+    });
+
+    test('标签统计 - /customer/tag/statistics', async ({ page }) => {
+      await page.goto(`${BASE_URL}/customer/tag/statistics`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/customer/tag/statistics');
+    });
+
+    test('分组统计 - /customer/group/statistics', async ({ page }) => {
+      await page.goto(`${BASE_URL}/customer/group/statistics`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/customer/group/statistics');
+    });
+
+    test('跟进统计 - /customer/follow-up/statistics', async ({ page }) => {
+      await page.goto(`${BASE_URL}/customer/follow-up/statistics`);
+      await page.waitForLoadState('networkidle');
+      expect(page.url()).toContain('/customer/follow-up/statistics');
+    });
   });
 
   test.describe('旧路由已废弃测试', () => {

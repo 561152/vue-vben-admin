@@ -318,7 +318,7 @@ export default {
 <template>
   <StatisticsPageLayout
     title="客户统计分析"
-    back-path="/crm/customer"
+    back-path="/customer/list"
     :loading="loading"
   >
     <template #actions>

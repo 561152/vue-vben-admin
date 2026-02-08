@@ -63,7 +63,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<TagItem>({
       params: { page: params.page, pageSize: params.pageSize },
     }),
   deleteApi: async (id) => {
-    await requestClient.delete(`/tags/${id}`);
+    await requestClient.delete(`/customer/tag/${id}`);
   },
 });
 
@@ -75,7 +75,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       await requestClient.post('/customer/tag', data);
     },
     updateApi: async (id, data) => {
-      await requestClient.put(`/tags/${id}`, data);
+      await requestClient.put(`/customer/tag/${id}`, data);
     },
     initialValues: () => ({
       name: '',
