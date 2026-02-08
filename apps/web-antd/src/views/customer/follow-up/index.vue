@@ -183,7 +183,7 @@ const { tableProps, filters, search, resetFilters, fetchData } = useCrudTable<
     if (params.status) apiParams.status = params.status;
     if (params.type) apiParams.type = params.type;
     return requestClient.get<{ items: FollowUpItem[]; total: number }>(
-      '/follow-ups',
+      '/customer/follow-up',
       { params: apiParams },
     );
   },
@@ -226,7 +226,7 @@ const formState = ref({
 async function fetchCustomers() {
   try {
     const res = await requestClient.get<{ items: CustomerItem[] }>(
-      '/customers',
+      '/customer/list',
       {
         params: { pageSize: 100 },
       },
@@ -258,7 +258,7 @@ async function handleSubmit() {
   }
 
   try {
-    await requestClient.post('/follow-ups', {
+    await requestClient.post('/customer/follow-up', {
       customerId: formState.value.customerId,
       type: formState.value.type,
       content: formState.value.content,

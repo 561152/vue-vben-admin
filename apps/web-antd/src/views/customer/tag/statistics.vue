@@ -86,9 +86,9 @@ interface TagStats {
 }
 
 const { loading, data } = useStatistics<TagStats>({
-  overview: '/tags/statistics/overview',
-  usageAnalysis: '/tags/statistics/usage-analysis',
-  unusedTags: '/tags/statistics/unused',
+  overview: '/customer/tag/statistics/overview',
+  usageAnalysis: '/customer/tag/statistics/usage-analysis',
+  unusedTags: '/customer/tag/statistics/unused',
 });
 
 // ==================== 统计卡片配置 ====================

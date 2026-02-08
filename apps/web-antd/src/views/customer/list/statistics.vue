@@ -230,7 +230,7 @@ async function fetchOverview() {
   try {
     loading.value = true;
     overview.value = await requestClient.get<StatisticsOverview>(
-      '/customers/statistics/overview',
+      '/customer/list/statistics/overview',
     );
   } catch (error) {
     message.error('获取统计数据失败');
@@ -242,7 +242,7 @@ async function fetchOverview() {
 async function fetchGrowthTrend() {
   try {
     growthTrend.value = await requestClient.get<GrowthTrend[]>(
-      '/customers/statistics/growth-trend',
+      '/customer/list/statistics/growth-trend',
       { params: { period: growthPeriod.value } },
     );
   } catch (error) {
@@ -253,7 +253,7 @@ async function fetchGrowthTrend() {
 async function fetchRegionDistribution() {
   try {
     regionDistribution.value = await requestClient.get<RegionDistribution[]>(
-      '/customers/statistics/region-distribution',
+      '/customer/list/statistics/region-distribution',
       { params: { level: 'province', limit: 10 } },
     );
   } catch (error) {
@@ -264,7 +264,7 @@ async function fetchRegionDistribution() {
 async function fetchValueAnalysis() {
   try {
     valueAnalysis.value = await requestClient.get<ValueAnalysis>(
-      '/customers/statistics/value-analysis',
+      '/customer/list/statistics/value-analysis',
     );
   } catch (error) {
     message.error('获取价值分析失败');
@@ -274,7 +274,7 @@ async function fetchValueAnalysis() {
 async function fetchOwnerRanking() {
   try {
     ownerRanking.value = await requestClient.get<OwnerRanking[]>(
-      '/customers/statistics/owner-ranking',
+      '/customer/list/statistics/owner-ranking',
       { params: { period: rankingPeriod.value, limit: 10 } },
     );
   } catch (error) {

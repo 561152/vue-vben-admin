@@ -108,25 +108,25 @@ export interface PaginatedResponse<T> {
 // ==================== Customer API ====================
 
 export async function getCustomers(params?: Record<string, unknown>) {
-  return requestClient.get<PaginatedResponse<Customer>>('/customers', {
+  return requestClient.get<PaginatedResponse<Customer>>('/customer/list', {
     params,
   });
 }
 
 export async function getCustomer(id: number) {
-  return requestClient.get<Customer>(`/customers/${id}`);
+  return requestClient.get<Customer>(`/customer/list/${id}`);
 }
 
 export async function createCustomer(data: Partial<Customer>) {
-  return requestClient.post<Customer>('/customers', data);
+  return requestClient.post<Customer>('/customer/list', data);
 }
 
 export async function updateCustomer(id: number, data: Partial<Customer>) {
-  return requestClient.put<Customer>(`/customers/${id}`, data);
+  return requestClient.put<Customer>(`/customer/list/${id}`, data);
 }
 
 export async function deleteCustomer(id: number) {
-  return requestClient.delete(`/customers/${id}`);
+  return requestClient.delete(`/customer/list/${id}`);
 }
 
 // ==================== Customer Channel API ====================
@@ -176,13 +176,13 @@ export async function createActivity(data: {
 // ==================== Follow-up API ====================
 
 export async function getFollowUps(params?: Record<string, unknown>) {
-  return requestClient.get<PaginatedResponse<FollowUp>>('/follow-ups', {
+  return requestClient.get<PaginatedResponse<FollowUp>>('/customer/follow-up', {
     params,
   });
 }
 
 export async function getFollowUp(id: number) {
-  return requestClient.get<FollowUp>(`/follow-ups/${id}`);
+  return requestClient.get<FollowUp>(`/customer/follow-up/${id}`);
 }
 
 export async function getCustomerFollowUps(
@@ -190,13 +190,13 @@ export async function getCustomerFollowUps(
   params?: { page?: number; pageSize?: number },
 ) {
   return requestClient.get<PaginatedResponse<FollowUp>>(
-    `/follow-ups/customer/${customerId}`,
+    `/customer/follow-up/customer/${customerId}`,
     { params },
   );
 }
 
 export async function getTodayFollowUps() {
-  return requestClient.get<TodayFollowUp>('/follow-ups/today');
+  return requestClient.get<TodayFollowUp>('/customer/follow-up/today');
 }
 
 export async function getPendingFollowUps(params?: {
@@ -204,12 +204,12 @@ export async function getPendingFollowUps(params?: {
   daysAhead?: number;
   limit?: number;
 }) {
-  return requestClient.get<FollowUp[]>('/follow-ups/pending', { params });
+  return requestClient.get<FollowUp[]>('/customer/follow-up/pending', { params });
 }
 
 export async function getFollowUpStats(customerId?: number) {
   const params = customerId ? { customerId } : {};
-  return requestClient.get<FollowUpStats>('/follow-ups/stats', { params });
+  return requestClient.get<FollowUpStats>('/customer/follow-up/stats', { params });
 }
 
 export async function createFollowUp(data: {
@@ -218,7 +218,7 @@ export async function createFollowUp(data: {
   content: string;
   nextPlanAt?: string;
 }) {
-  return requestClient.post<FollowUp>('/follow-ups', data);
+  return requestClient.post<FollowUp>('/customer/follow-up', data);
 }
 
 export async function updateFollowUp(
@@ -229,15 +229,15 @@ export async function updateFollowUp(
     nextPlanAt?: string | null;
   },
 ) {
-  return requestClient.put<FollowUp>(`/follow-ups/${id}`, data);
+  return requestClient.put<FollowUp>(`/customer/follow-up/${id}`, data);
 }
 
 export async function markFollowUpCompleted(id: number) {
-  return requestClient.put<FollowUp>(`/follow-ups/${id}/complete`);
+  return requestClient.put<FollowUp>(`/customer/follow-up/${id}/complete`);
 }
 
 export async function deleteFollowUp(id: number) {
-  return requestClient.delete(`/follow-ups/${id}`);
+  return requestClient.delete(`/customer/follow-up/${id}`);
 }
 
 // ==================== Direct Message Types ====================

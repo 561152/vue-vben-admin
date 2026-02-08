@@ -59,7 +59,7 @@ const columns = [
 
 const { tableProps, fetchData, handleDelete } = useCrudTable<TagItem>({
   fetchApi: async (params) =>
-    requestClient.get<{ items: TagItem[]; total: number }>('/tags', {
+    requestClient.get<{ items: TagItem[]; total: number }>('/customer/tag', {
       params: { page: params.page, pageSize: params.pageSize },
     }),
   deleteApi: async (id) => {
@@ -72,7 +72,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<TagItem>({
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<TagFormState>({
     createApi: async (data) => {
-      await requestClient.post('/tags', data);
+      await requestClient.post('/customer/tag', data);
     },
     updateApi: async (id, data) => {
       await requestClient.put(`/tags/${id}`, data);

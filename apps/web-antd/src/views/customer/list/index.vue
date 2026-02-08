@@ -157,7 +157,7 @@ const { tableProps, filters, search, resetFilters, fetchData, handleDelete } =
       if (params.keyword) apiParams.keyword = params.keyword;
 
       return requestClient.get<{ items: CustomerItem[]; total: number }>(
-        '/customers',
+        '/customer/list',
         { params: apiParams },
       );
     },
@@ -177,7 +177,7 @@ const {
   submit,
 } = useModalForm<CustomerFormState>({
   createApi: async (data) => {
-    await requestClient.post('/customers', data);
+    await requestClient.post('/customer/list', data);
   },
   updateApi: async (id, data) => {
     await requestClient.put(`/customers/${id}`, data);

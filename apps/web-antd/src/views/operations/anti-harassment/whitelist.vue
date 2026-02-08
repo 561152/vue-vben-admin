@@ -106,7 +106,7 @@ async function searchCustomers(keyword: string) {
   }
   customerLoading.value = true;
   try {
-    const res = await requestClient.get<{ items: Customer[] }>('/customers', {
+    const res = await requestClient.get<{ items: Customer[] }>('/customer/list', {
       params: { keyword, pageSize: 20 },
     });
     customers.value = res.items || [];

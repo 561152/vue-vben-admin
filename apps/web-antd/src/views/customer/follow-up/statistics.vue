@@ -163,9 +163,9 @@ async function loadData() {
   loading.value = true;
   try {
     const [overviewRes, efficiencyRes, rankingRes] = await Promise.all([
-      requestClient.get<FollowUpOverview>('/follow-ups/statistics/overview'),
-      requestClient.get<EfficiencyData>('/follow-ups/statistics/efficiency'),
-      requestClient.get<UserRanking[]>('/follow-ups/statistics/user-ranking', {
+      requestClient.get<FollowUpOverview>('/customer/follow-up/statistics/overview'),
+      requestClient.get<EfficiencyData>('/customer/follow-up/statistics/efficiency'),
+      requestClient.get<UserRanking[]>('/customer/follow-up/statistics/user-ranking', {
         params: { period: rankingPeriod.value, limit: 10 },
       }),
     ]);
@@ -182,7 +182,7 @@ async function loadData() {
 async function loadRanking() {
   try {
     userRanking.value = await requestClient.get<UserRanking[]>(
-      '/follow-ups/statistics/user-ranking',
+      '/customer/follow-up/statistics/user-ranking',
       { params: { period: rankingPeriod.value, limit: 10 } },
     );
   } catch (error) {

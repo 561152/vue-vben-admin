@@ -37,9 +37,9 @@ export interface UseStatisticsReturn<T extends Record<string, unknown>> {
  * }
  *
  * const { loading, data, reload } = useStatistics<TagStats>({
- *   overview: '/tags/statistics/overview',
- *   analysis: '/tags/statistics/usage-analysis',
- *   unused: '/tags/statistics/unused',
+ *   overview: '/customer/tag/statistics/overview',
+ *   analysis: '/customer/tag/statistics/usage-analysis',
+ *   unused: '/customer/tag/statistics/unused',
  * });
  *
  * // 在模板中使用: data.overview.value, data.analysis.value

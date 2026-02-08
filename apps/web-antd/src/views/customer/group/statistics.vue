@@ -86,9 +86,9 @@ interface GroupStats {
 }
 
 const { loading, data } = useStatistics<GroupStats>({
-  overview: '/groups/statistics/overview',
-  memberAnalysis: '/groups/statistics/member-analysis',
-  emptyGroups: '/groups/statistics/empty',
+  overview: '/customer/group/statistics/overview',
+  memberAnalysis: '/customer/group/statistics/member-analysis',
+  emptyGroups: '/customer/group/statistics/empty',
 });
 
 // ==================== 映射 ====================

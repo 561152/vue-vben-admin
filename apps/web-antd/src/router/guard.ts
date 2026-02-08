@@ -141,7 +141,9 @@ function setupAccessGuard(router: Router) {
       if (permissions && permissions.length > 0) {
         const hasAnyPerm = permissions.some((perm) => hasPermission(perm));
         if (!hasAnyPerm) {
-          console.warn(`[权限] 缺少权限，需要以下任一权限: ${permissions.join(', ')}`);
+          console.warn(
+            `[权限] 缺少权限，需要以下任一权限: ${permissions.join(', ')}`,
+          );
           return '/403';
         }
       }

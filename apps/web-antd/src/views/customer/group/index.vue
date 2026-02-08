@@ -105,7 +105,7 @@ const memberColumns = [
 
 const { tableProps, fetchData, handleDelete } = useCrudTable<GroupItem>({
   fetchApi: async (params) =>
-    requestClient.get<{ items: GroupItem[]; total: number }>('/groups', {
+    requestClient.get<{ items: GroupItem[]; total: number }>('/customer/group', {
       params: { page: params.page, pageSize: params.pageSize },
     }),
   deleteApi: async (id) => {
@@ -118,7 +118,7 @@ const { tableProps, fetchData, handleDelete } = useCrudTable<GroupItem>({
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<GroupFormState>({
     createApi: async (data) => {
-      await requestClient.post('/groups', data);
+      await requestClient.post('/customer/group', data);
     },
     updateApi: async (id, data) => {
       await requestClient.put(`/groups/${id}`, data);
@@ -150,7 +150,7 @@ const selectedCustomerId = ref<number | undefined>(undefined);
 async function fetchCustomers() {
   try {
     const res = await requestClient.get<{ items: CustomerItem[] }>(
-      '/customers',
+      '/customer/list',
     );
     customers.value = res.items;
   } catch (e) {
