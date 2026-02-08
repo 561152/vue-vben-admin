@@ -276,7 +276,7 @@ async function fetchTags() {
     const res = await requestClient.get<{ items: TagItem[] }>(
       '/customer-tags',
       {
-        params: { pageSize: 200 },
+        params: { pageSize: 100 },
       },
     );
     tags.value = res.items || [];
@@ -288,7 +288,7 @@ async function fetchTags() {
 async function fetchUsers() {
   try {
     const res = await requestClient.get<{ items: UserItem[] }>('/users', {
-      params: { pageSize: 200 },
+      params: { pageSize: 100 },
     });
     users.value = res.items || [];
   } catch (e) {

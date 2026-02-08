@@ -236,7 +236,7 @@ async function fetchTemplates() {
 async function fetchEmployees(keyword?: string) {
   employeeLoading.value = true;
   try {
-    const params: Record<string, unknown> = { pageSize: 200 };
+    const params: Record<string, unknown> = { pageSize: 100 };
     if (keyword) params.keyword = keyword;
     const res = await getEmployees(params);
     employees.value = res.items || [];
