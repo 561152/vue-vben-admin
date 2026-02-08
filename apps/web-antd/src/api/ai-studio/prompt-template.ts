@@ -142,7 +142,7 @@ export async function updatePromptTemplate(
   id: string,
   data: UpdatePromptTemplateData,
 ) {
-  return requestClient.patch<PromptTemplate>(`/prompt-templates/${id}`, data);
+  return requestClient.put<PromptTemplate>(`/prompt-templates/${id}`, data);
 }
 
 /**
