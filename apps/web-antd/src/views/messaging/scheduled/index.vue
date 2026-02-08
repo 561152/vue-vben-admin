@@ -104,7 +104,7 @@ const { tableProps, fetchData } = useCrudTable<ScheduledMessage>({
     const res = await requestClient.get<{
       data: ScheduledMessage[];
       total?: number;
-    }>('/scheduled-messages', {
+    }>('/messaging/scheduled', {
       params: { page: params.page, pageSize: params.pageSize },
     });
     return { items: res.data || [], total: res.total || res.data?.length || 0 };
@@ -120,7 +120,7 @@ const materialPickerType = ref<MaterialType>('ALL');
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<FormState>({
     createApi: async (data) => {
-      await requestClient.post('/scheduled-messages', {
+      await requestClient.post('/messaging/scheduled', {
         ...data,
         scheduledAt: data.scheduledAt?.toISOString(),
         attachments: data.attachments.map((att) => ({
@@ -132,7 +132,7 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       });
     },
     updateApi: async (id, data) => {
-      await requestClient.put(`/scheduled-messages/${id}`, {
+      await requestClient.put(`/messaging/scheduled/${id}`, {
         ...data,
         scheduledAt: data.scheduledAt?.toISOString(),
         attachments: data.attachments.map((att) => ({
@@ -224,7 +224,7 @@ function handleEdit(record: ScheduledMessage) {
 
 async function handleConfirm(id: number) {
   try {
-    await requestClient.post(`/scheduled-messages/${id}/confirm`);
+    await requestClient.post(`/messaging/scheduled/${id}/confirm`);
     message.success('已确认，将按计划发送');
     fetchData();
   } catch {
@@ -234,7 +234,7 @@ async function handleConfirm(id: number) {
 
 async function handleExecute(id: number) {
   try {
-    await requestClient.post(`/scheduled-messages/${id}/execute`);
+    await requestClient.post(`/messaging/scheduled/${id}/execute`);
     message.success('已立即发送');
     fetchData();
   } catch {
@@ -244,7 +244,7 @@ async function handleExecute(id: number) {
 
 async function handleDelete(id: number) {
   try {
-    await requestClient.delete(`/scheduled-messages/${id}`);
+    await requestClient.delete(`/messaging/scheduled/${id}`);
     message.success('删除成功');
     fetchData();
   } catch {

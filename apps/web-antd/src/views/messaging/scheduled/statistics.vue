@@ -168,7 +168,7 @@ async function fetchStatistics() {
   loading.value = true;
   try {
     const res = await requestClient.get<ScheduledMessageStatistics>(
-      '/scheduled-messages/statistics/overview',
+      '/messaging/scheduled/statistics/overview',
     );
     statistics.value = res;
   } catch (e) {
@@ -191,7 +191,7 @@ async function fetchExecutionHistory() {
     const res = await requestClient.get<{
       items: ExecutionHistory[];
       total: number;
-    }>('/scheduled-messages/statistics/history', { params });
+    }>('/messaging/scheduled/statistics/history', { params });
     executionHistory.value = res.items || [];
     historyTotal.value = res.total || 0;
   } catch (e) {
@@ -204,7 +204,7 @@ async function fetchExecutionHistory() {
 async function fetchTypeDistribution() {
   try {
     const res = await requestClient.get<TypeDistribution[]>(
-      '/scheduled-messages/statistics/type-distribution',
+      '/messaging/scheduled/statistics/type-distribution',
     );
     typeDistribution.value = res || [];
   } catch (e) {
@@ -216,7 +216,7 @@ async function handleRetryFailed() {
   retryLoading.value = true;
   try {
     const res = await requestClient.post<{ retried: number; failed: number }>(
-      '/scheduled-messages/statistics/retry-failed',
+      '/messaging/scheduled/statistics/retry-failed',
     );
     if (res.retried > 0) {
       // 刷新数据
