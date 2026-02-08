@@ -4,7 +4,7 @@ defineOptions({ name: 'RfmAnalysis' });
 
 <template>
   <div class="p-4">
-    <h2 class="text-xl font-semibold mb-4">RFM 分析</h2>
+    <h2 class="mb-4 text-xl font-semibold">RFM 分析</h2>
     <p class="text-gray-500">此功能正在开发中...</p>
   </div>
 </template>

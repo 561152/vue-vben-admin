@@ -327,7 +327,7 @@ function handleOpenMaterialPicker(type?: 'image' | 'video' | 'file') {
     file: 'FILE',
   };
 
-  materialPickerType.value = type ? (typeMap[type] || 'ALL') : 'ALL';
+  materialPickerType.value = type ? typeMap[type] || 'ALL' : 'ALL';
   materialPickerVisible.value = true;
 }
 
@@ -339,13 +339,22 @@ function handleMaterialSelect(selectedMaterials: Material[]) {
   const newAttachments: MomentsAttachment[] = toAdd.map((material) => {
     const att: MomentsAttachment = {
       id: generateAttachmentId(),
-      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link' | 'miniprogram',
+      type: material.type.toLowerCase() as
+        | 'image'
+        | 'video'
+        | 'file'
+        | 'link'
+        | 'miniprogram',
       materialId: material.id, // Important: for usage tracking
       name: material.name,
     };
 
     // Handle different material types
-    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+    if (
+      material.type === 'IMAGE' ||
+      material.type === 'VIDEO' ||
+      material.type === 'FILE'
+    ) {
       if (material.mediaIds && material.mediaIds.length > 0) {
         att.mediaId = material.mediaIds[0];
       }
@@ -674,7 +683,10 @@ onMounted(() => {
                         <LinkOutlined class="text-2xl" />
                         <span class="mt-1 text-xs">网页</span>
                       </div>
-                      <div v-else class="flex flex-col items-center text-gray-400">
+                      <div
+                        v-else
+                        class="flex flex-col items-center text-gray-400"
+                      >
                         <component
                           :is="
                             att.type === 'image'

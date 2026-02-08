@@ -230,12 +230,21 @@ function handleMaterialSelect(selectedMaterials: Material[]) {
   const newAttachments: Attachment[] = toAdd.map((material) => {
     const att: Attachment = {
       id: generateId(),
-      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link' | 'miniprogram',
+      type: material.type.toLowerCase() as
+        | 'image'
+        | 'video'
+        | 'file'
+        | 'link'
+        | 'miniprogram',
       materialId: material.id, // Add materialId for usage tracking
     };
 
     // Handle different material types
-    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
+    if (
+      material.type === 'IMAGE' ||
+      material.type === 'VIDEO' ||
+      material.type === 'FILE'
+    ) {
       // Get the first media ID if available
       if (material.mediaIds && material.mediaIds.length > 0) {
         att.mediaId = material.mediaIds[0];

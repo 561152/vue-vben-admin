@@ -196,6 +196,6 @@ export async function checkDeletePipeline(key: string) {
  */
 export async function deletePipeline(key: string, confirmationText: string) {
   return requestClient.delete(`/ai-studio/pipelines/${key}`, {
-    data: { confirmationText },
+    params: { confirmationText },
   });
 }

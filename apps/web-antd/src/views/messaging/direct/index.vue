@@ -279,24 +279,34 @@ function handleOpenMaterialPicker(target: 'customer' | 'employee' | 'test') {
 }
 
 function handleMaterialSelect(selectedMaterials: Material[]) {
-  const newAttachments: MessageAttachment[] = selectedMaterials.map((material) => {
-    const att: MessageAttachment = {
-      id: generateAttachmentId(),
-      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link',
-      materialId: material.id, // Important: for usage tracking
-      name: material.name,
-    };
+  const newAttachments: MessageAttachment[] = selectedMaterials.map(
+    (material) => {
+      const att: MessageAttachment = {
+        id: generateAttachmentId(),
+        type: material.type.toLowerCase() as
+          | 'image'
+          | 'video'
+          | 'file'
+          | 'link',
+        materialId: material.id, // Important: for usage tracking
+        name: material.name,
+      };
 
-    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
-      if (material.mediaIds && material.mediaIds.length > 0) {
-        att.mediaId = material.mediaIds[0];
+      if (
+        material.type === 'IMAGE' ||
+        material.type === 'VIDEO' ||
+        material.type === 'FILE'
+      ) {
+        if (material.mediaIds && material.mediaIds.length > 0) {
+          att.mediaId = material.mediaIds[0];
+        }
+      } else if (material.type === 'LINK' && material.linkUrl) {
+        att.url = material.linkUrl;
       }
-    } else if (material.type === 'LINK' && material.linkUrl) {
-      att.url = material.linkUrl;
-    }
 
-    return att;
-  });
+      return att;
+    },
+  );
 
   // Add to appropriate form based on target
   if (materialPickerTarget.value === 'customer') {
@@ -319,15 +329,16 @@ function handleMaterialSelect(selectedMaterials: Material[]) {
   materialPickerVisible.value = false;
 }
 
-function handleRemoveAttachment(target: 'customer' | 'employee' | 'test', id: string) {
+function handleRemoveAttachment(
+  target: 'customer' | 'employee' | 'test',
+  id: string,
+) {
   if (target === 'customer') {
-    customerFormState.value.attachments = customerFormState.value.attachments.filter(
-      (att) => att.id !== id,
-    );
+    customerFormState.value.attachments =
+      customerFormState.value.attachments.filter((att) => att.id !== id);
   } else if (target === 'employee') {
-    employeeFormState.value.attachments = employeeFormState.value.attachments.filter(
-      (att) => att.id !== id,
-    );
+    employeeFormState.value.attachments =
+      employeeFormState.value.attachments.filter((att) => att.id !== id);
   } else {
     testFormState.value.attachments = testFormState.value.attachments.filter(
       (att) => att.id !== id,

@@ -45,7 +45,11 @@ export default {
 
 <template>
   <Row :gutter="props.gutter" class="mb-4">
-    <Col v-for="(item, index) in props.items" :key="index" :span="props.colSpan">
+    <Col
+      v-for="(item, index) in props.items"
+      :key="index"
+      :span="props.colSpan"
+    >
       <StatisticCard
         :title="item.title"
         :value="item.value"

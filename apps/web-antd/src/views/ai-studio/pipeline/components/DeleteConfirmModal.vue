@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { Modal, Alert, Input, Typography, Space, Tag } from 'ant-design-vue';
+import { Modal, Alert, Input, Typography, Space, Tag, Button } from 'ant-design-vue';
 import {
   ExclamationCircleOutlined,
   WarningOutlined,
@@ -190,8 +190,8 @@ const getRiskDescription = () => {
     <template #footer>
       <div class="modal-footer">
         <Space>
-          <a-button @click="handleCancel" :disabled="loading">取消</a-button>
-          <a-button
+          <Button @click="handleCancel" :disabled="loading">取消</Button>
+          <Button
             type="primary"
             danger
             :disabled="!canConfirm"
@@ -199,7 +199,7 @@ const getRiskDescription = () => {
             @click="handleOk"
           >
             确认删除
-          </a-button>
+          </Button>
         </Space>
       </div>
     </template>

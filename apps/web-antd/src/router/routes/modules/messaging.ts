@@ -51,7 +51,10 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:clock-circle-outlined',
           title: '定时消息',
           appModule: 'MESSAGING',
-          permissions: ['MESSAGING:SCHEDULED:LIST', 'CRM:SCHEDULED_MESSAGE:LIST'],
+          permissions: [
+            'MESSAGING:SCHEDULED:LIST',
+            'CRM:SCHEDULED_MESSAGE:LIST',
+          ],
         },
       },
       {
@@ -62,7 +65,10 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:bar-chart-outlined',
           title: '定时消息统计',
           appModule: 'MESSAGING',
-          permissions: ['MESSAGING:SCHEDULED:LIST', 'CRM:SCHEDULED_MESSAGE:LIST'],
+          permissions: [
+            'MESSAGING:SCHEDULED:LIST',
+            'CRM:SCHEDULED_MESSAGE:LIST',
+          ],
           hideInMenu: true,
         },
       },
@@ -150,7 +156,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MessagingMassStatistics',
         path: 'mass-message/statistics',
-        component: () => import('#/views/messaging/mass-message/statistics.vue'),
+        component: () =>
+          import('#/views/messaging/mass-message/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: '群发统计',

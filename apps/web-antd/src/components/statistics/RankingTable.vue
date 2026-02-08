@@ -121,13 +121,11 @@ export default {
           <!-- 标签列 -->
           <template v-else-if="column.key === col.key && col.isTag">
             <Tag
-              :color="col.tagColorField ? String(record[col.tagColorField]) : 'blue'"
+              :color="
+                col.tagColorField ? String(record[col.tagColorField]) : 'blue'
+              "
             >
-              <component
-                :is="col.tagIcon"
-                v-if="col.tagIcon"
-                class="mr-1"
-              />
+              <component :is="col.tagIcon" v-if="col.tagIcon" class="mr-1" />
               {{
                 col.valueMap
                   ? col.valueMap[String(record[col.dataIndex || col.key])] ||
@@ -149,9 +147,6 @@ export default {
         </template>
       </template>
     </Table>
-    <Empty
-      v-if="!displayData.length"
-      :description="emptyText"
-    />
+    <Empty v-if="!displayData.length" :description="emptyText" />
   </Card>
 </template>

@@ -24,14 +24,19 @@ test.describe('CRM 菜单重构验证', () => {
     await page.waitForLoadState('networkidle');
 
     // 填写登录表单
-    await page.fill('input[type="text"], input[placeholder*="用户名"], input[placeholder*="账号"]', TEST_CREDENTIALS.username);
+    await page.fill(
+      'input[type="text"], input[placeholder*="用户名"], input[placeholder*="账号"]',
+      TEST_CREDENTIALS.username,
+    );
     await page.fill('input[type="password"]', TEST_CREDENTIALS.password);
 
     // 点击登录按钮
     await page.click('button[type="submit"], button:has-text("登录")');
 
     // 等待登录完成
-    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 15000 });
+    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), {
+      timeout: 15000,
+    });
     await page.waitForLoadState('networkidle');
   });
 
@@ -173,7 +178,9 @@ test.describe('CRM 菜单重构验证', () => {
       await page.waitForLoadState('networkidle');
 
       // 等待菜单加载
-      await page.waitForSelector('.ant-menu, [class*="menu"]', { timeout: 10000 });
+      await page.waitForSelector('.ant-menu, [class*="menu"]', {
+        timeout: 10000,
+      });
 
       // 获取页面内容
       const pageContent = await page.content();

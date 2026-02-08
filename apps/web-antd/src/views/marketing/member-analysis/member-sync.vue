@@ -4,7 +4,7 @@ defineOptions({ name: 'MemberSync' });
 
 <template>
   <div class="p-4">
-    <h2 class="text-xl font-semibold mb-4">会员同步</h2>
+    <h2 class="mb-4 text-xl font-semibold">会员同步</h2>
     <p class="text-gray-500">此功能正在开发中...</p>
   </div>
 </template>

@@ -81,7 +81,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MarketingMemberProfileStatistics',
         path: 'member-analysis/statistics',
-        component: () => import('#/views/marketing/member-profile/statistics.vue'),
+        component: () =>
+          import('#/views/marketing/member-profile/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: '会员画像统计',
@@ -104,7 +105,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MarketingReferral',
         path: 'referral',
-        component: () => import('#/views/marketing/member-analysis/referral.vue'),
+        component: () =>
+          import('#/views/marketing/member-analysis/referral.vue'),
         meta: {
           icon: 'ant-design:gift-outlined',
           title: '推荐营销',
@@ -137,7 +139,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MarketingAiMarketingStatistics',
         path: 'ai-marketing/statistics',
-        component: () => import('#/views/marketing/ai-marketing/statistics.vue'),
+        component: () =>
+          import('#/views/marketing/ai-marketing/statistics.vue'),
         meta: {
           icon: 'ant-design:bar-chart-outlined',
           title: 'AI定向营销统计',

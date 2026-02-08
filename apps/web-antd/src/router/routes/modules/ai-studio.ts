@@ -68,6 +68,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'AIPromptPlayground',
+        path: 'prompt/playground/:id?',
+        component: () => import('#/views/ai-studio/prompt/playground.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '提示词测试',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:PROMPT:TEST'],
+        },
+      },
+      {
         name: 'AIComponent',
         path: 'component',
         component: () => import('#/views/ai-studio/component/index.vue'),
@@ -108,7 +119,7 @@ const routes: RouteRecordRaw[] = [
           icon: 'ant-design:dollar-outlined',
           title: '成本看板',
           appModule: 'AI_STUDIO',
-          permissions: ['AI_STUDIO:COST:VIEW'],
+          permissions: ['AI_STUDIO:METRICS:COST'],
         },
       },
     ],

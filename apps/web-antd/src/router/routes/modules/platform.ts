@@ -81,6 +81,17 @@ const routes: RouteRecordRaw[] = [
           permissions: ['PLATFORM:AUDIT:LOG'],
         },
       },
+      {
+        name: 'MastraStudio',
+        path: 'mastra-studio',
+        component: () => import('#/views/platform/mastra-studio/index.vue'),
+        meta: {
+          icon: 'ant-design:robot-outlined',
+          title: 'AI 调试工具',
+          appModule: 'PLATFORM',
+          permissions: ['PLATFORM:MASTRA_STUDIO:ACCESS'],
+        },
+      },
     ],
   },
 ];

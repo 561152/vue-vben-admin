@@ -166,24 +166,34 @@ function handleOpenMaterialPicker() {
 }
 
 function handleMaterialSelect(selectedMaterials: Material[]) {
-  const newAttachments: MessageAttachment[] = selectedMaterials.map((material) => {
-    const att: MessageAttachment = {
-      id: generateAttachmentId(),
-      type: material.type.toLowerCase() as 'image' | 'video' | 'file' | 'link',
-      materialId: material.id, // Important: for usage tracking
-      name: material.name,
-    };
+  const newAttachments: MessageAttachment[] = selectedMaterials.map(
+    (material) => {
+      const att: MessageAttachment = {
+        id: generateAttachmentId(),
+        type: material.type.toLowerCase() as
+          | 'image'
+          | 'video'
+          | 'file'
+          | 'link',
+        materialId: material.id, // Important: for usage tracking
+        name: material.name,
+      };
 
-    if (material.type === 'IMAGE' || material.type === 'VIDEO' || material.type === 'FILE') {
-      if (material.mediaIds && material.mediaIds.length > 0) {
-        att.mediaId = material.mediaIds[0];
+      if (
+        material.type === 'IMAGE' ||
+        material.type === 'VIDEO' ||
+        material.type === 'FILE'
+      ) {
+        if (material.mediaIds && material.mediaIds.length > 0) {
+          att.mediaId = material.mediaIds[0];
+        }
+      } else if (material.type === 'LINK' && material.linkUrl) {
+        att.url = material.linkUrl;
       }
-    } else if (material.type === 'LINK' && material.linkUrl) {
-      att.url = material.linkUrl;
-    }
 
-    return att;
-  });
+      return att;
+    },
+  );
 
   formState.value.attachments = [
     ...formState.value.attachments,
