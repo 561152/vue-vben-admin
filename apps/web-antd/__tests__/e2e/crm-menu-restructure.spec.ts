@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  getAdminToken,
+  getPiniaAccessStoreData,
+  getPiniaUserStoreData,
+} from './test-auth';
+
 /**
  * CRM 菜单重构 E2E 测试
  *
@@ -11,32 +17,34 @@ import { expect, test } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:5666';
 
-// 测试账户 - 使用 boss 账户确保有所有权限
-const TEST_CREDENTIALS = {
-  username: 'boss',
-  password: 'boss123',
-};
+// Pinia store localStorage key 前缀 (格式: ${VITE_APP_NAMESPACE}-${version}-${env})
+const STORE_PREFIX = 'vben-web-antd-5.5.9-dev';
 
 test.describe('CRM 菜单重构验证', () => {
   test.beforeEach(async ({ page }) => {
-    // 登录
+    // 使用 token 认证方式，通过 localStorage 注入认证状态
+    const token = getAdminToken();
+    const accessStoreData = getPiniaAccessStoreData(token);
+    const userStoreData = getPiniaUserStoreData();
+
+    // 先访问登录页以初始化域名
     await page.goto(`${BASE_URL}/auth/login`);
-    await page.waitForLoadState('networkidle');
 
-    // 填写登录表单
-    await page.fill(
-      'input[type="text"], input[placeholder*="用户名"], input[placeholder*="账号"]',
-      TEST_CREDENTIALS.username,
+    // 在 localStorage 中设置认证状态 (使用 Pinia 持久化格式)
+    await page.evaluate(
+      ({ prefix, accessStore, userStore }) => {
+        // Pinia 持久化使用的 key 格式: ${prefix}-${storeId}
+        localStorage.setItem(
+          `${prefix}-core-access`,
+          JSON.stringify(accessStore),
+        );
+        localStorage.setItem(`${prefix}-core-user`, JSON.stringify(userStore));
+      },
+      { prefix: STORE_PREFIX, accessStore: accessStoreData, userStore: userStoreData },
     );
-    await page.fill('input[type="password"]', TEST_CREDENTIALS.password);
 
-    // 点击登录按钮
-    await page.click('button[type="submit"], button:has-text("登录")');
-
-    // 等待登录完成
-    await page.waitForURL((url) => !url.pathname.includes('/auth/login'), {
-      timeout: 15000,
-    });
+    // 刷新页面使认证状态生效
+    await page.goto(`${BASE_URL}/`);
     await page.waitForLoadState('networkidle');
   });
 
@@ -114,61 +122,25 @@ test.describe('CRM 菜单重构验证', () => {
     });
   });
 
-  test.describe('旧路由重定向测试', () => {
-    test('CRM 客户 → 客户管理', async ({ page }) => {
+  test.describe('旧路由已废弃测试', () => {
+    // 旧的 /crm/* 路由已被删除，不再重定向
+    // 这些测试验证旧路由返回 404 或重定向到首页
+    test('旧 CRM 路由不再可用', async ({ page }) => {
+      // 访问已废弃的旧路由
       await page.goto(`${BASE_URL}/crm/customer`);
       await page.waitForLoadState('networkidle');
 
-      // 验证重定向到新路由
-      expect(page.url()).toContain('/customer/list');
-    });
-
-    test('CRM 标签 → 客户标签', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/tag`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/customer/tag');
-    });
-
-    test('CRM 营销活动 → 营销中心', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/campaign`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/marketing/campaign');
-    });
-
-    test('CRM 人群包 → 营销中心', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/audience`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/marketing/audience');
-    });
-
-    test('CRM 消息推送 → 消息中心', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/direct-message`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/messaging/direct');
-    });
-
-    test('CRM 群发消息 → 消息中心', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/mass-message`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/messaging/mass-message');
-    });
-
-    test('CRM 员工任务 → 运营管理', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/employee-task`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/operations/employee-task');
-    });
-
-    test('CRM 企微同步 → 运营管理', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/wecom-sync`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/operations/wecom-sync');
-    });
-
-    test('CRM 零售 → 会员分析', async ({ page }) => {
-      await page.goto(`${BASE_URL}/crm/retail`);
-      await page.waitForLoadState('networkidle');
-      expect(page.url()).toContain('/marketing/member-analysis');
+      // 验证不是停留在旧路由（应该是 404 或重定向到首页/其他页面）
+      const currentUrl = page.url();
+      // 旧路由要么被重定向，要么显示 404
+      const isOldRoute = currentUrl.includes('/crm/customer');
+      if (isOldRoute) {
+        // 如果还在旧路由，检查页面是否显示 404
+        const pageContent = await page.content();
+        const has404 =
+          pageContent.includes('404') || pageContent.includes('Not Found');
+        expect(has404).toBe(true);
+      }
     });
   });
 
