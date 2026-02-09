@@ -130,9 +130,9 @@ onMounted(() => {
               <div class="image-container">
                 <!-- 使用预览图，点击可查看原图 -->
                 <Image
-                  :src="currentImageUrls.preview"
+                  :src="currentImageUrls.enhanced || currentImageUrls.preview"
                   :preview="{
-                    src: currentImageUrls.original,
+                    src: currentImageUrls.enhanced || currentImageUrls.original,
                   }"
                   :alt="`第${currentImageUrls.pageIndex}页`"
                   class="paper-image"

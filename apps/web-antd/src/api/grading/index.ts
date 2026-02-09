@@ -76,9 +76,11 @@ export interface GradingRecord {
   processingMs?: number;
   createdAt?: string;
   paperImageUrls?: Array<{
-    thumbnail: string;
-    original: string;
     pageIndex: number;
+    thumbnail: string;
+    preview: string;
+    original: string;
+    enhanced?: string;
   }>;
 }
 
