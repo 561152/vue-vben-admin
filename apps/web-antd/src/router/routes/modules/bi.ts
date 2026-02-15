@@ -6,8 +6,8 @@ const routes: RouteRecordRaw[] = [
   {
     meta: {
       icon: 'ant-design:bar-chart-outlined',
-      order: 2,
-      title: 'BI',
+      order: 89,
+      title: '数据分析',
       appModule: 'BI',
     },
     name: 'BI',
