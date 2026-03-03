@@ -68,34 +68,36 @@ const customerPagination = ref({
 
 // 图表引用
 const distributionChartRef = ref<EchartsUIType>();
-const { renderEcharts: renderDistributionChart } = useEcharts(distributionChartRef);
+const { renderEcharts: renderDistributionChart } =
+  useEcharts(distributionChartRef);
 
 // ==================== 计算属性 ====================
 
 const totalCustomers = computed(() =>
-  segmentData.value.reduce((sum, s) => sum + s.count, 0),
+  (segmentData.value || []).reduce((sum, s) => sum + s.count, 0),
 );
 
 const championsCount = computed(() =>
-  segmentData.value.find((s) => s.segment === 'CHAMPIONS')?.count || 0,
+  (segmentData.value || []).find((s) => s.segment === 'CHAMPIONS')?.count || 0,
 );
 
 const atRiskCount = computed(() =>
-  segmentData.value
+  (segmentData.value || [])
     .filter((s) => ['AT_RISK', 'CANT_LOSE_THEM'].includes(s.segment))
     .reduce((sum, s) => sum + s.count, 0),
 );
 
 const loyalCount = computed(() =>
-  segmentData.value
+  (segmentData.value || [])
     .filter((s) => ['CHAMPIONS', 'LOYAL_CUSTOMERS'].includes(s.segment))
     .reduce((sum, s) => sum + s.count, 0),
 );
 
 // 按固定顺序排序的分层数据
 const sortedSegmentData = computed(() => {
+  const data = segmentData.value || [];
   return segmentOrder
-    .map((segment) => segmentData.value.find((s) => s.segment === segment))
+    .map((segment) => data.find((s) => s.segment === segment))
     .filter(Boolean) as RfmSegmentDistribution[];
 });
 
@@ -166,8 +168,10 @@ const customerColumns = [
     key: 'segment',
     width: 120,
     customRender: ({ value }: { value: RfmSegment }) =>
-      h(Tag, { color: segmentMap[value]?.color || 'default' }, () =>
-        segmentMap[value]?.text || value,
+      h(
+        Tag,
+        { color: segmentMap[value]?.color || 'default' },
+        () => segmentMap[value]?.text || value,
       ),
   },
   {
@@ -209,26 +213,30 @@ function formatMoney(amount: number): string {
 async function loadData() {
   loading.value = true;
   try {
-    segmentData.value = await getRfmSegmentDistribution();
+    const response = await getRfmSegmentDistribution();
+    // Handle both direct array response and wrapped { data: [...] } response
+    segmentData.value = Array.isArray(response) ? response : (response as any)?.data || [];
     renderDistributionChartData();
   } catch (e) {
     console.error('加载RFM数据失败', e);
     message.error('加载数据失败');
+    segmentData.value = [];
   } finally {
     loading.value = false;
   }
 }
 
 function renderDistributionChartData() {
-  if (!segmentData.value.length) return;
+  const segmentArray = segmentData.value || [];
+  if (!segmentArray.length) return;
 
   const data = segmentOrder
-    .map((segment) => segmentData.value.find((s) => s.segment === segment))
+    .map((segment) => segmentArray.find((s) => s.segment === segment))
     .filter(Boolean)
     .map((item) => ({
       name: item!.segmentLabel,
       value: item!.count,
-      itemStyle: { color: item!.color || segmentColors[item!.segment] },
+      itemStyle: { color: item!.color || segmentColors[item!.segment as RfmSegment] },
     }));
 
   renderDistributionChart({
@@ -340,7 +348,11 @@ onMounted(() => {
 
 // 监听 Tab 切换，加载客户列表
 watch(activeTab, (newTab) => {
-  if (newTab === 'customers' && !selectedSegment.value && segmentData.value.length > 0) {
+  if (
+    newTab === 'customers' &&
+    !selectedSegment.value &&
+    segmentData.value.length > 0
+  ) {
     // 默认选择第一个有客户的分层
     const firstSegment = sortedSegmentData.value.find((s) => s.count > 0);
     if (firstSegment) {
@@ -360,7 +372,11 @@ watch(activeTab, (newTab) => {
           <Tag color="blue">总客户</Tag>
         </Badge>
       </div>
-      <Button type="primary" :loading="recalculating" @click="handleRecalculate">
+      <Button
+        type="primary"
+        :loading="recalculating"
+        @click="handleRecalculate"
+      >
         <template #icon><ReloadOutlined /></template>
         重新计算
       </Button>
@@ -392,7 +408,12 @@ watch(activeTab, (newTab) => {
                   <template #prefix><TrophyOutlined /></template>
                 </Statistic>
                 <div class="mt-2 text-xs text-green-600">
-                  占比: {{ totalCustomers > 0 ? ((championsCount / totalCustomers) * 100).toFixed(1) : 0 }}%
+                  占比:
+                  {{
+                    totalCustomers > 0
+                      ? ((championsCount / totalCustomers) * 100).toFixed(1)
+                      : 0
+                  }}%
                 </div>
               </Card>
             </Col>
@@ -419,9 +440,7 @@ watch(activeTab, (newTab) => {
                 >
                   <template #prefix><CrownOutlined /></template>
                 </Statistic>
-                <div class="mt-2 text-xs text-blue-600">
-                  最佳+忠诚客户总数
-                </div>
+                <div class="mt-2 text-xs text-blue-600">最佳+忠诚客户总数</div>
               </Card>
             </Col>
           </Row>
@@ -449,7 +468,12 @@ watch(activeTab, (newTab) => {
                 >
                   <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'segment'">
-                      <Tag :color="record.color || segmentColors[record.segment as RfmSegment]">
+                      <Tag
+                        :color="
+                          record.color ||
+                          segmentColors[record.segment as RfmSegment]
+                        "
+                      >
                         {{ record.segmentLabel }}
                       </Tag>
                     </template>
@@ -478,12 +502,19 @@ watch(activeTab, (newTab) => {
               <Card
                 size="small"
                 class="cursor-pointer transition-shadow hover:shadow-md"
-                :style="{ borderTop: `3px solid ${item.color || segmentColors[item.segment as RfmSegment]}` }"
-                @click="activeTab = 'customers'; loadCustomersBySegment(item.segment);"
+                :style="{
+                  borderTop: `3px solid ${item.color || segmentColors[item.segment as RfmSegment]}`,
+                }"
+                @click="
+                  activeTab = 'customers';
+                  loadCustomersBySegment(item.segment);
+                "
               >
                 <div class="flex items-center justify-between">
                   <div>
-                    <div class="text-sm text-gray-500">{{ item.segmentLabel }}</div>
+                    <div class="text-sm text-gray-500">
+                      {{ item.segmentLabel }}
+                    </div>
                     <div class="text-2xl font-bold">{{ item.count }}</div>
                     <div class="text-xs text-gray-400">
                       占比 {{ item.percentage }}% · 均分 {{ item.avgRfmScore }}
@@ -491,7 +522,8 @@ watch(activeTab, (newTab) => {
                   </div>
                   <Avatar
                     :style="{
-                      backgroundColor: item.color || segmentColors[item.segment],
+                      backgroundColor:
+                        item.color || segmentColors[item.segment],
                     }"
                     :icon="h(TeamOutlined)"
                   />
@@ -507,10 +539,7 @@ watch(activeTab, (newTab) => {
             <!-- 左侧分层选择 -->
             <Col :xs="24" :md="6">
               <Card title="选择分层" class="h-full">
-                <List
-                  :data-source="sortedSegmentData"
-                  size="small"
-                >
+                <List :data-source="sortedSegmentData" size="small">
                   <template #renderItem="{ item }">
                     <List.Item
                       :class="[
@@ -522,7 +551,10 @@ watch(activeTab, (newTab) => {
                       <div class="flex w-full items-center justify-between">
                         <Space>
                           <Badge
-                            :color="item.color || segmentColors[item.segment as RfmSegment]"
+                            :color="
+                              item.color ||
+                              segmentColors[item.segment as RfmSegment]
+                            "
                             :text="item.segmentLabel"
                           />
                         </Space>
@@ -537,7 +569,11 @@ watch(activeTab, (newTab) => {
             <!-- 右侧客户列表 -->
             <Col :xs="24" :md="18">
               <Card
-                :title="selectedSegment ? segmentMap[selectedSegment]?.text + ' 客户列表' : '请选择分层'"
+                :title="
+                  selectedSegment
+                    ? segmentMap[selectedSegment]?.text + ' 客户列表'
+                    : '请选择分层'
+                "
               >
                 <template v-if="selectedSegment" #extra>
                   <Button
@@ -606,7 +642,11 @@ watch(activeTab, (newTab) => {
                     </Avatar>
                     <span>{{ segmentMap[segment].text }}</span>
                     <Tag :color="segmentMap[segment].color">
-                      {{ segmentData.find(s => s.segment === segment)?.count || 0 }} 人
+                      {{
+                        segmentData.find((s) => s.segment === segment)?.count ||
+                        0
+                      }}
+                      人
                     </Tag>
                   </Space>
                 </template>
@@ -615,7 +655,10 @@ watch(activeTab, (newTab) => {
                   <Button
                     type="link"
                     size="small"
-                    @click="activeTab = 'customers'; loadCustomersBySegment(segment);"
+                    @click="
+                      activeTab = 'customers';
+                      loadCustomersBySegment(segment);
+                    "
                   >
                     查看客户
                   </Button>
@@ -623,27 +666,35 @@ watch(activeTab, (newTab) => {
 
                 <div class="space-y-3">
                   <div>
-                    <div class="mb-1 text-sm font-medium text-gray-500">客户特征</div>
-                    <div class="text-sm">{{ segmentMap[segment].description }}</div>
+                    <div class="mb-1 text-sm font-medium text-gray-500">
+                      客户特征
+                    </div>
+                    <div class="text-sm">
+                      {{ segmentMap[segment].description }}
+                    </div>
                   </div>
 
                   <div>
-                    <div class="mb-1 text-sm font-medium text-gray-500">营销策略</div>
-                    <div class="text-sm">{{ segmentMap[segment].strategy }}</div>
+                    <div class="mb-1 text-sm font-medium text-gray-500">
+                      营销策略
+                    </div>
+                    <div class="text-sm">
+                      {{ segmentMap[segment].strategy }}
+                    </div>
                   </div>
 
                   <div class="pt-2">
                     <Space>
-                      <Button
-                        size="small"
-                        @click="createCampaign(segment)"
-                      >
+                      <Button size="small" @click="createCampaign(segment)">
                         <template #icon><RocketOutlined /></template>
                         创建活动
                       </Button>
                       <Button
                         size="small"
-                        @click="activeTab = 'customers'; loadCustomersBySegment(segment);"
+                        @click="
+                          activeTab = 'customers';
+                          loadCustomersBySegment(segment);
+                        "
                       >
                         <template #icon><MailOutlined /></template>
                         发送消息
@@ -662,7 +713,8 @@ watch(activeTab, (newTab) => {
             <Col :xs="24" :md="12">
               <Card title="什么是 RFM 模型？">
                 <p class="mb-4">
-                  RFM 模型是客户关系管理中最经典的分析模型之一，通过三个维度对客户进行分层：
+                  RFM
+                  模型是客户关系管理中最经典的分析模型之一，通过三个维度对客户进行分层：
                 </p>
                 <List>
                   <List.Item>
@@ -715,15 +767,42 @@ watch(activeTab, (newTab) => {
               <Card title="评分规则">
                 <Table
                   :data-source="[
-                    { dim: 'R (最近消费)', s5: '0-7天', s4: '8-30天', s3: '31-60天', s2: '61-90天', s1: '>90天' },
-                    { dim: 'F (消费频率)', s5: '≥20次', s4: '10-19次', s3: '5-9次', s2: '2-4次', s1: '0-1次' },
-                    { dim: 'M (消费金额)', s5: '≥5万', s4: '2-5万', s3: '5千-2万', s2: '1千-5千', s1: '<1千' },
+                    {
+                      dim: 'R (最近消费)',
+                      s5: '0-7天',
+                      s4: '8-30天',
+                      s3: '31-60天',
+                      s2: '61-90天',
+                      s1: '>90天',
+                    },
+                    {
+                      dim: 'F (消费频率)',
+                      s5: '≥20次',
+                      s4: '10-19次',
+                      s3: '5-9次',
+                      s2: '2-4次',
+                      s1: '0-1次',
+                    },
+                    {
+                      dim: 'M (消费金额)',
+                      s5: '≥5万',
+                      s4: '2-5万',
+                      s3: '5千-2万',
+                      s2: '1千-5千',
+                      s1: '<1千',
+                    },
                   ]"
                   :pagination="false"
                   size="small"
                 >
                   <template #bodyCell="{ column, text }">
-                    <Tag v-if="typeof column.key === 'string' && column.key.startsWith('s')" :color="getScoreColor(parseInt(column.key.slice(1)))">
+                    <Tag
+                      v-if="
+                        typeof column.key === 'string' &&
+                        column.key.startsWith('s')
+                      "
+                      :color="getScoreColor(parseInt(column.key.slice(1)))"
+                    >
                       {{ text }}
                     </Tag>
                     <span v-else>{{ text }}</span>
