@@ -625,8 +625,10 @@ async function handleSaveSettings() {
   try {
     // 同步日期范围到设置
     if (effectiveDateRange.value) {
-      rewardSettings.value.effectiveStart = effectiveDateRange.value[0].format('YYYY-MM-DD');
-      rewardSettings.value.effectiveEnd = effectiveDateRange.value[1].format('YYYY-MM-DD');
+      rewardSettings.value.effectiveStart =
+        effectiveDateRange.value[0].format('YYYY-MM-DD');
+      rewardSettings.value.effectiveEnd =
+        effectiveDateRange.value[1].format('YYYY-MM-DD');
     }
     // 实际项目中应该调用API保存设置
     await new Promise((resolve) => setTimeout(resolve, 500));
