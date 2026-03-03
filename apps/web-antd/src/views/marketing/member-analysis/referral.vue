@@ -130,6 +130,10 @@ const rewardSettings = ref({
   effectiveStart: dayjs().format('YYYY-MM-DD'),
   effectiveEnd: dayjs().add(1, 'year').format('YYYY-MM-DD'),
 });
+const effectiveDateRange = ref<[dayjs.Dayjs, dayjs.Dayjs]>([
+  dayjs(rewardSettings.value.effectiveStart),
+  dayjs(rewardSettings.value.effectiveEnd),
+]);
 const rewardRecords = ref<RewardRecord[]>([]);
 const saveSettingsLoading = ref(false);
 
@@ -260,28 +264,32 @@ const referrerColumns = [
     key: 'action',
     width: 200,
     customRender: ({ record }: any) =>
-      h(Space, { size: 'small' }, {
-        default: () => [
-          h(
-            Button,
-            {
-              type: 'link',
-              size: 'small',
-              onClick: () => viewReferralDetail(record),
-            },
-            () => [h(EyeOutlined), ' 详情'],
-          ),
-          h(
-            Button,
-            {
-              type: 'link',
-              size: 'small',
-              onClick: () => viewRelationships(record.customerId),
-            },
-            () => [h(LinkOutlined), ' 关系树'],
-          ),
-        ],
-      }),
+      h(
+        Space,
+        { size: 'small' },
+        {
+          default: () => [
+            h(
+              Button,
+              {
+                type: 'link',
+                size: 'small',
+                onClick: () => viewReferralDetail(record),
+              },
+              () => [h(EyeOutlined), ' 详情'],
+            ),
+            h(
+              Button,
+              {
+                type: 'link',
+                size: 'small',
+                onClick: () => viewRelationships(record.customerId),
+              },
+              () => [h(LinkOutlined), ' 关系树'],
+            ),
+          ],
+        },
+      ),
   },
 ];
 
@@ -457,18 +465,23 @@ async function loadReferrerList() {
     // 本地筛选
     if (searchKeyword.value) {
       list = list.filter((item) =>
-        item.customerName.toLowerCase().includes(searchKeyword.value.toLowerCase()),
+        item.customerName
+          .toLowerCase()
+          .includes(searchKeyword.value.toLowerCase()),
       );
     }
     if (searchCode.value) {
       list = list.filter((item) =>
-        item.referralCode.toLowerCase().includes(searchCode.value.toLowerCase()),
+        item.referralCode
+          .toLowerCase()
+          .includes(searchCode.value.toLowerCase()),
       );
     }
 
     referrerPagination.value.total = list.length;
     referrerList.value = list.slice(
-      (referrerPagination.value.current - 1) * referrerPagination.value.pageSize,
+      (referrerPagination.value.current - 1) *
+        referrerPagination.value.pageSize,
       referrerPagination.value.current * referrerPagination.value.pageSize,
     );
   } catch (error) {
@@ -511,13 +524,10 @@ async function loadRelationships() {
 
   relationshipsLoading.value = true;
   try {
-    const response = await getReferralRelationships(
-      selectedCustomer.value,
-      {
-        page: relationshipsPagination.value.current,
-        pageSize: relationshipsPagination.value.pageSize,
-      },
-    );
+    const response = await getReferralRelationships(selectedCustomer.value, {
+      page: relationshipsPagination.value.current,
+      pageSize: relationshipsPagination.value.pageSize,
+    });
 
     referrerInfo.value = {
       customerId: response.customerId,
@@ -569,7 +579,11 @@ function viewReferralDetail(record: ReferralUser) {
       ]),
       h('div', { class: 'flex justify-between' }, [
         h('span', { class: 'text-gray-500' }, '累计奖励'),
-        h('span', { class: 'font-medium text-green-600' }, `${record.totalRewardPoints} 积分`),
+        h(
+          'span',
+          { class: 'font-medium text-green-600' },
+          `${record.totalRewardPoints} 积分`,
+        ),
       ]),
     ]),
   });
@@ -609,6 +623,11 @@ function handleGenerateCode() {
 async function handleSaveSettings() {
   saveSettingsLoading.value = true;
   try {
+    // 同步日期范围到设置
+    if (effectiveDateRange.value) {
+      rewardSettings.value.effectiveStart = effectiveDateRange.value[0].format('YYYY-MM-DD');
+      rewardSettings.value.effectiveEnd = effectiveDateRange.value[1].format('YYYY-MM-DD');
+    }
     // 实际项目中应该调用API保存设置
     await new Promise((resolve) => setTimeout(resolve, 500));
     message.success('奖励设置保存成功');
@@ -695,9 +714,7 @@ onMounted(() => {
                 >
                   <template #prefix><TeamOutlined /></template>
                 </Statistic>
-                <div class="mt-2 text-xs text-gray-500">
-                  累计推荐注册人数
-                </div>
+                <div class="mt-2 text-xs text-gray-500">累计推荐注册人数</div>
               </Card>
             </Col>
             <Col :xs="24" :sm="12" :md="6">
@@ -709,9 +726,7 @@ onMounted(() => {
                 >
                   <template #prefix><TrophyOutlined /></template>
                 </Statistic>
-                <div class="mt-2 text-xs text-gray-500">
-                  有推荐记录的客户数
-                </div>
+                <div class="mt-2 text-xs text-gray-500">有推荐记录的客户数</div>
               </Card>
             </Col>
             <Col :xs="24" :sm="12" :md="6">
@@ -737,9 +752,7 @@ onMounted(() => {
                 >
                   <template #prefix><GiftOutlined /></template>
                 </Statistic>
-                <div class="mt-2 text-xs text-gray-500">
-                  已发放积分总数
-                </div>
+                <div class="mt-2 text-xs text-gray-500">已发放积分总数</div>
               </Card>
             </Col>
           </Row>
@@ -803,9 +816,7 @@ onMounted(() => {
               <Button type="primary" @click="loadReferrerList">
                 <SearchOutlined /> 搜索
               </Button>
-              <Button @click="resetSearch">
-                <ReloadOutlined /> 重置
-              </Button>
+              <Button @click="resetSearch"> <ReloadOutlined /> 重置 </Button>
             </Space>
           </Card>
 
@@ -851,13 +862,16 @@ onMounted(() => {
                 <Divider />
 
                 <div v-if="referrerInfo" class="referrer-info">
-                  <div class="text-sm text-gray-500 mb-2">当前客户</div>
-                  <div class="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                  <div class="mb-2 text-sm text-gray-500">当前客户</div>
+                  <div class="flex items-center gap-3 rounded bg-gray-50 p-3">
                     <Avatar :size="48" :icon="h(UserOutlined)" />
                     <div>
-                      <div class="font-medium">{{ referrerInfo.customerName }}</div>
+                      <div class="font-medium">
+                        {{ referrerInfo.customerName }}
+                      </div>
                       <div class="text-sm text-gray-500">
-                        推荐码: <Tag color="blue">{{ referrerInfo.referralCode }}</Tag>
+                        推荐码:
+                        <Tag color="blue">{{ referrerInfo.referralCode }}</Tag>
                       </div>
                     </div>
                   </div>
@@ -871,8 +885,8 @@ onMounted(() => {
 
                 <!-- 上级推荐人 -->
                 <div v-if="referrerInfo" class="mt-4">
-                  <div class="text-sm text-gray-500 mb-2">上级推荐人</div>
-                  <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                  <div class="mb-2 text-sm text-gray-500">上级推荐人</div>
+                  <div class="rounded border border-blue-100 bg-blue-50 p-3">
                     <div class="flex items-center gap-2">
                       <ArrowUpOutlined class="text-blue-500" />
                       <span class="text-sm text-gray-600">系统推荐</span>
@@ -955,14 +969,14 @@ onMounted(() => {
                       :min="0"
                       :formatter="(value: number) => `¥${value}`"
                     />
-                    <div class="text-xs text-gray-500 mt-1">
+                    <div class="mt-1 text-xs text-gray-500">
                       被推荐人需达到此消费金额，推荐人才能获得奖励
                     </div>
                   </Form.Item>
 
                   <Form.Item label="生效时间">
                     <DatePicker.RangePicker
-                      v-model:value="[rewardSettings.effectiveStart, rewardSettings.effectiveEnd]"
+                      v-model:value="effectiveDateRange"
                       style="width: 100%"
                     />
                   </Form.Item>
@@ -999,21 +1013,25 @@ onMounted(() => {
               <Card title="奖励统计" class="mt-4">
                 <List size="small">
                   <List.Item>
-                    <div class="flex justify-between w-full">
+                    <div class="flex w-full justify-between">
                       <span>本月发放积分</span>
-                      <span class="font-medium text-green-600">12,500 积分</span>
+                      <span class="font-medium text-green-600"
+                        >12,500 积分</span
+                      >
                     </div>
                   </List.Item>
                   <List.Item>
-                    <div class="flex justify-between w-full">
+                    <div class="flex w-full justify-between">
                       <span>本月发放现金</span>
                       <span class="font-medium text-green-600">¥3,200</span>
                     </div>
                   </List.Item>
                   <List.Item>
-                    <div class="flex justify-between w-full">
+                    <div class="flex w-full justify-between">
                       <span>待发放奖励</span>
-                      <span class="font-medium text-orange-600">1,800 积分</span>
+                      <span class="font-medium text-orange-600"
+                        >1,800 积分</span
+                      >
                     </div>
                   </List.Item>
                 </List>
