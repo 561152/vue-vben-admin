@@ -298,7 +298,11 @@ onMounted(() => {
         <div class="content-toolbar">
           <div class="toolbar-left">
             <!-- 视图切换 -->
-            <Radio.Group v-model:value="viewMode" button-style="solid" size="small">
+            <Radio.Group
+              v-model:value="viewMode"
+              button-style="solid"
+              size="small"
+            >
               <Radio.Button value="grid">
                 <AppstoreOutlined /> 卡片
               </Radio.Button>
@@ -483,7 +487,10 @@ onMounted(() => {
         </Form.Item>
 
         <Form.Item v-if="formState.type === 'LINK'" label="链接标题">
-          <Input v-model:value="formState.linkTitle" placeholder="链接显示标题" />
+          <Input
+            v-model:value="formState.linkTitle"
+            placeholder="链接显示标题"
+          />
         </Form.Item>
 
         <Form.Item label="所属分类">
@@ -581,51 +588,51 @@ onMounted(() => {
 }
 
 .category-sidebar {
-  width: 240px;
   flex-shrink: 0;
+  width: 240px;
   height: fit-content;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
 .sidebar-title {
-  font-weight: 600;
   font-size: 16px;
+  font-weight: 600;
 }
 
 .tree-node {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
 }
 
 .content-area {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .content-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: var(--component-background, white);
+  justify-content: space-between;
   padding: 12px 16px;
+  background: var(--component-background, white);
   border-radius: 8px;
 }
 
 .toolbar-left {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .toolbar-right {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .material-list-card {
@@ -650,9 +657,9 @@ onMounted(() => {
 }
 
 .pagination-bar {
-  padding: 16px;
-  border-top: 1px solid var(--border-color, #f0f0f0);
   display: flex;
   justify-content: flex-end;
+  padding: 16px;
+  border-top: 1px solid var(--border-color, #f0f0f0);
 }
 </style>
