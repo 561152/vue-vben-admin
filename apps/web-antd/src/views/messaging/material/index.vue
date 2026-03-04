@@ -1,211 +1,143 @@
-<script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted, computed, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
-  Button,
-  Space,
-  message,
-  Tag,
   Card,
-  Table,
+  Button,
+  Tree,
+  Empty,
+  Space,
+  Tooltip,
   Modal,
   Form,
   Input,
   Select,
-  Popconfirm,
-  Tree,
-  Empty,
+  message,
+  Radio,
+  Pagination,
 } from 'ant-design-vue';
 import {
   PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
+  BarChartOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
+  CheckSquareOutlined,
+  FolderOutlined,
+  FileTextOutlined,
   PictureOutlined,
   VideoCameraOutlined,
-  FileOutlined,
   LinkOutlined,
-  FileTextOutlined,
-  EyeOutlined,
-  SendOutlined,
-  FolderOutlined,
-  BarChartOutlined,
+  FileOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons-vue';
-import { useRouter } from 'vue-router';
+import { useModalForm } from '#/composables';
 import { requestClient } from '#/api/request';
-import { useCrudTable, useModalForm } from '#/composables';
+import MaterialCard from './components/MaterialCard.vue';
+import BatchToolbar from './components/BatchToolbar.vue';
+import FilterPanel from './components/FilterPanel.vue';
+import MaterialDetailDrawer from './components/MaterialDetailDrawer.vue';
+import { useMaterialLibrary } from './composables/useMaterialLibrary';
+import type { MaterialItem, MaterialFormState } from './types';
 
-// ==================== 类型定义 ====================
-
-interface MaterialItem {
-  id: number;
-  name: string;
-  description: string | null;
-  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'FILE' | 'MIXED';
-  content: string | null;
-  mediaIds: number[];
-  linkUrl: string | null;
-  linkTitle: string | null;
-  categoryId: number | null;
-  categoryName: string | null;
-  tags: string[];
-  viewCount: number;
-  usageCount: number;
-  likeCount: number;
-  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
-  isPublic: boolean;
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CategoryItem {
-  id: number;
-  name: string;
-  parentId: number | null;
-  sort: number;
-  children?: CategoryItem[];
-  materialCount?: number;
-}
-
-interface MaterialFormState {
-  name: string;
-  description: string;
-  type: MaterialItem['type'];
-  content: string;
-  mediaIds: number[];
-  linkUrl: string;
-  linkTitle: string;
-  categoryId: number | null;
-  tags: string[];
-  isPublic: boolean;
-}
-
-interface MaterialFilters {
-  keyword?: string;
-  type?: string;
-  status?: string;
-  categoryId?: number | null;
-}
-
-// ==================== 分类状态 ====================
-
+// ==================== 路由 ====================
 const router = useRouter();
 
-const categories = ref<CategoryItem[]>([]);
-const selectedCategoryId = ref<number | null>(null);
+// ==================== 使用 composable ====================
+const {
+  viewMode,
+  selectionMode,
+  selectedIds,
+  filters,
+  categories,
+  selectedCategoryId,
+  categoryLoading,
+  materials,
+  loading,
+  pagination,
+  detailVisible,
+  selectedMaterial,
+  hasSelection,
+  selectedCount,
+  fetchMaterials,
+  fetchCategories,
+  toggleSelection,
+  selectAll,
+  clearSelection,
+  enterSelectionMode,
+  openDetail,
+  closeDetail,
+  batchDelete,
+  batchChangeCategory,
+  batchAddTags,
+  batchRemoveTags,
+  batchChangeStatus,
+  batchExport,
+  deleteMaterial,
+  updateFilters,
+  resetFilters,
+} = useMaterialLibrary();
+
+// ==================== 分类相关 ====================
 const categoryModalVisible = ref(false);
 const categoryFormState = ref({
   name: '',
   parentId: null as number | null,
 });
 
-// ==================== 常量 ====================
-
-const materialTypes = [
-  { key: 'TEXT', icon: FileTextOutlined, label: '文本' },
-  { key: 'IMAGE', icon: PictureOutlined, label: '图片' },
-  { key: 'VIDEO', icon: VideoCameraOutlined, label: '视频' },
-  { key: 'FILE', icon: FileOutlined, label: '文件' },
-  { key: 'LINK', icon: LinkOutlined, label: '链接' },
-  { key: 'MIXED', icon: FolderOutlined, label: '图文' },
-];
-
-const columns = [
-  { title: '素材名称', dataIndex: 'name', key: 'name', width: 200 },
-  {
-    title: '内容预览',
-    dataIndex: 'content',
-    key: 'content',
-    width: 300,
-    ellipsis: true,
-  },
-  { title: '类型', dataIndex: 'type', key: 'type', width: 80 },
-  { title: '分类', dataIndex: 'categoryName', key: 'categoryName', width: 100 },
-  {
-    title: '浏览',
-    dataIndex: 'viewCount',
-    key: 'viewCount',
-    width: 80,
-    sorter: true,
-  },
-  {
-    title: '使用次数',
-    dataIndex: 'usageCount',
-    key: 'usageCount',
-    width: 100,
-    sorter: true,
-  },
-  { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 160 },
-  { title: '操作', key: 'actions', width: 150, fixed: 'right' as const },
-];
-
-const tagPresets = [
-  { label: '产品', value: '产品' },
-  { label: '活动', value: '活动' },
-  { label: '节日', value: '节日' },
-  { label: '促销', value: '促销' },
-  { label: '公告', value: '公告' },
-];
-
-const typeLabels: Record<MaterialItem['type'], string> = {
-  TEXT: '文本',
-  IMAGE: '图片',
-  VIDEO: '视频',
-  FILE: '文件',
-  LINK: '链接',
-  MIXED: '图文',
-};
-
-// ==================== 计算属性 ====================
-
+// 分类树数据
 const categoryTreeData = computed(() => {
-  const buildTree = (
-    items: CategoryItem[],
-    parentId: number | null = null,
-  ): any[] => {
+  const buildTree = (items: any[], parentId: number | null = null): any[] => {
     return items
       .filter((item) => item.parentId === parentId)
       .map((item) => ({
         key: item.id,
         title: `${item.name} (${item.materialCount || 0})`,
+        icon: () => h(FolderOutlined),
         children: buildTree(items, item.id),
       }));
   };
+
   return [
-    { key: null, title: '全部分类', children: buildTree(categories.value) },
+    {
+      key: 'all',
+      title: `全部分类 (${materials.value.length})`,
+      icon: () => h(FolderOpenOutlined),
+    },
+    ...buildTree(categories.value),
   ];
 });
 
-// ==================== 表格逻辑 ====================
+function handleCategorySelect(selectedKeys: string[]) {
+  const key = selectedKeys[0];
+  if (key === 'all') {
+    selectedCategoryId.value = null;
+  } else {
+    selectedCategoryId.value = Number(key);
+  }
+  fetchMaterials();
+}
 
-const { tableProps, filters, search, fetchData, handleDelete } = useCrudTable<
-  MaterialItem,
-  MaterialFilters
->({
-  fetchApi: async (params) => {
-    const apiParams: Record<string, unknown> = {
-      page: params.page,
-      pageSize: params.pageSize,
-    };
-    if (params.keyword) apiParams.keyword = params.keyword;
-    if (params.type) apiParams.type = params.type;
-    if (params.status) apiParams.status = params.status;
-    if (selectedCategoryId.value)
-      apiParams.categoryId = selectedCategoryId.value;
+async function handleCreateCategory() {
+  if (!categoryFormState.value.name.trim()) {
+    message.warning('请输入分类名称');
+    return;
+  }
 
-    const res = await requestClient.get<{
-      data: MaterialItem[];
-      total: number;
-    }>('/messaging/material', { params: apiParams });
-    return { items: res.data || [], total: res.total || 0 };
-  },
-  deleteApi: async (id) => {
-    await requestClient.delete(`/messaging/material/${id}`);
-  },
-  initialFilters: { status: 'ACTIVE' },
-});
+  try {
+    await requestClient.post('/messaging/material/categories', {
+      name: categoryFormState.value.name,
+      parentId: categoryFormState.value.parentId || undefined,
+    });
+    message.success('分类创建成功');
+    categoryModalVisible.value = false;
+    categoryFormState.value = { name: '', parentId: null };
+    fetchCategories();
+  } catch (e) {
+    message.error('创建分类失败');
+  }
+}
 
-// ==================== Modal 逻辑 ====================
-
+// ==================== 素材表单 ====================
 const { visible, formState, isEditing, openCreate, openEdit, submit } =
   useModalForm<MaterialFormState>({
     createApi: async (data) => {
@@ -248,60 +180,22 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
       tags: [],
       isPublic: true,
     }),
-    afterSubmit: fetchData,
+    afterSubmit: fetchMaterials,
   });
 
-// ==================== 分类相关 ====================
+// ==================== 素材卡片事件 ====================
+function handleCardClick(material: MaterialItem) {
+  openDetail(material);
+}
 
-async function fetchCategories() {
-  try {
-    const res = await requestClient.get<CategoryItem[]>(
-      '/messaging/material/categories/tree',
-    );
-    categories.value = flattenCategories(res);
-  } catch (e) {
-    console.error(e);
+function handleCardSelect(material: MaterialItem, selected: boolean) {
+  toggleSelection(material.id);
+  if (selected && !selectionMode.value) {
+    enterSelectionMode();
   }
 }
 
-function flattenCategories(items: CategoryItem[]): CategoryItem[] {
-  const result: CategoryItem[] = [];
-  function traverse(list: CategoryItem[]) {
-    for (const item of list) {
-      result.push(item);
-      if (item.children?.length) {
-        traverse(item.children);
-      }
-    }
-  }
-  traverse(items);
-  return result;
-}
-
-async function handleCreateCategory() {
-  if (!categoryFormState.value.name) {
-    message.warning('请输入分类名称');
-    return;
-  }
-
-  try {
-    await requestClient.post('/messaging/material/categories', {
-      name: categoryFormState.value.name,
-      parentId: categoryFormState.value.parentId || undefined,
-    });
-    message.success('分类创建成功');
-    categoryModalVisible.value = false;
-    categoryFormState.value = { name: '', parentId: null };
-    fetchCategories();
-  } catch (e: unknown) {
-    const errorMessage = e instanceof Error ? e.message : '创建分类失败';
-    message.error(errorMessage);
-  }
-}
-
-// ==================== 事件处理 ====================
-
-function handleEdit(material: MaterialItem) {
+function handleCardEdit(material: MaterialItem) {
   openEdit(material.id, {
     name: material.name,
     description: material.description || '',
@@ -316,182 +210,212 @@ function handleEdit(material: MaterialItem) {
   });
 }
 
-function handleCategorySelect(selectedKeys: (string | number)[]) {
-  selectedCategoryId.value = selectedKeys[0] as number | null;
-  search();
+function handleCardDelete(material: MaterialItem) {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除素材"${material.name}"吗？`,
+    okText: '删除',
+    cancelText: '取消',
+    okButtonProps: { danger: true },
+    onOk: () => deleteMaterial(material.id),
+  });
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleString('zh-CN');
+function handleCardUse(material: MaterialItem) {
+  message.info(`使用素材: ${material.name}`);
+  // 这里可以打开使用场景选择器
 }
 
+// ==================== 批量操作 ====================
+function handleSelectAll() {
+  selectAll();
+}
+
+// ==================== 导航 ====================
 function goToStatistics() {
   router.push('/messaging/material/statistics');
 }
 
 // ==================== 生命周期 ====================
-
 onMounted(() => {
   fetchCategories();
-  fetchData();
+  fetchMaterials();
 });
 </script>
 
 <template>
-  <div class="flex h-full gap-4 p-5">
-    <!-- Left: Category Tree -->
-    <Card class="w-64 flex-shrink-0" title="素材分类">
-      <template #extra>
-        <Button type="link" size="small" @click="categoryModalVisible = true">
-          <PlusOutlined /> 添加
-        </Button>
-      </template>
-      <Tree
-        v-if="categoryTreeData.length"
-        :tree-data="categoryTreeData"
-        :selected-keys="[selectedCategoryId]"
-        default-expand-all
-        @select="handleCategorySelect"
-      />
-      <Empty v-else description="暂无分类" />
-    </Card>
-
-    <!-- Right: Material List -->
-    <Card class="flex-1" title="素材列表">
-      <template #extra>
-        <Space>
-          <Button @click="goToStatistics">
-            <BarChartOutlined /> 数据统计
+  <div class="material-library">
+    <div class="material-layout">
+      <!-- 左侧分类树 -->
+      <Card class="category-sidebar" :bordered="false">
+        <template #title>
+          <span class="sidebar-title">素材分类</span>
+        </template>
+        <template #extra>
+          <Button
+            type="link"
+            size="small"
+            :icon="h(PlusOutlined)"
+            @click="categoryModalVisible = true"
+          >
+            添加
           </Button>
-          <Button type="primary" @click="openCreate">
-            <PlusOutlined /> 添加素材
-          </Button>
-        </Space>
-      </template>
+        </template>
 
-      <!-- Filters -->
-      <div
-        class="mb-4 flex flex-wrap items-center gap-4 rounded bg-gray-50 p-4"
-      >
-        <Input
-          v-model:value="filters.keyword"
-          placeholder="搜索素材名称/内容"
-          style="width: 200px"
-          allow-clear
-          @press-enter="search"
+        <Tree
+          v-if="categories.length"
+          :tree-data="categoryTreeData"
+          :selected-keys="[selectedCategoryId ?? 'all']"
+          default-expand-all
+          @select="handleCategorySelect"
+        >
+          <template #title="{ title, icon }">
+            <span class="tree-node">
+              <component :is="icon" />
+              {{ title }}
+            </span>
+          </template>
+        </Tree>
+        <Empty v-else description="暂无分类" />
+      </Card>
+
+      <!-- 右侧内容区 -->
+      <div class="content-area">
+        <!-- 工具栏 -->
+        <div class="content-toolbar">
+          <div class="toolbar-left">
+            <!-- 视图切换 -->
+            <Radio.Group v-model:value="viewMode" button-style="solid" size="small">
+              <Radio.Button value="grid">
+                <AppstoreOutlined /> 卡片
+              </Radio.Button>
+              <Radio.Button value="list">
+                <UnorderedListOutlined /> 列表
+              </Radio.Button>
+            </Radio.Group>
+
+            <!-- 选择模式切换 -->
+            <Button
+              size="small"
+              :type="selectionMode ? 'primary' : 'default'"
+              :icon="h(CheckSquareOutlined)"
+              @click="selectionMode ? clearSelection() : enterSelectionMode()"
+            >
+              {{ selectionMode ? `已选 ${selectedCount}` : '批量选择' }}
+            </Button>
+
+            <!-- 全选 -->
+            <Button v-if="selectionMode" size="small" @click="handleSelectAll">
+              {{ selectedCount === materials.length ? '取消全选' : '全选' }}
+            </Button>
+          </div>
+
+          <div class="toolbar-right">
+            <Button @click="goToStatistics">
+              <BarChartOutlined /> 数据统计
+            </Button>
+            <Button type="primary" :icon="h(PlusOutlined)" @click="openCreate">
+              新建素材
+            </Button>
+          </div>
+        </div>
+
+        <!-- 筛选面板 -->
+        <FilterPanel
+          :filters="filters"
+          :categories="categories"
+          @update="updateFilters"
+          @search="fetchMaterials"
+          @reset="resetFilters"
         />
 
-        <Select
-          v-model:value="filters.type"
-          placeholder="素材类型"
-          style="width: 120px"
-          allow-clear
-        >
-          <Select.Option v-for="t in materialTypes" :key="t.key" :value="t.key">
-            {{ t.label }}
-          </Select.Option>
-        </Select>
+        <!-- 素材列表 -->
+        <Card class="material-list-card" :bordered="false" :loading="loading">
+          <!-- 网格视图 -->
+          <div v-if="viewMode === 'grid'" class="material-grid">
+            <MaterialCard
+              v-for="material in materials"
+              :key="material.id"
+              :material="material"
+              :selected="selectedIds.includes(material.id)"
+              :selection-mode="selectionMode"
+              view-mode="grid"
+              @click="handleCardClick"
+              @select="handleCardSelect"
+              @edit="handleCardEdit"
+              @delete="handleCardDelete"
+              @use="handleCardUse"
+            />
+          </div>
 
-        <Select
-          v-model:value="filters.status"
-          placeholder="状态"
-          style="width: 100px"
-          allow-clear
-        >
-          <Select.Option value="ACTIVE">启用</Select.Option>
-          <Select.Option value="DRAFT">草稿</Select.Option>
-          <Select.Option value="ARCHIVED">归档</Select.Option>
-        </Select>
+          <!-- 列表视图 -->
+          <div v-else class="material-list">
+            <MaterialCard
+              v-for="material in materials"
+              :key="material.id"
+              :material="material"
+              :selected="selectedIds.includes(material.id)"
+              :selection-mode="selectionMode"
+              view-mode="list"
+              @click="handleCardClick"
+              @select="handleCardSelect"
+              @edit="handleCardEdit"
+              @delete="handleCardDelete"
+              @use="handleCardUse"
+            />
+          </div>
 
-        <Button type="primary" @click="search">搜索</Button>
+          <!-- 空状态 -->
+          <Empty
+            v-if="!loading && !materials.length"
+            description="暂无素材，点击右上角新建"
+            class="empty-state"
+          />
+
+          <!-- 分页 -->
+          <div v-if="pagination.total > 0" class="pagination-bar">
+            <Pagination
+              v-model:current="pagination.page"
+              v-model:page-size="pagination.pageSize"
+              :total="pagination.total"
+              :page-size-options="['12', '24', '48', '96']"
+              show-size-changer
+              show-total
+              @change="fetchMaterials"
+            />
+          </div>
+        </Card>
       </div>
+    </div>
 
-      <!-- Table -->
-      <Table v-bind="tableProps" :columns="columns" :scroll="{ x: 1200 }">
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'name'">
-            <div class="font-medium">{{ record.name }}</div>
-            <div v-if="record.tags?.length" class="mt-1">
-              <Tag
-                v-for="tag in record.tags.slice(0, 3)"
-                :key="tag"
-                size="small"
-              >
-                {{ tag }}
-              </Tag>
-              <span v-if="record.tags.length > 3" class="text-xs text-gray-400">
-                +{{ record.tags.length - 3 }}
-              </span>
-            </div>
-          </template>
+    <!-- 批量操作工具栏 -->
+    <BatchToolbar
+      :selected-count="selectedCount"
+      :categories="categories"
+      @clear="clearSelection"
+      @delete="batchDelete"
+      @change-category="batchChangeCategory"
+      @add-tags="batchAddTags"
+      @remove-tags="batchRemoveTags"
+      @change-status="batchChangeStatus"
+      @export="batchExport"
+    />
 
-          <template v-if="column.key === 'content'">
-            <div class="line-clamp-2 text-sm text-gray-600">
-              {{ record.content || record.linkUrl || '-' }}
-            </div>
-          </template>
+    <!-- 素材详情抽屉 -->
+    <MaterialDetailDrawer
+      v-model:visible="detailVisible"
+      :material="selectedMaterial"
+      @edit="handleCardEdit"
+      @delete="handleCardDelete"
+      @use="handleCardUse"
+    />
 
-          <template v-if="column.key === 'type'">
-            <Tag
-              :color="
-                record.type === 'TEXT'
-                  ? 'blue'
-                  : record.type === 'IMAGE'
-                    ? 'green'
-                    : 'orange'
-              "
-            >
-              {{ typeLabels[record.type] }}
-            </Tag>
-          </template>
-
-          <template v-if="column.key === 'viewCount'">
-            <div class="flex items-center gap-1 text-gray-500">
-              <EyeOutlined />
-              {{ record.viewCount || 0 }}
-            </div>
-          </template>
-
-          <template v-if="column.key === 'usageCount'">
-            <div class="flex items-center gap-1 text-gray-500">
-              <SendOutlined />
-              {{ record.usageCount || 0 }}
-            </div>
-          </template>
-
-          <template v-if="column.key === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
-          </template>
-
-          <template v-if="column.key === 'actions'">
-            <Space>
-              <Button
-                type="link"
-                size="small"
-                @click="handleEdit(record as MaterialItem)"
-              >
-                <EditOutlined /> 编辑
-              </Button>
-              <Popconfirm
-                title="确定要删除吗？"
-                @confirm="handleDelete((record as MaterialItem).id)"
-              >
-                <Button type="link" size="small" danger>
-                  <DeleteOutlined /> 删除
-                </Button>
-              </Popconfirm>
-            </Space>
-          </template>
-        </template>
-      </Table>
-    </Card>
-
-    <!-- Create/Edit Modal -->
+    <!-- 新建/编辑素材弹窗 -->
     <Modal
       v-model:open="visible"
-      :title="isEditing ? '编辑素材' : '添加素材'"
+      :title="isEditing ? '编辑素材' : '新建素材'"
       width="700px"
+      :confirm-loading="loading"
       @ok="submit"
     >
       <Form layout="vertical" class="mt-4">
@@ -500,6 +424,7 @@ onMounted(() => {
             v-model:value="formState.name"
             placeholder="输入素材名称"
             :maxlength="100"
+            show-count
           />
         </Form.Item>
 
@@ -509,20 +434,19 @@ onMounted(() => {
             placeholder="简要描述素材用途"
             :rows="2"
             :maxlength="500"
+            show-count
           />
         </Form.Item>
 
         <Form.Item label="素材类型">
-          <div class="flex flex-wrap gap-2">
-            <Button
-              v-for="type in materialTypes"
-              :key="type.key"
-              :type="formState.type === type.key ? 'primary' : 'default'"
-              @click="formState.type = type.key as MaterialItem['type']"
-            >
-              <component :is="type.icon" /> {{ type.label }}
-            </Button>
-          </div>
+          <Radio.Group v-model:value="formState.type">
+            <Radio.Button value="TEXT">文本</Radio.Button>
+            <Radio.Button value="IMAGE">图片</Radio.Button>
+            <Radio.Button value="VIDEO">视频</Radio.Button>
+            <Radio.Button value="LINK">链接</Radio.Button>
+            <Radio.Button value="FILE">文件</Radio.Button>
+            <Radio.Button value="MIXED">图文</Radio.Button>
+          </Radio.Group>
         </Form.Item>
 
         <Form.Item
@@ -543,10 +467,7 @@ onMounted(() => {
         </Form.Item>
 
         <Form.Item v-if="formState.type === 'LINK'" label="链接标题">
-          <Input
-            v-model:value="formState.linkTitle"
-            placeholder="链接显示标题"
-          />
+          <Input v-model:value="formState.linkTitle" placeholder="链接显示标题" />
         </Form.Item>
 
         <Form.Item label="所属分类">
@@ -572,20 +493,18 @@ onMounted(() => {
             mode="tags"
             placeholder="添加标签，便于分类管理"
             :token-separators="[',', '，']"
+            style="width: 100%"
           >
-            <Select.Option
-              v-for="tag in tagPresets"
-              :key="tag.value"
-              :value="tag.value"
-            >
-              {{ tag.label }}
-            </Select.Option>
+            <Select.Option value="产品">产品</Select.Option>
+            <Select.Option value="活动">活动</Select.Option>
+            <Select.Option value="节日">节日</Select.Option>
+            <Select.Option value="促销">促销</Select.Option>
           </Select>
         </Form.Item>
       </Form>
     </Modal>
 
-    <!-- Category Modal -->
+    <!-- 添加分类弹窗 -->
     <Modal
       v-model:open="categoryModalVisible"
       title="添加分类"
@@ -605,7 +524,7 @@ onMounted(() => {
             allow-clear
           >
             <Select.Option
-              v-for="cat in categories"
+              v-for="cat in categories.filter((c) => c.parentId === null)"
               :key="cat.id"
               :value="cat.id"
             >
@@ -617,3 +536,93 @@ onMounted(() => {
     </Modal>
   </div>
 </template>
+
+<style scoped>
+.material-library {
+  height: 100%;
+  padding: 16px;
+  background: #f5f5f5;
+}
+
+.material-layout {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.category-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.material-list-card {
+  flex: 1;
+  min-height: 0;
+}
+
+.material-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.material-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  padding: 64px 0;
+}
+
+.pagination-bar {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+}
+</style>
