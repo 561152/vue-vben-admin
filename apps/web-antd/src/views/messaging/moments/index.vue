@@ -18,10 +18,7 @@ import {
   Image,
   Alert,
 } from 'ant-design-vue';
-import type { UploadFile } from 'ant-design-vue';
 import {
-  PlusOutlined,
-  EditOutlined,
   DeleteOutlined,
   LikeOutlined,
   CommentOutlined,
@@ -30,7 +27,6 @@ import {
   VideoCameraOutlined,
   FileOutlined,
   LinkOutlined,
-  AppstoreOutlined,
   BellOutlined,
   ExportOutlined,
   BarChartOutlined,
@@ -75,19 +71,6 @@ interface MomentTask {
   createdAt: string;
 }
 
-interface MaterialItem {
-  id: number;
-  title: string;
-  type: string;
-  url: string;
-  thumbnail: string;
-  likeCount: number;
-  commentCount: number;
-  viewCount: number;
-  createdBy: string;
-  createdAt: string;
-}
-
 interface MomentFilters {
   createdBy?: string;
   status?: string;
@@ -107,10 +90,6 @@ const router = useRouter();
 const activeTab = ref('create');
 const failedCount = ref(0);
 const retryLoading = ref(false);
-const materials = ref<MaterialItem[]>([]);
-const materialsLoading = ref(false);
-const materialsTotal = ref(0);
-const materialsPage = ref(1);
 
 // Filters (用于 history 表格)
 const dateRange = ref<[unknown, unknown] | null>(null);
@@ -155,14 +134,6 @@ const previewCount = ref(0);
 
 // ==================== 常量 ====================
 
-const attachmentTypes = [
-  { key: 'image', icon: PictureOutlined, label: '图片' },
-  { key: 'video', icon: VideoCameraOutlined, label: '视频' },
-  { key: 'file', icon: FileOutlined, label: '文件' },
-  { key: 'link', icon: LinkOutlined, label: '网页' },
-  { key: 'miniprogram', icon: AppstoreOutlined, label: '小程序' },
-];
-
 const statusMap: Record<string, { label: string; color: string }> = {
   PENDING: { label: '待发送', color: 'default' },
   SUBMITTED: { label: '已提交', color: 'processing' },
@@ -204,22 +175,6 @@ const historyColumns = [
   { title: '操作', key: 'actions', width: 100, fixed: 'right' as const },
 ];
 
-const materialColumns = [
-  { title: '内容', dataIndex: 'title', key: 'title', ellipsis: true },
-  { title: '点赞', dataIndex: 'likeCount', key: 'likeCount', sorter: true },
-  {
-    title: '评论',
-    dataIndex: 'commentCount',
-    key: 'commentCount',
-    sorter: true,
-  },
-  { title: '收藏', key: 'favoriteCount' },
-  { title: '浏览', dataIndex: 'viewCount', key: 'viewCount', sorter: true },
-  { title: '使用次数', key: 'usageCount' },
-  { title: '创建人', dataIndex: 'createdBy', key: 'createdBy' },
-  { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt' },
-  { title: '操作', key: 'actions', width: 150 },
-];
 
 // ==================== History 表格逻辑 ====================
 
@@ -255,25 +210,6 @@ const {
   },
 });
 
-// ==================== Materials 表格加载 ====================
-
-async function fetchMaterials() {
-  materialsLoading.value = true;
-  try {
-    const res = await requestClient.get<{
-      items: MaterialItem[];
-      total: number;
-    }>('/messaging/moments/materials', {
-      params: { page: materialsPage.value, pageSize: 10 },
-    });
-    materials.value = res.items || [];
-    materialsTotal.value = res.total || 0;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    materialsLoading.value = false;
-  }
-}
 
 // ==================== 计算属性 ====================
 
@@ -506,15 +442,7 @@ function handleTabChange(key: string | number) {
   activeTab.value = String(key);
   if (key === 'history') {
     fetchMoments();
-  } else if (key === 'materials') {
-    materialsPage.value = 1;
-    fetchMaterials();
   }
-}
-
-function handleMaterialsPageChange(page: number) {
-  materialsPage.value = page;
-  fetchMaterials();
 }
 
 // ==================== 统计与重试 ====================
@@ -927,66 +855,6 @@ onMounted(() => {
           </Table>
         </TabPane>
 
-        <!-- Materials Tab -->
-        <TabPane key="materials" tab="素材库">
-          <!-- Filters -->
-          <div class="mb-4 flex flex-wrap gap-4 rounded bg-gray-50 p-4">
-            <div class="flex items-center gap-2">
-              <span>筛选条件:</span>
-              <Input placeholder="活动标题【包含】" style="width: 160px" />
-            </div>
-            <Input placeholder="创建人【在之中】" style="width: 160px" />
-            <Input placeholder="创建时间【大于等于】" style="width: 160px" />
-            <Input placeholder="创建时间【小于】" style="width: 160px" />
-            <Button type="primary">筛选</Button>
-          </div>
-
-          <!-- Add button -->
-          <div class="mb-4">
-            <Button type="primary"> <PlusOutlined /> 添加素材 </Button>
-          </div>
-
-          <Table
-            :columns="materialColumns"
-            :data-source="materials"
-            :loading="materialsLoading"
-            :pagination="{
-              current: materialsPage,
-              pageSize: 10,
-              total: materialsTotal,
-              onChange: handleMaterialsPageChange,
-              showSizeChanger: true,
-              showTotal: (t: number) => `共 ${t} 条`,
-            }"
-            row-key="id"
-          >
-            <template #bodyCell="{ column, record }">
-              <template v-if="column.key === 'title'">
-                <div class="flex items-start gap-2">
-                  <Image
-                    v-if="record.thumbnail"
-                    :src="record.thumbnail"
-                    :width="48"
-                    :height="48"
-                    class="rounded"
-                  />
-                  <div class="flex-1">{{ record.title }}</div>
-                </div>
-              </template>
-
-              <template v-if="column.key === 'actions'">
-                <Space>
-                  <Button type="link" size="small">
-                    <EditOutlined /> 编辑
-                  </Button>
-                  <Button type="link" size="small" danger>
-                    <DeleteOutlined /> 删除
-                  </Button>
-                </Space>
-              </template>
-            </template>
-          </Table>
-        </TabPane>
       </Tabs>
     </Card>
 
