@@ -35,6 +35,7 @@ const show = ref(false);
       v-model="modelValue"
       :class="cn(props.class)"
       :type="show ? 'text' : 'password'"
+      autocomplete="current-password"
     />
     <template v-if="passwordStrength">
       <PasswordStrength :password="modelValue" />

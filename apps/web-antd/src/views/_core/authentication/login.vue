@@ -110,6 +110,7 @@ const formSchema = computed((): VbenFormSchema[] => {
       component: 'VbenInput',
       componentProps: {
         placeholder: $t('authentication.usernameTip'),
+        autocomplete: 'username',
         onBlur: (e: FocusEvent) => {
           isUsernameBlurred.value = true;
           const target = e.target as HTMLInputElement;

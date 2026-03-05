@@ -58,7 +58,10 @@ const gradingModeOptions = [
 ];
 
 // 处理文件选择
-const handleFileChange = (info: { file: UploadFile; fileList: UploadFile[] }) => {
+const handleFileChange = (info: {
+  file: UploadFile;
+  fileList: UploadFile[];
+}) => {
   fileList.value = info.fileList.slice(-1);
 
   if (info.file.originFileObj) {
@@ -190,8 +193,13 @@ const handleStartGrading = async () => {
     // 开始轮询
     pollTimerRef.value = setTimeout(pollStatus, pollInterval);
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } }; message?: string };
-    message.error(err?.response?.data?.message || err.message || '提交批改失败');
+    const err = error as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+    message.error(
+      err?.response?.data?.message || err.message || '提交批改失败',
+    );
     isLoading.value = false;
   }
 };
@@ -203,7 +211,6 @@ const handleClear = () => {
   progress.value = 0;
   currentStep.value = '';
 };
-
 </script>
 
 <template>
@@ -213,7 +220,10 @@ const handleClear = () => {
 
     <div class="page-header">
       <h2><CameraOutlined class="header-icon" /> 拍照批改</h2>
-      <p>拍照上传作业，AI 自动识别并批改，支持智能审批流 (homework-grading-approval)</p>
+      <p>
+        拍照上传作业，AI 自动识别并批改，支持智能审批流
+        (homework-grading-approval)
+      </p>
     </div>
 
     <div class="content-wrapper">
@@ -237,9 +247,7 @@ const handleClear = () => {
                   <FileImageOutlined style="font-size: 48px; color: #1890ff" />
                 </p>
                 <p class="ant-upload-text">点击或拖拽作业图片到此处</p>
-                <p class="ant-upload-hint">
-                  支持 JPG、PNG 格式，建议清晰拍摄
-                </p>
+                <p class="ant-upload-hint">支持 JPG、PNG 格式，建议清晰拍摄</p>
               </div>
             </Upload.Dragger>
           </div>
@@ -299,7 +307,8 @@ const handleClear = () => {
         <Card title="使用提示" :bordered="false" class="tips-card">
           <ul class="tips-list">
             <li>
-              <strong>工作流模式</strong>：使用 Qwen-VL + 审批流，支持实时进度追踪
+              <strong>工作流模式</strong>：使用 Qwen-VL +
+              审批流，支持实时进度追踪
             </li>
             <li>
               <strong>拍照技巧</strong>：请确保作业图片清晰、光线充足，正面平拍
@@ -307,15 +316,11 @@ const handleClear = () => {
             <li>
               <strong>批改速度</strong>：一般2-5秒完成，复杂作业可能需要更长时间
             </li>
-            <li>
-              <strong>仅对答案</strong>：快速批改模式，显示对错和得分
-            </li>
+            <li><strong>仅对答案</strong>：快速批改模式，显示对错和得分</li>
             <li>
               <strong>启发模式</strong>：家长模式，提供引导话术而非直接答案
             </li>
-            <li>
-              <strong>人工审核</strong>：低置信度结果会自动进入审批流程
-            </li>
+            <li><strong>人工审核</strong>：低置信度结果会自动进入审批流程</li>
           </ul>
         </Card>
       </div>
@@ -390,11 +395,11 @@ const handleClear = () => {
 }
 
 .page-header h2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
   margin: 0 0 8px;
   font-size: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .header-icon {
@@ -462,7 +467,7 @@ const handleClear = () => {
 
 .mode-desc {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgb(0 0 0 / 45%);
 }
 
 .mode-tip {
@@ -506,9 +511,9 @@ const handleClear = () => {
 }
 
 .progress-info {
-  margin-top: 24px;
   width: 80%;
   max-width: 400px;
+  margin-top: 24px;
 }
 
 .progress-text {
@@ -537,14 +542,14 @@ const handleClear = () => {
 }
 
 .ready-preview {
-  margin-top: 24px;
   max-width: 300px;
+  margin-top: 24px;
 }
 
 .ready-preview img {
   width: 100%;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
 }
 
 .shortcuts-card {
