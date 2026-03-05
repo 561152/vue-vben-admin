@@ -333,7 +333,7 @@ const formatTime = (time: string) => {
 
 const fetchSyncStats = async () => {
   try {
-    const res = await requestClient.get<SyncStats>('/wecom/sync/stats');
+    const res = await requestClient.get<SyncStats>('/operations/wecom-sync/stats');
     syncStats.value = res;
   } catch (error: any) {
     console.error('获取同步统计失败', error);
@@ -347,7 +347,7 @@ const pollJobStatus = async (
   onComplete: (result: JobStatusResponse['result']) => void,
   onError: (error: string) => void,
 ) => {
-  const statusUrl = `/wecom/sync/${syncType}/status/${jobId}`;
+  const statusUrl = `/operations/wecom-sync/${syncType}/status/${jobId}`;
 
   const poll = async () => {
     try {
@@ -418,7 +418,7 @@ const handleSyncUsers = async () => {
 
   try {
     const res = await requestClient.post<AsyncSyncResponse>(
-      '/wecom/sync/users',
+      '/operations/wecom-sync/users',
       {},
     );
 
@@ -480,7 +480,7 @@ const handleSyncCustomers = async () => {
 
   try {
     const res = await requestClient.post<AsyncSyncResponse>(
-      '/wecom/sync/customers',
+      '/operations/wecom-sync/customers',
       {},
     );
 
@@ -551,7 +551,7 @@ const handleSyncAll = async () => {
         failed: number;
         relationsCreated: number;
       };
-    }>('/wecom/sync/all', {}, { timeout: 600000 });
+    }>('/operations/wecom-sync/all', {}, { timeout: 600000 });
 
     message.destroy();
 

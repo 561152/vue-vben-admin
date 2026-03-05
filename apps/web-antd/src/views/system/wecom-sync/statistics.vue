@@ -647,7 +647,7 @@ const handleTabChange = (key: Key) => {
 const loadOverview = async () => {
   loading.value.overview = true;
   try {
-    const res = await requestClient.get('/wecom/sync/statistics/overview');
+    const res = await requestClient.get('/operations/wecom-sync/statistics/overview');
     overview.value = res;
   } catch (error) {
     message.error('加载统计概览失败');
@@ -659,7 +659,7 @@ const loadOverview = async () => {
 const loadUserSync = async () => {
   loading.value.users = true;
   try {
-    const res = await requestClient.get('/wecom/sync/statistics/users');
+    const res = await requestClient.get('/operations/wecom-sync/statistics/users');
     userSync.value = res;
   } catch (error) {
     message.error('加载员工同步分析失败');
@@ -671,7 +671,7 @@ const loadUserSync = async () => {
 const loadCustomerSync = async () => {
   loading.value.customers = true;
   try {
-    const res = await requestClient.get('/wecom/sync/statistics/customers');
+    const res = await requestClient.get('/operations/wecom-sync/statistics/customers');
     customerSync.value = res;
   } catch (error) {
     message.error('加载客户同步分析失败');
@@ -683,7 +683,7 @@ const loadCustomerSync = async () => {
 const loadGroupSync = async () => {
   loading.value.groups = true;
   try {
-    const res = await requestClient.get('/wecom/sync/statistics/groups');
+    const res = await requestClient.get('/operations/wecom-sync/statistics/groups');
     groupSync.value = res;
   } catch (error) {
     message.error('加载群聊同步分析失败');
@@ -695,7 +695,7 @@ const loadGroupSync = async () => {
 const loadRelationSync = async () => {
   loading.value.relations = true;
   try {
-    const res = await requestClient.get('/wecom/sync/statistics/relations');
+    const res = await requestClient.get('/operations/wecom-sync/statistics/relations');
     relationSync.value = res;
   } catch (error) {
     message.error('加载关系同步分析失败');
