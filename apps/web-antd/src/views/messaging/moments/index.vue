@@ -174,8 +174,6 @@ const historyColumns = [
   { title: '发表情况', dataIndex: 'status', key: 'status', width: 120 },
   { title: '操作', key: 'actions', width: 100, fixed: 'right' as const },
 ];
-
-
 // ==================== History 表格逻辑 ====================
 
 const {
@@ -210,9 +208,7 @@ const {
   },
 });
 
-
 // ==================== 计算属性 ====================
-
 const hasFilterConditions = computed(() => {
   const c = filterConditions.value;
   return (
@@ -854,10 +850,8 @@ onMounted(() => {
             </template>
           </Table>
         </TabPane>
-
       </Tabs>
     </Card>
-
     <!-- Customer Filter Drawer -->
     <CustomerFilterDrawer
       v-model:open="filterDrawerVisible"

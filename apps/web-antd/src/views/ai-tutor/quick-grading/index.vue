@@ -10,18 +10,15 @@
  * - 自动跳转到批改历史
  * - 支持 homework-grading-approval 工作流 (id=51)
  */
-import { ref, computed, watch } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import {
   Card,
   Upload,
   Button,
   Radio,
-  Switch,
   Spin,
   Alert,
   Progress,
-  Tabs,
-  TabPane,
   Divider,
   message,
 } from 'ant-design-vue';
@@ -29,7 +26,6 @@ import {
   CameraOutlined,
   EditOutlined,
   FileImageOutlined,
-  ThunderboltOutlined,
 } from '@ant-design/icons-vue';
 import type { UploadFile } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
@@ -45,6 +41,15 @@ const fileList = ref<UploadFile[]>([]);
 const previewUrl = ref<string>('');
 const progress = ref(0);
 const currentStep = ref<string>('');
+const pollTimerRef = ref<ReturnType<typeof setTimeout> | null>(null);
+
+// 组件卸载时清理轮询定时器
+onBeforeUnmount(() => {
+  if (pollTimerRef.value) {
+    clearTimeout(pollTimerRef.value);
+    pollTimerRef.value = null;
+  }
+});
 
 // 批改模式选项
 const gradingModeOptions = [
@@ -62,6 +67,8 @@ const handleFileChange = (info: { file: UploadFile; fileList: UploadFile[] }) =>
       previewUrl.value = e.target?.result as string;
     };
     reader.readAsDataURL(info.file.originFileObj);
+  } else if (info.fileList.length === 0) {
+    previewUrl.value = '';
   }
 };
 
@@ -80,8 +87,9 @@ const handleStartGrading = async () => {
     // 准备表单数据 - 使用工作流模式
     const formData = new FormData();
     formData.append('files', fileList.value[0].originFileObj);
+    // TODO: 后续改为用户选择器，当前硬编码为小学三年级数学
     formData.append('subject', 'MATH');
-    formData.append('gradeLevel', 'GRADE_3'); // 默认小学三年级，使用 Prisma 枚举格式
+    formData.append('gradeLevel', 'GRADE_3');
     formData.append('gradingMode', gradingMode.value);
 
     // 调用工作流批改 API (homework-grading-approval 工作流 id=51)
@@ -99,7 +107,7 @@ const handleStartGrading = async () => {
 
     currentStep.value = '批改任务已提交，正在处理...';
 
-    const { executionId, recordId } = submitResponse;
+    const { executionId } = submitResponse;
 
     // 轮询执行状态
     let attempts = 0;
@@ -122,7 +130,7 @@ const handleStartGrading = async () => {
             completedAt?: string;
             error?: string;
           }>;
-          result?: any;
+          result?: Record<string, unknown>;
           error?: string;
           requiresApproval?: boolean;
           approvalReason?: string;
@@ -136,8 +144,9 @@ const handleStartGrading = async () => {
           // 批改完成
           progress.value = 100;
           currentStep.value = '批改完成！';
+          isLoading.value = false;
           message.success('批改完成！即将跳转...');
-          setTimeout(() => {
+          pollTimerRef.value = setTimeout(() => {
             router.push('/ai-tutor/grading-history');
           }, 1000);
           return;
@@ -161,17 +170,16 @@ const handleStartGrading = async () => {
         // 继续轮询
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(pollStatus, pollInterval);
+          pollTimerRef.value = setTimeout(pollStatus, pollInterval);
         } else {
           message.warning('批改超时，请稍后在批改历史中查看结果');
           isLoading.value = false;
           router.push('/ai-tutor/grading-history');
         }
-      } catch (error: any) {
-        console.error('Poll status error:', error);
+      } catch (error: unknown) {
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(pollStatus, pollInterval);
+          pollTimerRef.value = setTimeout(pollStatus, pollInterval);
         } else {
           message.error('查询批改状态失败');
           isLoading.value = false;
@@ -180,10 +188,10 @@ const handleStartGrading = async () => {
     };
 
     // 开始轮询
-    setTimeout(pollStatus, pollInterval);
-  } catch (error: any) {
-    message.error(error?.response?.data?.message || error.message || '提交批改失败');
-    console.error('Grading submission error:', error);
+    pollTimerRef.value = setTimeout(pollStatus, pollInterval);
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string } }; message?: string };
+    message.error(err?.response?.data?.message || err.message || '提交批改失败');
     isLoading.value = false;
   }
 };
@@ -196,19 +204,6 @@ const handleClear = () => {
   currentStep.value = '';
 };
 
-// 监听文件列表变化，自动更新预览
-watch(fileList, (newList) => {
-  if (newList.length > 0 && newList[0]?.originFileObj) {
-    const file = newList[0].originFileObj;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewUrl.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  } else if (newList.length === 0) {
-    previewUrl.value = '';
-  }
-}, { deep: true });
 </script>
 
 <template>
