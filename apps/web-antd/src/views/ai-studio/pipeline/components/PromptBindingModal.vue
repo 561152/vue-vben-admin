@@ -45,7 +45,7 @@ const { Text, Paragraph } = Typography;
 const FormItem = Form.Item;
 
 interface Props {
-  visible: boolean;
+  open: boolean;
   pipelineKey: string;
   stepKey: string;
   stepName: string;
@@ -63,7 +63,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'update:visible', visible: boolean): void;
+  (e: 'update:open', open: boolean): void;
   (e: 'success'): void;
   (e: 'cancel'): void;
 }>();
@@ -86,21 +86,21 @@ const formState = ref<CreateBindingParams>({
   condition: undefined,
 });
 
-// 使用 PromptEngine 解析模板变量
-const { variables: extractedVars } = usePromptParser(
-  computed(() => selectedTemplate.value?.templateContent || ''),
-);
-
-// 选中的模板
+// 选中的模板（必须先定义，才能在 usePromptParser 中使用）
 const selectedTemplate = computed(() => {
   return templates.value.find(
     (t) => t.id === formState.value.promptTemplateId?.toString(),
   );
 });
 
+// 使用 PromptEngine 解析模板变量
+const { variables: extractedVars } = usePromptParser(
+  computed(() => selectedTemplate.value?.activeVersion?.userPromptTpl || ''),
+);
+
 // 模板变量（合并定义的变量和提取的变量）
 const templateVariables = computed(() => {
-  const definedVars = selectedTemplate.value?.variables || [];
+  const definedVars = selectedTemplate.value?.activeVersion?.variables || [];
   const extracted = extractedVars.value;
 
   // 使用 Map 去重，优先使用定义的变量
@@ -169,9 +169,9 @@ const bindingConflicts = computed(() => {
   return conflicts;
 });
 
-// 监听 visible 变化
+// 监听 open 变化
 watch(
-  () => props.visible,
+  () => props.open,
   (newVisible) => {
     if (newVisible) {
       loadTemplates();
@@ -203,11 +203,9 @@ const loadTemplates = async () => {
   templatesLoading.value = true;
   try {
     const response = await getPromptTemplates({
-      activeOnly: true,
-      includeSystem: true,
-      limit: 100,
+      pageSize: 100,
     });
-    templates.value = response.data;
+    templates.value = response.items;
   } catch (error) {
     message.error('加载提示词模板失败');
     console.error(error);
@@ -267,11 +265,15 @@ const doSave = async () => {
       message.success('更新绑定成功');
     } else {
       // 创建模式
-      await createPromptBinding(props.pipelineKey, props.stepKey, formState.value);
+      await createPromptBinding(
+        props.pipelineKey,
+        props.stepKey,
+        formState.value,
+      );
       message.success('创建绑定成功');
     }
     emit('success');
-    emit('update:visible', false);
+    emit('update:open', false);
   } catch (error: any) {
     message.error(error?.response?.data?.message || '保存失败');
     console.error(error);
@@ -282,7 +284,7 @@ const doSave = async () => {
 
 // 取消
 const handleCancel = () => {
-  emit('update:visible', false);
+  emit('update:open', false);
   emit('cancel');
 };
 
@@ -299,7 +301,7 @@ const sourceVariables = computed(() => {
 
 <template>
   <Modal
-    :open="visible"
+    :open="open"
     :title="editingBinding ? '编辑提示词绑定' : '添加提示词绑定'"
     :width="900"
     :confirm-loading="saving"
@@ -350,7 +352,10 @@ const sourceVariables = computed(() => {
                     :key="template.id"
                     :class="[
                       'template-card',
-                      { selected: formState.promptTemplateId === Number(template.id) },
+                      {
+                        selected:
+                          formState.promptTemplateId === Number(template.id),
+                      },
                     ]"
                     size="small"
                     @click="handleTemplateSelect(Number(template.id))"
@@ -358,7 +363,11 @@ const sourceVariables = computed(() => {
                     <div class="template-card-content">
                       <div class="template-header">
                         <Text strong>{{ template.name }}</Text>
-                        <Tag v-if="template.isSystem" color="blue" size="small">
+                        <Tag
+                          v-if="template.type === 'SYSTEM'"
+                          color="blue"
+                          size="small"
+                        >
                           系统
                         </Tag>
                       </div>
@@ -370,7 +379,10 @@ const sourceVariables = computed(() => {
                           {{ template.category }}
                         </Tag>
                         <Text type="secondary" style="font-size: 12px">
-                          {{ template.variables?.length || 0 }} 变量
+                          {{
+                            template.activeVersion?.variables?.length || 0
+                          }}
+                          变量
                         </Text>
                       </div>
                     </div>
@@ -393,7 +405,7 @@ const sourceVariables = computed(() => {
                 type="secondary"
                 style="font-size: 12px"
               >
-                <pre>{{ selectedTemplate.templateContent }}</pre>
+                <pre>{{ selectedTemplate.activeVersion?.userPromptTpl }}</pre>
               </Paragraph>
             </Card>
           </Col>
@@ -446,7 +458,11 @@ const sourceVariables = computed(() => {
               size="small"
               title="变量映射"
               class="mt-3"
-              :body-style="{ maxHeight: '300px', overflow: 'auto', padding: '12px' }"
+              :body-style="{
+                maxHeight: '300px',
+                overflow: 'auto',
+                padding: '12px',
+              }"
             >
               <VariableMapper
                 v-model="formState.variableMappings"
@@ -469,8 +485,8 @@ const sourceVariables = computed(() => {
 }
 
 .step-info {
-  margin-bottom: 20px;
   padding: 12px;
+  margin-bottom: 20px;
   background: #f5f5f5;
   border-radius: 6px;
 }
@@ -493,8 +509,8 @@ const sourceVariables = computed(() => {
 }
 
 .template-card.selected {
-  border-color: #1890ff;
   background: #e6f7ff;
+  border-color: #1890ff;
 }
 
 .template-card-content {
@@ -505,8 +521,8 @@ const sourceVariables = computed(() => {
 
 .template-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .template-key {
