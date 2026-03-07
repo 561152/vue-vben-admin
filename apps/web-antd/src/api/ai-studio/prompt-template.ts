@@ -244,3 +244,53 @@ export async function checkPromptUsage(id: string) {
     pipelines: Array<{ id: string; name: string }>;
   }>(`/prompt-templates/${id}/usage`);
 }
+
+// ==================== 场景默认模板 ====================
+
+export enum AiScenario {
+  LLM_CHAT = 'LLM_CHAT',
+  LLM_REASONING = 'LLM_REASONING',
+  VISION_OCR = 'VISION_OCR',
+  VISION_ANALYSIS = 'VISION_ANALYSIS',
+  EMBEDDING = 'EMBEDDING',
+  PAPER_RECOGNITION = 'PAPER_RECOGNITION',
+  PAPER_GRADING = 'PAPER_GRADING',
+}
+
+export const AI_SCENARIO_LABELS: Record<AiScenario, string> = {
+  [AiScenario.LLM_CHAT]: '普通对话',
+  [AiScenario.LLM_REASONING]: '结构化推理',
+  [AiScenario.VISION_OCR]: 'OCR 识别',
+  [AiScenario.VISION_ANALYSIS]: '图像分析',
+  [AiScenario.EMBEDDING]: '向量嵌入',
+  [AiScenario.PAPER_RECOGNITION]: '试卷识别',
+  [AiScenario.PAPER_GRADING]: '试卷批改',
+};
+
+export interface ScenarioDefault {
+  id: string;
+  scenario: AiScenario;
+  templateId: string;
+  templateName: string;
+  templateKey: string;
+  subjectCode: string | null;
+  priority: number;
+  isActive: boolean;
+}
+
+/**
+ * 获取场景默认模板配置
+ */
+export async function getScenarioDefaults() {
+  return requestClient.get<ScenarioDefault[]>('/prompt-templates/defaults');
+}
+
+/**
+ * 设置场景默认模板
+ */
+export async function setScenarioDefault(
+  scenario: AiScenario,
+  data: { templateId: number; subjectCode?: string },
+) {
+  return requestClient.put(`/prompt-templates/defaults/${scenario}`, data);
+}

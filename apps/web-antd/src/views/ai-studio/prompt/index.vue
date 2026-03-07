@@ -10,6 +10,7 @@ import {
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
+  SettingOutlined,
   TagOutlined,
   TagsOutlined,
 } from '@ant-design/icons-vue';
@@ -44,6 +45,7 @@ import {
   type PromptTemplateListParams,
 } from '#/api/ai-studio/prompt-template';
 
+import ScenarioDefaultsModal from './components/ScenarioDefaultsModal.vue';
 import VersionManagerModal from './components/VersionManagerModal.vue';
 
 const router = useRouter();
@@ -78,6 +80,9 @@ const allTags = ref<string[]>([]);
 // 版本管理弹窗
 const versionModalVisible = ref(false);
 const versionModalTemplate = ref<PromptTemplate | null>(null);
+
+// 场景默认配置弹窗
+const scenarioDefaultsVisible = ref(false);
 
 // ==================== 计算属性 ====================
 
@@ -470,10 +475,16 @@ loadCategoriesAndTags();
         </Space>
       </Col>
       <Col>
-        <Button type="primary" @click="goToCreate">
-          <PlusOutlined />
-          新建提示词
-        </Button>
+        <Space>
+          <Button @click="scenarioDefaultsVisible = true">
+            <SettingOutlined />
+            场景默认配置
+          </Button>
+          <Button type="primary" @click="goToCreate">
+            <PlusOutlined />
+            新建提示词
+          </Button>
+        </Space>
       </Col>
     </Row>
 
@@ -660,6 +671,9 @@ loadCategoriesAndTags();
       v-model:visible="versionModalVisible"
       :template="versionModalTemplate"
     />
+
+    <!-- 场景默认配置弹窗 -->
+    <ScenarioDefaultsModal v-model:visible="scenarioDefaultsVisible" />
   </Card>
 </template>
 

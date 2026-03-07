@@ -4,11 +4,14 @@ import { useRoute, useRouter } from 'vue-router';
 
 import {
   ArrowLeftOutlined,
+  BarChartOutlined,
+  ExperimentOutlined,
   ExportOutlined,
   EyeOutlined,
   FileTextOutlined,
   SaveOutlined,
   SendOutlined,
+  SwapOutlined,
 } from '@ant-design/icons-vue';
 import {
   Alert,
@@ -45,9 +48,12 @@ import {
 } from '#/api/ai-studio/prompt-template';
 import { usePromptEditCache } from '#/composables/useLruCache';
 
+import AbTestPanel from './components/AbTestPanel.vue';
+import AnalyticsPanel from './components/AnalyticsPanel.vue';
 import ExportModal from './components/ExportModal.vue';
 import PromptPreview from './components/PromptPreview.vue';
 import VariableEditor from './components/VariableEditor.vue';
+import VersionCompareModal from './components/VersionCompareModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -115,6 +121,9 @@ const recentPrompts = ref<
 
 // 导出弹窗
 const exportModalVisible = ref(false);
+
+// 版本对比弹窗
+const versionCompareVisible = ref(false);
 
 // ==================== 表单规则 ====================
 
@@ -442,6 +451,10 @@ onUnmounted(() => {
                   </Menu>
                 </template>
               </Dropdown>
+              <Button v-if="isEdit" @click="versionCompareVisible = true">
+                <SwapOutlined />
+                版本对比
+              </Button>
               <Button @click="handlePreview">
                 <EyeOutlined />
                 预览
@@ -669,11 +682,40 @@ onUnmounted(() => {
               :model-config="formData.modelConfig"
             />
           </Tabs.TabPane>
+
+          <!-- A/B 测试（仅编辑模式） -->
+          <Tabs.TabPane v-if="isEdit" key="ab-test">
+            <template #tab>
+              <Space :size="4">
+                <ExperimentOutlined />
+                A/B 测试
+              </Space>
+            </template>
+            <AbTestPanel :template-id="promptId" />
+          </Tabs.TabPane>
+
+          <!-- 使用分析（仅编辑模式） -->
+          <Tabs.TabPane v-if="isEdit" key="analytics">
+            <template #tab>
+              <Space :size="4">
+                <BarChartOutlined />
+                分析
+              </Space>
+            </template>
+            <AnalyticsPanel :template-id="promptId" />
+          </Tabs.TabPane>
         </Tabs>
       </Form>
 
       <!-- 导出弹窗 -->
       <ExportModal v-model:visible="exportModalVisible" :template="formData" />
+
+      <!-- 版本对比弹窗 -->
+      <VersionCompareModal
+        v-if="isEdit"
+        v-model:visible="versionCompareVisible"
+        :template-id="promptId"
+      />
     </div>
   </Spin>
 </template>
