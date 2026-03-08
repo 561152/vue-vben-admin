@@ -3,7 +3,12 @@ import { requestClient } from '#/api/request';
 // ==================== 类型定义 ====================
 
 /** 人群包状态 */
-export type AudienceStatus = 'DRAFT' | 'COMPUTING' | 'READY' | 'EXPIRED' | 'ARCHIVED';
+export type AudienceStatus =
+  | 'DRAFT'
+  | 'COMPUTING'
+  | 'READY'
+  | 'EXPIRED'
+  | 'ARCHIVED';
 
 /** 人群包计算类型 */
 export type AudienceComputeType = 'STATIC' | 'DYNAMIC';
@@ -151,16 +156,23 @@ export async function deleteAudience(id: number) {
  * 计算/刷新人群包
  */
 export async function computeAudience(id: number) {
-  return requestClient.post<AudienceComputeResult>(`/marketing/audience/${id}/compute`);
+  return requestClient.post<AudienceComputeResult>(
+    `/marketing/audience/${id}/compute`,
+  );
 }
 
 /**
  * 预览人群包（不保存）
  */
-export async function previewAudience(filterConditions: AudienceFilterConditions) {
-  return requestClient.post<AudiencePreviewResult>('/marketing/audience/preview', {
-    filterConditions,
-  });
+export async function previewAudience(
+  filterConditions: AudienceFilterConditions,
+) {
+  return requestClient.post<AudiencePreviewResult>(
+    '/marketing/audience/preview',
+    {
+      filterConditions,
+    },
+  );
 }
 
 /**
@@ -175,7 +187,10 @@ export async function getAudienceMembers(
     hasWecom?: boolean;
   },
 ) {
-  return requestClient.get<PaginatedResponse<AudienceMember>>(`/marketing/audience/${id}/members`, {
-    params,
-  });
+  return requestClient.get<PaginatedResponse<AudienceMember>>(
+    `/marketing/audience/${id}/members`,
+    {
+      params,
+    },
+  );
 }

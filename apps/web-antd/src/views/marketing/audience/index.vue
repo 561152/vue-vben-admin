@@ -51,7 +51,10 @@ const statusMap: Record<AudienceStatus, { text: string; color: string }> = {
   ARCHIVED: { text: '已归档', color: 'warning' },
 };
 
-const computeTypeMap: Record<AudienceComputeType, { text: string; color: string }> = {
+const computeTypeMap: Record<
+  AudienceComputeType,
+  { text: string; color: string }
+> = {
   STATIC: { text: '静态', color: 'blue' },
   DYNAMIC: { text: '动态', color: 'purple' },
 };
@@ -94,7 +97,12 @@ const columns = [
       return h(Badge, { status: map?.color as any, text: map?.text || text });
     },
   },
-  { title: '客户数', dataIndex: 'customerCount', key: 'customerCount', width: 100 },
+  {
+    title: '客户数',
+    dataIndex: 'customerCount',
+    key: 'customerCount',
+    width: 100,
+  },
   { title: '企微客户', dataIndex: 'wecomCount', key: 'wecomCount', width: 100 },
   {
     title: '最后计算',
@@ -123,7 +131,10 @@ interface AudienceFilters {
   computeType?: AudienceComputeType;
 }
 
-const { tableProps, filters, fetchData, handleDelete, refresh } = useCrudTable<Audience, AudienceFilters>({
+const { tableProps, filters, fetchData, handleDelete, refresh } = useCrudTable<
+  Audience,
+  AudienceFilters
+>({
   fetchApi: async (params) => {
     const response = await getAudiences({
       page: params.page,
@@ -358,7 +369,9 @@ onMounted(fetchData);
                 :disabled="(record as Audience).status === 'COMPUTING'"
                 @click="handleCompute(record as Audience)"
               >
-                <template #icon><ReloadOutlined v-if="!isComputing(record as Audience)" /></template>
+                <template #icon
+                  ><ReloadOutlined v-if="!isComputing(record as Audience)"
+                /></template>
                 计算
               </Button>
               <Button
@@ -395,10 +408,16 @@ onMounted(fetchData);
     >
       <Form :model="formState" layout="vertical">
         <Form.Item label="人群包名称" required>
-          <Input v-model:value="formState.name" placeholder="请输入人群包名称" />
+          <Input
+            v-model:value="formState.name"
+            placeholder="请输入人群包名称"
+          />
         </Form.Item>
         <Form.Item label="计算类型">
-          <Select v-model:value="formState.computeType" :options="computeTypeOptions" />
+          <Select
+            v-model:value="formState.computeType"
+            :options="computeTypeOptions"
+          />
         </Form.Item>
         <Form.Item label="描述">
           <Input.TextArea
@@ -453,15 +472,27 @@ onMounted(fetchData);
         </div>
         <div class="flex">
           <span class="w-24 font-medium text-gray-500">最后计算：</span>
-          <span>{{ detailAudience.lastComputedAt ? dayjs(detailAudience.lastComputedAt).format('YYYY-MM-DD HH:mm:ss') : '-' }}</span>
+          <span>{{
+            detailAudience.lastComputedAt
+              ? dayjs(detailAudience.lastComputedAt).format(
+                  'YYYY-MM-DD HH:mm:ss',
+                )
+              : '-'
+          }}</span>
         </div>
         <div class="flex">
           <span class="w-24 font-medium text-gray-500">过期时间：</span>
-          <span>{{ detailAudience.expiredAt ? dayjs(detailAudience.expiredAt).format('YYYY-MM-DD HH:mm:ss') : '-' }}</span>
+          <span>{{
+            detailAudience.expiredAt
+              ? dayjs(detailAudience.expiredAt).format('YYYY-MM-DD HH:mm:ss')
+              : '-'
+          }}</span>
         </div>
         <div class="flex">
           <span class="w-24 font-medium text-gray-500">创建时间：</span>
-          <span>{{ dayjs(detailAudience.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</span>
+          <span>{{
+            dayjs(detailAudience.createdAt).format('YYYY-MM-DD HH:mm:ss')
+          }}</span>
         </div>
       </div>
     </Drawer>
@@ -469,7 +500,9 @@ onMounted(fetchData);
     <!-- 成员 Drawer -->
     <Drawer
       v-model:open="membersVisible"
-      :title="currentAudience ? `${currentAudience.name} - 成员列表` : '成员列表'"
+      :title="
+        currentAudience ? `${currentAudience.name} - 成员列表` : '成员列表'
+      "
       width="700"
       placement="right"
     >
