@@ -295,7 +295,7 @@ onMounted(() => {
         <Form.Item label="角色代码" required>
           <Input
             v-model:value="formState.code"
-            placeholder="如：CRM_ADMIN"
+            placeholder="如：CUSTOMER_ADMIN"
             :disabled="!!editingId"
           />
         </Form.Item>

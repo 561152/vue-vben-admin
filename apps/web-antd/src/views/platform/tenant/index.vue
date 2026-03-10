@@ -220,8 +220,8 @@ function handleTableChange(pag: any) {
 async function fetchAllAppModules() {
   appModulesLoading.value = true;
   try {
-    const res = await requestClient.get<AppModule[]>('/platform/app-modules');
-    allAppModules.value = res.data || res || [];
+    const res = await requestClient.get<{ items: AppModule[]; total: number }>('/platform/app-modules');
+    allAppModules.value = res.items || [];
   } catch (e: any) {
     console.error('获取应用模块列表失败:', e);
     message.error(e?.message || '获取应用模块列表失败，请检查权限或联系管理员');
