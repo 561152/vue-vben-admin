@@ -78,8 +78,13 @@ export async function getUserInfoApi(): Promise<UserInfo> {
 
   // 缓存权限码（合并所有角色的权限 + 订阅的模块代码）
   const rolePermissions = result.roles.flatMap((role) => role.permissions);
+  const now = new Date();
   const subscribedModules = result.tenant.subscriptions
-    .filter((s) => s.status === 'ACTIVE' || s.status === 'TRIAL')
+    .filter(
+      (s) =>
+        (s.status === 'ACTIVE' || s.status === 'TRIAL') &&
+        (s.expiredAt === null || new Date(s.expiredAt) > now),
+    )
     .map((s) => s.appModuleCode);
   cachedPermissions = [...new Set([...rolePermissions, ...subscribedModules])];
 

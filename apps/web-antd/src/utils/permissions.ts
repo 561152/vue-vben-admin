@@ -13,10 +13,12 @@ export function hasAppModule(appModuleCode: string): boolean {
   const userInfo = getCachedBackendUserInfo();
   if (!userInfo) return false;
 
+  const now = new Date();
   return userInfo.tenant.subscriptions.some(
     (sub) =>
       sub.appModuleCode === appModuleCode &&
-      (sub.status === 'ACTIVE' || sub.status === 'TRIAL'),
+      (sub.status === 'ACTIVE' || sub.status === 'TRIAL') &&
+      (sub.expiredAt === null || new Date(sub.expiredAt) > now),
   );
 }
 
@@ -120,8 +122,13 @@ export function getSubscribedModules(): string[] {
   const userInfo = getCachedBackendUserInfo();
   if (!userInfo) return [];
 
+  const now = new Date();
   return userInfo.tenant.subscriptions
-    .filter((sub) => sub.status === 'ACTIVE' || sub.status === 'TRIAL')
+    .filter(
+      (sub) =>
+        (sub.status === 'ACTIVE' || sub.status === 'TRIAL') &&
+        (sub.expiredAt === null || new Date(sub.expiredAt) > now),
+    )
     .map((sub) => sub.appModuleCode);
 }
 
