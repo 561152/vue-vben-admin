@@ -26,8 +26,8 @@ function goTo(path: string) {
 
 <template>
   <div class="channel-assets-page p-6">
-    <h1 class="text-2xl font-bold mb-6">渠道资产</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <h1 class="mb-6 text-2xl font-bold">渠道资产</h1>
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card
         v-for="item in assetItems"
         :key="item.name"
@@ -39,7 +39,7 @@ function goTo(path: string) {
           <span class="text-4xl">{{ item.icon }}</span>
           <div>
             <div class="text-lg font-semibold">{{ item.name }}</div>
-            <div class="text-gray-500 text-sm mt-1">{{ item.desc }}</div>
+            <div class="mt-1 text-sm text-gray-500">{{ item.desc }}</div>
           </div>
         </div>
       </Card>
@@ -52,11 +52,13 @@ function goTo(path: string) {
   max-width: 1200px;
   margin: 0 auto;
 }
+
 .asset-card {
   transition: all 0.3s;
 }
+
 .asset-card:hover {
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 </style>

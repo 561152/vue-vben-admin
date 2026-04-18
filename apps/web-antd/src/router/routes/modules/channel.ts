@@ -86,7 +86,8 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'ChannelSyncMember',
         path: 'sync/member',
-        component: () => import('#/views/operations/member-sync/member-sync.vue'),
+        component: () =>
+          import('#/views/operations/member-sync/member-sync.vue'),
         meta: {
           icon: 'ant-design:sync-outlined',
           title: '会员同步',

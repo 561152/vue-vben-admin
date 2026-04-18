@@ -169,9 +169,12 @@ async function fetchTenants() {
 
 async function fetchAllRoles() {
   try {
-    const res = await requestClient.get<{ items: Role[]; total: number }>('/platform/roles', {
-      params: { page: 1, pageSize: 100 },
-    });
+    const res = await requestClient.get<{ items: Role[]; total: number }>(
+      '/platform/roles',
+      {
+        params: { page: 1, pageSize: 100 },
+      },
+    );
     allRoles.value = res.items;
   } catch (e: any) {
     console.error(e);
