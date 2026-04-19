@@ -52,7 +52,6 @@ function setupRedirectGuard(router: Router) {
     const redirectTarget = getRedirectTarget(to.path);
 
     if (redirectTarget) {
-
       // Parse redirect target to handle query params
       const [path, queryString] = redirectTarget.split('?');
       const query: Record<string, string> = { ...to.query };

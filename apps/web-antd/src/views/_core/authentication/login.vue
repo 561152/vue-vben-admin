@@ -4,7 +4,9 @@ import type { VbenFormSchema } from '@vben/common-ui';
 import { computed, markRaw, ref, onMounted } from 'vue';
 
 // 等待租户加载完成的辅助函数
-function waitForTenantsLoading(isLoadingRef: globalThis.Ref<boolean>): Promise<void> {
+function waitForTenantsLoading(
+  isLoadingRef: globalThis.Ref<boolean>,
+): Promise<void> {
   return new Promise((resolve) => {
     const check = () => {
       if (!isLoadingRef.value) {
@@ -204,7 +206,11 @@ async function handleLogin(values: any) {
   }
 
   // 如果租户列表为空且未在加载中，主动触发加载
-  if (tenants.value.length === 0 && !isLoadingTenants.value && values.username) {
+  if (
+    tenants.value.length === 0 &&
+    !isLoadingTenants.value &&
+    values.username
+  ) {
     await handleUsernameBlur(values.username);
     await waitForTenantsLoading(isLoadingTenants);
   }

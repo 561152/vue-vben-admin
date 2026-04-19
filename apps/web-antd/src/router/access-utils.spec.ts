@@ -18,7 +18,10 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'OperationsEmployeeTask',
             path: 'employee-task',
-            meta: { appModule: 'OPERATIONS', permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'] },
+            meta: {
+              appModule: 'OPERATIONS',
+              permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'],
+            },
           },
         ],
       },
@@ -30,7 +33,8 @@ describe('filterRoutesByAccess', () => {
 
   it('should keep parent route when at least one child has permission', () => {
     const hasAppModule = (module: string) => module === 'OPERATIONS';
-    const hasPermission = (perm: string) => perm === 'OPERATIONS:EMPLOYEE_TASK:VIEW';
+    const hasPermission = (perm: string) =>
+      perm === 'OPERATIONS:EMPLOYEE_TASK:VIEW';
 
     const routes: RouteRecordRaw[] = [
       {
@@ -42,12 +46,18 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'OperationsEmployeeTask',
             path: 'employee-task',
-            meta: { appModule: 'OPERATIONS', permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'] },
+            meta: {
+              appModule: 'OPERATIONS',
+              permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'],
+            },
           },
           {
             name: 'OperationsAntiHarassment',
             path: 'anti-harassment',
-            meta: { appModule: 'OPERATIONS', permissions: ['OPERATIONS:ANTI_HARASSMENT:VIEW'] },
+            meta: {
+              appModule: 'OPERATIONS',
+              permissions: ['OPERATIONS:ANTI_HARASSMENT:VIEW'],
+            },
           },
         ],
       },
@@ -91,7 +101,10 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'CustomerListNew',
             path: '/customer/list',
-            meta: { appModule: 'CUSTOMER', permissions: ['CUSTOMER:CUSTOMER:LIST'] },
+            meta: {
+              appModule: 'CUSTOMER',
+              permissions: ['CUSTOMER:CUSTOMER:LIST'],
+            },
           },
         ],
       },
@@ -115,7 +128,10 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'MarketingCampaign',
             path: '/marketing/campaign',
-            meta: { appModule: 'MARKETING', permissions: ['MARKETING:CAMPAIGN:LIST'] },
+            meta: {
+              appModule: 'MARKETING',
+              permissions: ['MARKETING:CAMPAIGN:LIST'],
+            },
           },
         ],
       },

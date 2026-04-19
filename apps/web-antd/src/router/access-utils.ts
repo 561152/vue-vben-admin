@@ -5,7 +5,9 @@ import { filterTree } from '@vben/utils';
  * 清理 children 为空的父路由（分组路由）
  * filterTree 会保留通过检查的父节点，即使所有子节点被过滤
  */
-export function cleanEmptyParentRoutes(routes: RouteRecordRaw[]): RouteRecordRaw[] {
+export function cleanEmptyParentRoutes(
+  routes: RouteRecordRaw[],
+): RouteRecordRaw[] {
   return routes.filter((route) => {
     if (route.children) {
       // 递归清理子节点（filterTree 可能把 children 设为空数组 []）
