@@ -279,38 +279,9 @@ interface SyncProgress {
   processed?: number;
 }
 
-interface AsyncSyncResponse {
-  async: boolean;
-  jobId?: string;
-  syncType?: string;
-  message?: string;
-  success?: boolean;
-  total?: number;
-  totalUsers?: number;
-  totalCustomers?: number;
-  created?: number;
-  updated?: number;
-  failed?: number;
-  relationsCreated?: number;
-  errors?: string[];
-}
-
-interface JobStatusResponse {
-  status: string;
-  progress?: number;
-  total?: number;
-  processed?: number;
-  result?: {
-    success: boolean;
-    totalUsers?: number;
-    totalCustomers?: number;
-    created: number;
-    updated: number;
-    failed: number;
-    relationsCreated?: number;
-    errors?: string[];
-  };
-  error?: string;
+interface SyncTriggerResponse {
+  sessionId: string;
+  message: string;
 }
 
 const syncStats = ref<SyncStats>({
@@ -347,70 +318,6 @@ const fetchSyncStats = async () => {
   } catch (error: any) {
     console.error('获取同步统计失败', error);
   }
-};
-
-const pollJobStatus = async (
-  syncType: 'users' | 'customers',
-  jobId: string,
-  title: string,
-  onComplete: (result: JobStatusResponse['result']) => void,
-  onError: (error: string) => void,
-) => {
-  const statusUrl = `/operations/wecom-sync/${syncType}/status/${jobId}`;
-
-  const poll = async () => {
-    try {
-      const status = await requestClient.get<JobStatusResponse>(statusUrl);
-
-      if (status.status === 'completed') {
-        syncProgress.value = {
-          title,
-          percent: 100,
-          status: 'completed',
-          total:
-            status.total ||
-            status.result?.totalUsers ||
-            status.result?.totalCustomers,
-          processed: status.processed || status.total,
-        };
-
-        setTimeout(() => {
-          syncProgress.value = null;
-        }, 2000);
-
-        onComplete(status.result);
-        return;
-      } else if (status.status === 'failed') {
-        syncProgress.value = {
-          title,
-          percent: syncProgress.value?.percent || 0,
-          status: 'failed',
-        };
-
-        setTimeout(() => {
-          syncProgress.value = null;
-        }, 2000);
-
-        onError(status.error || '同步失败');
-        return;
-      } else {
-        syncProgress.value = {
-          title,
-          percent: status.progress || 0,
-          status: 'active',
-          total: status.total,
-          processed: status.processed,
-        };
-
-        pollingTimer = setTimeout(poll, 1000);
-      }
-    } catch (error: any) {
-      console.error('轮询任务状态失败', error);
-      pollingTimer = setTimeout(poll, 2000);
-    }
-  };
-
-  poll();
 };
 
 const stopPolling = () => {
@@ -489,53 +396,31 @@ const handleSyncUsers = async () => {
   stopPolling();
 
   try {
-    const res = await requestClient.post<AsyncSyncResponse>(
+    const res = await requestClient.post<SyncTriggerResponse>(
       '/operations/wecom-sync/users',
       {},
     );
-
-    if (res.async && res.jobId) {
-      syncProgress.value = {
-        title: '正在同步员工数据...',
-        percent: 0,
-        status: 'active',
-      };
-
-      pollJobStatus(
-        'users',
-        res.jobId,
-        '正在同步员工数据...',
-        (result) => {
-          syncingUsers.value = false;
-          if (result) {
-            lastSyncResult.value = {
-              success: result.success ?? true,
-              message: `员工同步完成：新增 ${result.created ?? 0} 人，更新 ${result.updated ?? 0} 人${(result.failed ?? 0) > 0 ? `，失败 ${result.failed} 人` : ''}`,
-            };
-          } else {
-            lastSyncResult.value = {
-              success: true,
-              message: '员工同步完成',
-            };
-          }
-          fetchSyncStats();
-        },
-        (error) => {
-          syncingUsers.value = false;
-          lastSyncResult.value = {
-            success: false,
-            message: error,
-          };
-        },
-      );
-    } else {
-      lastSyncResult.value = {
-        success: res.success ?? true,
-        message: `员工同步完成：新增 ${res.created ?? 0} 人，更新 ${res.updated ?? 0} 人${(res.failed ?? 0) > 0 ? `，失败 ${res.failed} 人` : ''}`,
-      };
-      await fetchSyncStats();
-      syncingUsers.value = false;
-    }
+    syncProgress.value = {
+      title: '正在同步员工数据...',
+      percent: 0,
+      status: 'active',
+    };
+    pollSessionStatus(
+      res.sessionId,
+      async (result) => {
+        syncingUsers.value = false;
+        const users = (result.users || {}) as Record<string, number>;
+        lastSyncResult.value = {
+          success: true,
+          message: `员工同步完成：新增 ${users.created ?? 0} 人，更新 ${users.updated ?? 0} 人${(users.failed ?? 0) > 0 ? `，失败 ${users.failed} 人` : ''}`,
+        };
+        await fetchSyncStats();
+      },
+      (error) => {
+        syncingUsers.value = false;
+        lastSyncResult.value = { success: false, message: error };
+      },
+    );
   } catch (error: any) {
     lastSyncResult.value = {
       success: false,
@@ -551,53 +436,31 @@ const handleSyncCustomers = async () => {
   stopPolling();
 
   try {
-    const res = await requestClient.post<AsyncSyncResponse>(
+    const res = await requestClient.post<SyncTriggerResponse>(
       '/operations/wecom-sync/customers',
       {},
     );
-
-    if (res.async && res.jobId) {
-      syncProgress.value = {
-        title: '正在同步客户数据...',
-        percent: 0,
-        status: 'active',
-      };
-
-      pollJobStatus(
-        'customers',
-        res.jobId,
-        '正在同步客户数据...',
-        (result) => {
-          syncingCustomers.value = false;
-          if (result) {
-            lastSyncResult.value = {
-              success: result.success ?? true,
-              message: `客户同步完成：新增 ${result.created ?? 0} 人，更新 ${result.updated ?? 0} 人，关系 ${result.relationsCreated ?? 0} 条${(result.failed ?? 0) > 0 ? `，失败 ${result.failed} 人` : ''}`,
-            };
-          } else {
-            lastSyncResult.value = {
-              success: true,
-              message: '客户同步完成',
-            };
-          }
-          fetchSyncStats();
-        },
-        (error) => {
-          syncingCustomers.value = false;
-          lastSyncResult.value = {
-            success: false,
-            message: error,
-          };
-        },
-      );
-    } else {
-      lastSyncResult.value = {
-        success: res.success ?? true,
-        message: `客户同步完成：新增 ${res.created ?? 0} 人，更新 ${res.updated ?? 0} 人，关系 ${res.relationsCreated ?? 0} 条${(res.failed ?? 0) > 0 ? `，失败 ${res.failed} 人` : ''}`,
-      };
-      await fetchSyncStats();
-      syncingCustomers.value = false;
-    }
+    syncProgress.value = {
+      title: '正在同步客户数据...',
+      percent: 0,
+      status: 'active',
+    };
+    pollSessionStatus(
+      res.sessionId,
+      async (result) => {
+        syncingCustomers.value = false;
+        const customers = (result.customers || {}) as Record<string, number>;
+        lastSyncResult.value = {
+          success: true,
+          message: `客户同步完成：新增 ${customers.created ?? 0} 人，更新 ${customers.updated ?? 0} 人，关系 ${customers.relationsCreated ?? 0} 条${(customers.failed ?? 0) > 0 ? `，失败 ${customers.failed} 人` : ''}`,
+        };
+        await fetchSyncStats();
+      },
+      (error) => {
+        syncingCustomers.value = false;
+        lastSyncResult.value = { success: false, message: error };
+      },
+    );
   } catch (error: any) {
     lastSyncResult.value = {
       success: false,
@@ -613,47 +476,33 @@ const handleSyncAll = async () => {
   lastSyncResult.value = null;
 
   try {
-    const res = await requestClient.post<{
-      async: boolean;
-      sessionId?: string;
-      success?: boolean;
-      users?: Record<string, unknown>;
-      customers?: Record<string, unknown>;
-      groups?: Record<string, unknown>;
-    }>('/operations/wecom-sync/all');
-
-    if (res.async && res.sessionId) {
-      // 异步模式：轮询会话进度
-      pollSessionStatus(
-        res.sessionId,
-        async (result) => {
-          const users = (result.users || {}) as Record<string, number>;
-          const customers = (result.customers || {}) as Record<string, number>;
-
-          lastSyncResult.value = {
-            success: true,
-            message: `全量同步完成：员工新增 ${users.created ?? 0} / 更新 ${users.updated ?? 0}，客户新增 ${customers.created ?? 0} / 更新 ${customers.updated ?? 0}`,
-          };
-          message.success('同步完成！');
-          syncingAll.value = false;
-          await fetchSyncStats();
-        },
-        (error) => {
-          lastSyncResult.value = { success: false, message: error };
-          message.error('同步失败');
-          syncingAll.value = false;
-        },
-      );
-    } else {
-      // 同步降级模式
-      lastSyncResult.value = {
-        success: res.success ?? false,
-        message: '全量同步完成（同步模式）',
-      };
-      message.success('同步完成！');
-      syncingAll.value = false;
-      await fetchSyncStats();
-    }
+    const res = await requestClient.post<SyncTriggerResponse>(
+      '/operations/wecom-sync/all',
+    );
+    syncProgress.value = {
+      title: '全量同步 - 准备中...',
+      percent: 0,
+      status: 'active',
+    };
+    pollSessionStatus(
+      res.sessionId,
+      async (result) => {
+        const users = (result.users || {}) as Record<string, number>;
+        const customers = (result.customers || {}) as Record<string, number>;
+        lastSyncResult.value = {
+          success: true,
+          message: `全量同步完成：员工新增 ${users.created ?? 0} / 更新 ${users.updated ?? 0}，客户新增 ${customers.created ?? 0} / 更新 ${customers.updated ?? 0}`,
+        };
+        message.success('同步完成！');
+        syncingAll.value = false;
+        await fetchSyncStats();
+      },
+      (error) => {
+        lastSyncResult.value = { success: false, message: error };
+        message.error('同步失败');
+        syncingAll.value = false;
+      },
+    );
   } catch (error: any) {
     lastSyncResult.value = {
       success: false,
