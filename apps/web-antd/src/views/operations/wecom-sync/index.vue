@@ -271,13 +271,9 @@ interface SyncResult {
   message: string;
 }
 
-interface SyncProgress {
-  title: string;
-  percent: number;
-  status: 'active' | 'completed' | 'failed';
-  total?: number;
-  processed?: number;
-}
+import { useSessionPolling, type SessionProgress } from '#/composables/useSessionPolling';
+
+type SyncProgress = SessionProgress;
 
 interface SyncTriggerResponse {
   sessionId: string;
@@ -296,7 +292,8 @@ const syncingCustomers = ref(false);
 const syncingAll = ref(false);
 const lastSyncResult = ref<SyncResult | null>(null);
 const syncProgress = ref<SyncProgress | null>(null);
-let pollingTimer: ReturnType<typeof setTimeout> | null = null;
+
+const { start: startPolling, stop: stopPolling } = useSessionPolling(syncProgress);
 
 const formatTime = (time: string | null | undefined) => {
   if (!time || time === 'Invalid Date') {
@@ -320,75 +317,6 @@ const fetchSyncStats = async () => {
   }
 };
 
-const stopPolling = () => {
-  if (pollingTimer) {
-    clearTimeout(pollingTimer);
-    pollingTimer = null;
-  }
-};
-
-const pollSessionStatus = async (
-  sessionId: string,
-  onComplete: (result: Record<string, unknown>) => void,
-  onError: (error: string) => void,
-) => {
-  const poll = async () => {
-    try {
-      const session = await requestClient.get<{
-        id: string;
-        status: string;
-        overallProgress: number;
-        tasks: Array<{
-          type: string;
-          label: string;
-          status: string;
-          progress: number;
-          error: string | null;
-        }>;
-        result: Record<string, unknown> | null;
-        error: string | null;
-      }>(`/async-task-sessions/${sessionId}`);
-
-      // 找到当前正在执行的任务
-      const runningTask = session.tasks.find((t) => t.status === 'RUNNING');
-      const currentLabel = runningTask?.label || '准备中...';
-
-      syncProgress.value = {
-        title: `全量同步 - ${currentLabel}`,
-        percent: session.overallProgress,
-        status: session.status === 'FAILED' ? 'failed' : 'active',
-        total: session.tasks.length,
-        processed: session.tasks.filter((t) => t.status === 'COMPLETED').length,
-      };
-
-      if (session.status === 'COMPLETED') {
-        syncProgress.value = {
-          ...syncProgress.value,
-          percent: 100,
-          status: 'completed',
-        };
-        setTimeout(() => {
-          syncProgress.value = null;
-        }, 2000);
-        onComplete(session.result || {});
-        return;
-      } else if (session.status === 'FAILED') {
-        setTimeout(() => {
-          syncProgress.value = null;
-        }, 2000);
-        onError(session.error || '同步失败');
-        return;
-      }
-
-      pollingTimer = setTimeout(poll, 1000);
-    } catch (error: any) {
-      console.error('轮询会话状态失败', error);
-      pollingTimer = setTimeout(poll, 2000);
-    }
-  };
-
-  poll();
-};
 
 const handleSyncUsers = async () => {
   syncingUsers.value = true;
@@ -405,7 +333,7 @@ const handleSyncUsers = async () => {
       percent: 0,
       status: 'active',
     };
-    pollSessionStatus(
+    startPolling(
       res.sessionId,
       async (result) => {
         syncingUsers.value = false;
@@ -420,6 +348,7 @@ const handleSyncUsers = async () => {
         syncingUsers.value = false;
         lastSyncResult.value = { success: false, message: error };
       },
+      { titlePrefix: '员工同步' },
     );
   } catch (error: any) {
     lastSyncResult.value = {
@@ -445,7 +374,7 @@ const handleSyncCustomers = async () => {
       percent: 0,
       status: 'active',
     };
-    pollSessionStatus(
+    startPolling(
       res.sessionId,
       async (result) => {
         syncingCustomers.value = false;
@@ -460,6 +389,7 @@ const handleSyncCustomers = async () => {
         syncingCustomers.value = false;
         lastSyncResult.value = { success: false, message: error };
       },
+      { titlePrefix: '客户同步' },
     );
   } catch (error: any) {
     lastSyncResult.value = {
@@ -484,7 +414,7 @@ const handleSyncAll = async () => {
       percent: 0,
       status: 'active',
     };
-    pollSessionStatus(
+    startPolling(
       res.sessionId,
       async (result) => {
         const users = (result.users || {}) as Record<string, number>;
@@ -502,6 +432,7 @@ const handleSyncAll = async () => {
         message.error('同步失败');
         syncingAll.value = false;
       },
+      { titlePrefix: '全量同步' },
     );
   } catch (error: any) {
     lastSyncResult.value = {
