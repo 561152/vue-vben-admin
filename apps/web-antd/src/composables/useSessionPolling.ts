@@ -1,9 +1,11 @@
 import type { Ref } from 'vue';
+import { ref } from 'vue';
 
 import { requestClient } from '#/api/request';
 
 /**
  * AsyncTaskSession 视图（来自 shared-async-task 的 /async-task-sessions/:id）。
+ * 与后端 TaskViewDto 对齐：result / startedAt / completedAt 均存在。
  */
 export interface SessionView {
   id: string;
@@ -14,6 +16,7 @@ export interface SessionView {
     label: string;
     status: string;
     progress: number;
+    result: Record<string, unknown> | null;
     error: string | null;
   }>;
   result: Record<string, unknown> | null;
@@ -21,14 +24,33 @@ export interface SessionView {
 }
 
 /**
- * 前端进度展示视图。与页面里的 syncProgress ref 对齐。
+ * 前端整体进度展示视图（写到 syncProgress ref）。
+ * 移除了 total / processed：它们原来存的是子任务数（1~3），不是记录条数，语义混乱。
+ * 子任务明细通过 useSessionPolling 返回的 tasks ref 单独获取。
  */
 export interface SessionProgress {
   title: string;
   percent: number;
   status: 'active' | 'completed' | 'failed';
-  total?: number;
-  processed?: number;
+}
+
+/**
+ * 单个子任务的进度视图。
+ * - RUNNING 时：percent 来自 task.progress（0-100）
+ * - COMPLETED 时：result 含新增/更新/失败数量
+ */
+export interface TaskProgress {
+  type: string;
+  label: string;
+  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  percent: number;
+  result: {
+    created?: number;
+    updated?: number;
+    failed?: number;
+    relationsCreated?: number;
+  } | null;
+  error: string | null;
 }
 
 export interface UseSessionPollingOptions {
@@ -46,20 +68,20 @@ export interface UseSessionPollingOptions {
  *
  * - 调 `GET /async-task-sessions/:sessionId` 拉最新状态
  * - 将 SessionView 拍平成 `SessionProgress` 写到传入的 ref
+ * - 同时将子任务列表写到返回的 tasks ref
  * - COMPLETED / FAILED 自动停止轮询并回调 onComplete / onError
  * - `stop()` 方法用于页面 unmount 或用户手动停止
- *
- * 设计目的（计划回填 PF-6 的延伸）：operations 和 system 两个 wecom-sync 页面共享这份逻辑，
- * 避免双份复制漂移。后续其它 AsyncTaskSession 消费场景也可直接复用。
  */
 export function useSessionPolling(progressRef: Ref<null | SessionProgress>) {
   let timer: null | ReturnType<typeof setTimeout> = null;
+  const tasks = ref<TaskProgress[]>([]);
 
   const stop = () => {
     if (timer) {
       clearTimeout(timer);
       timer = null;
     }
+    tasks.value = [];
   };
 
   const start = (
@@ -82,12 +104,24 @@ export function useSessionPolling(progressRef: Ref<null | SessionProgress>) {
         const runningTask = session.tasks.find((t) => t.status === 'RUNNING');
         const currentLabel = runningTask?.label || '准备中...';
 
+        // 更新子任务列表
+        tasks.value = session.tasks.map((t) => ({
+          type: t.type,
+          label: t.label,
+          status: t.status as TaskProgress['status'],
+          percent: t.progress,
+          result:
+            t.status === 'COMPLETED' && t.result
+              ? (t.result as TaskProgress['result'])
+              : null,
+          error: t.error,
+        }));
+
+        // 更新整体进度
         progressRef.value = {
           title: `${titlePrefix} - ${currentLabel}`,
           percent: session.overallProgress,
           status: session.status === 'FAILED' ? 'failed' : 'active',
-          total: session.tasks.length,
-          processed: session.tasks.filter((t) => t.status === 'COMPLETED').length,
         };
 
         if (session.status === 'COMPLETED') {
@@ -98,6 +132,7 @@ export function useSessionPolling(progressRef: Ref<null | SessionProgress>) {
           };
           setTimeout(() => {
             progressRef.value = null;
+            tasks.value = [];
           }, completeClearMs);
           onComplete(session.result || {});
           return;
@@ -105,6 +140,7 @@ export function useSessionPolling(progressRef: Ref<null | SessionProgress>) {
         if (session.status === 'FAILED') {
           setTimeout(() => {
             progressRef.value = null;
+            tasks.value = [];
           }, completeClearMs);
           onError(session.error || '同步失败');
           return;
@@ -118,8 +154,9 @@ export function useSessionPolling(progressRef: Ref<null | SessionProgress>) {
     };
 
     stop();
+    tasks.value = [];
     poll();
   };
 
-  return { start, stop };
+  return { start, stop, tasks };
 }
