@@ -161,23 +161,33 @@
 
         <!-- 多子任务时显示各任务明细（全量同步） -->
         <div v-if="showTaskDetails" class="task-list mb-3">
-          <div
-            v-for="task in syncTasks"
-            :key="task.type"
-            class="task-item"
-          >
+          <div v-for="task in syncTasks" :key="task.type" class="task-item">
             <div class="task-item-header">
               <span class="task-status-icon">
-                <span v-if="task.status === 'COMPLETED'" class="text-green-500">✓</span>
-                <span v-else-if="task.status === 'RUNNING'" class="text-blue-500">▶</span>
-                <span v-else-if="task.status === 'FAILED'" class="text-red-500">✗</span>
+                <span v-if="task.status === 'COMPLETED'" class="text-green-500"
+                  >✓</span
+                >
+                <span
+                  v-else-if="task.status === 'RUNNING'"
+                  class="text-blue-500"
+                  >▶</span
+                >
+                <span v-else-if="task.status === 'FAILED'" class="text-red-500"
+                  >✗</span
+                >
                 <span v-else class="text-gray-400">○</span>
               </span>
               <span class="task-label">{{ task.label }}</span>
-              <span v-if="task.status === 'RUNNING'" class="task-percent text-blue-500">
+              <span
+                v-if="task.status === 'RUNNING'"
+                class="task-percent text-blue-500"
+              >
                 {{ task.percent }}%
               </span>
-              <span v-else-if="task.status === 'PENDING'" class="task-hint text-gray-400">
+              <span
+                v-else-if="task.status === 'PENDING'"
+                class="task-hint text-gray-400"
+              >
                 等待中
               </span>
             </div>
@@ -192,10 +202,20 @@
             />
 
             <!-- COMPLETED: 显示结果数量 -->
-            <div v-if="task.status === 'COMPLETED' && task.result" class="task-result">
-              <span v-if="task.result.created !== undefined">新增 {{ task.result.created }}</span>
-              <span v-if="task.result.updated !== undefined"> / 更新 {{ task.result.updated }}</span>
-              <span v-if="task.result.failed && task.result.failed > 0" class="text-red-400">
+            <div
+              v-if="task.status === 'COMPLETED' && task.result"
+              class="task-result"
+            >
+              <span v-if="task.result.created !== undefined"
+                >新增 {{ task.result.created }}</span
+              >
+              <span v-if="task.result.updated !== undefined">
+                / 更新 {{ task.result.updated }}</span
+              >
+              <span
+                v-if="task.result.failed && task.result.failed > 0"
+                class="text-red-400"
+              >
                 / 失败 {{ task.result.failed }}
               </span>
               <span v-if="task.result.relationsCreated !== undefined">
@@ -204,8 +224,15 @@
             </div>
 
             <!-- FAILED: 显示错误 -->
-            <div v-if="task.status === 'FAILED' && task.error" class="task-error text-red-500">
-              {{ task.error.length > 50 ? task.error.slice(0, 50) + '...' : task.error }}
+            <div
+              v-if="task.status === 'FAILED' && task.error"
+              class="task-error text-red-500"
+            >
+              {{
+                task.error.length > 50
+                  ? task.error.slice(0, 50) + '...'
+                  : task.error
+              }}
             </div>
           </div>
         </div>
@@ -318,7 +345,10 @@ interface SyncResult {
   message: string;
 }
 
-import { useSessionPolling, type SessionProgress } from '#/composables/useSessionPolling';
+import {
+  useSessionPolling,
+  type SessionProgress,
+} from '#/composables/useSessionPolling';
 
 type SyncProgress = SessionProgress;
 
@@ -340,8 +370,40 @@ const syncingAll = ref(false);
 const lastSyncResult = ref<SyncResult | null>(null);
 const syncProgress = ref<SyncProgress | null>(null);
 
-const { start: startPolling, stop: stopPolling, tasks: syncTasks } = useSessionPolling(syncProgress);
+const {
+  start: startPolling,
+  stop: stopPolling,
+  tasks: syncTasks,
+} = useSessionPolling(syncProgress);
 const showTaskDetails = computed(() => syncTasks.value.length > 1);
+
+// 持久化 sessionId 到 sessionStorage
+const PENDING_SESSION_KEY = 'wecom-sync-pending-session';
+
+interface PendingSession {
+  sessionId: string;
+  type: 'users' | 'customers' | 'all';
+  startedAt: number;
+}
+
+const savePendingSession = (sessionId: string, type: 'users' | 'customers' | 'all') => {
+  const pending: PendingSession = { sessionId, type, startedAt: Date.now() };
+  sessionStorage.setItem(PENDING_SESSION_KEY, JSON.stringify(pending));
+};
+
+const getPendingSession = (): PendingSession | null => {
+  const data = sessionStorage.getItem(PENDING_SESSION_KEY);
+  if (!data) return null;
+  try {
+    return JSON.parse(data) as PendingSession;
+  } catch {
+    return null;
+  }
+};
+
+const clearPendingSession = () => {
+  sessionStorage.removeItem(PENDING_SESSION_KEY);
+};
 
 const formatTime = (time: string | null | undefined) => {
   if (!time || time === 'Invalid Date') {
@@ -365,7 +427,6 @@ const fetchSyncStats = async () => {
   }
 };
 
-
 const handleSyncUsers = async () => {
   syncingUsers.value = true;
   lastSyncResult.value = null;
@@ -381,10 +442,12 @@ const handleSyncUsers = async () => {
       percent: 0,
       status: 'active',
     };
+    savePendingSession(res.sessionId, 'users');
     startPolling(
       res.sessionId,
       async (result) => {
         syncingUsers.value = false;
+        clearPendingSession();
         const users = (result.users || {}) as Record<string, number>;
         lastSyncResult.value = {
           success: true,
@@ -394,6 +457,7 @@ const handleSyncUsers = async () => {
       },
       (error) => {
         syncingUsers.value = false;
+        clearPendingSession();
         lastSyncResult.value = { success: false, message: error };
       },
       { titlePrefix: '员工同步' },
@@ -422,10 +486,12 @@ const handleSyncCustomers = async () => {
       percent: 0,
       status: 'active',
     };
+    savePendingSession(res.sessionId, 'customers');
     startPolling(
       res.sessionId,
       async (result) => {
         syncingCustomers.value = false;
+        clearPendingSession();
         const customers = (result.customers || {}) as Record<string, number>;
         lastSyncResult.value = {
           success: true,
@@ -435,6 +501,7 @@ const handleSyncCustomers = async () => {
       },
       (error) => {
         syncingCustomers.value = false;
+        clearPendingSession();
         lastSyncResult.value = { success: false, message: error };
       },
       { titlePrefix: '客户同步' },
@@ -462,6 +529,7 @@ const handleSyncAll = async () => {
       percent: 0,
       status: 'active',
     };
+    savePendingSession(res.sessionId, 'all');
     startPolling(
       res.sessionId,
       async (result) => {
@@ -473,12 +541,14 @@ const handleSyncAll = async () => {
         };
         message.success('同步完成！');
         syncingAll.value = false;
+        clearPendingSession();
         await fetchSyncStats();
       },
       (error) => {
         lastSyncResult.value = { success: false, message: error };
         message.error('同步失败');
         syncingAll.value = false;
+        clearPendingSession();
       },
       { titlePrefix: '全量同步' },
     );
@@ -492,8 +562,83 @@ const handleSyncAll = async () => {
   }
 };
 
-onMounted(() => {
-  fetchSyncStats();
+onMounted(async () => {
+  await fetchSyncStats();
+
+  // 恢复正在进行的同步任务
+  const pending = getPendingSession();
+  if (pending) {
+    // 检查是否过期（超过 30 分钟的任务不再恢复）
+    const elapsed = Date.now() - pending.startedAt;
+    if (elapsed > 30 * 60 * 1000) {
+      clearPendingSession();
+      return;
+    }
+
+    // 恢复轮询
+    const titleMap = {
+      users: '员工同步',
+      customers: '客户同步',
+      all: '全量同步',
+    };
+
+    syncProgress.value = {
+      title: `${titleMap[pending.type]} - 恢复中...`,
+      percent: 0,
+      status: 'active',
+    };
+
+    if (pending.type === 'users') {
+      syncingUsers.value = true;
+    } else if (pending.type === 'customers') {
+      syncingCustomers.value = true;
+    } else {
+      syncingAll.value = true;
+    }
+
+    startPolling(
+      pending.sessionId,
+      async (result) => {
+        if (pending.type === 'users') {
+          syncingUsers.value = false;
+          const users = (result.users || {}) as Record<string, number>;
+          lastSyncResult.value = {
+            success: true,
+            message: `员工同步完成：新增 ${users.created ?? 0} 人，更新 ${users.updated ?? 0} 人`,
+          };
+        } else if (pending.type === 'customers') {
+          syncingCustomers.value = false;
+          const customers = (result.customers || {}) as Record<string, number>;
+          lastSyncResult.value = {
+            success: true,
+            message: `客户同步完成：新增 ${customers.created ?? 0} 人，更新 ${customers.updated ?? 0} 人`,
+          };
+        } else {
+          syncingAll.value = false;
+          const users = (result.users || {}) as Record<string, number>;
+          const customers = (result.customers || {}) as Record<string, number>;
+          lastSyncResult.value = {
+            success: true,
+            message: `全量同步完成：员工新增 ${users.created ?? 0} / 更新 ${users.updated ?? 0}，客户新增 ${customers.created ?? 0} / 更新 ${customers.updated ?? 0}`,
+          };
+        }
+        clearPendingSession();
+        await fetchSyncStats();
+      },
+      (error) => {
+        if (pending.type === 'users') {
+          syncingUsers.value = false;
+        } else if (pending.type === 'customers') {
+          syncingCustomers.value = false;
+        } else {
+          syncingAll.value = false;
+        }
+        lastSyncResult.value = { success: false, message: error };
+        clearPendingSession();
+      },
+      { titlePrefix: titleMap[pending.type] },
+    );
+  }
 });
 </script>
 
