@@ -386,7 +386,10 @@ interface PendingSession {
   startedAt: number;
 }
 
-const savePendingSession = (sessionId: string, type: 'users' | 'customers' | 'all') => {
+const savePendingSession = (
+  sessionId: string,
+  type: 'users' | 'customers' | 'all',
+) => {
   const pending: PendingSession = { sessionId, type, startedAt: Date.now() };
   sessionStorage.setItem(PENDING_SESSION_KEY, JSON.stringify(pending));
 };

@@ -86,9 +86,13 @@
           <template v-else-if="column.key === 'error'">
             <span
               v-if="record.status === 'FAILED' && record.error"
-              class="text-red-500 text-xs"
+              class="text-xs text-red-500"
             >
-              {{ record.error.length > 40 ? record.error.slice(0, 40) + '...' : record.error }}
+              {{
+                record.error.length > 40
+                  ? record.error.slice(0, 40) + '...'
+                  : record.error
+              }}
             </span>
             <span v-else class="text-gray-400">-</span>
           </template>
@@ -135,8 +139,12 @@
               </template>
 
               <template v-else-if="column.key === 'error'">
-                <span v-if="task.error" class="text-red-500 text-xs">
-                  {{ task.error.length > 50 ? task.error.slice(0, 50) + '...' : task.error }}
+                <span v-if="task.error" class="text-xs text-red-500">
+                  {{
+                    task.error.length > 50
+                      ? task.error.slice(0, 50) + '...'
+                      : task.error
+                  }}
                 </span>
                 <span v-else class="text-gray-400">-</span>
               </template>
@@ -196,7 +204,12 @@ const columns = [
   { title: '任务类型', key: 'typeLabel', dataIndex: 'typeLabel', width: 120 },
   { title: '状态', key: 'status', dataIndex: 'status', width: 100 },
   { title: '触发人', key: 'triggeredBy', dataIndex: 'triggeredBy', width: 100 },
-  { title: '耗时', key: 'durationSeconds', dataIndex: 'durationSeconds', width: 90 },
+  {
+    title: '耗时',
+    key: 'durationSeconds',
+    dataIndex: 'durationSeconds',
+    width: 90,
+  },
   { title: '开始时间', key: 'startedAt', dataIndex: 'startedAt', width: 160 },
   { title: '错误信息', key: 'error', dataIndex: 'error' },
 ];
@@ -289,7 +302,9 @@ function formatTime(iso: string): string {
 function taskDuration(task: SyncTaskItem): string {
   if (!task.startedAt || !task.completedAt) return '-';
   const seconds = Math.round(
-    (new Date(task.completedAt).getTime() - new Date(task.startedAt).getTime()) / 1000,
+    (new Date(task.completedAt).getTime() -
+      new Date(task.startedAt).getTime()) /
+      1000,
   );
   return formatDuration(seconds);
 }
@@ -304,7 +319,9 @@ function statusLabel(status: string): string {
   return map[status] ?? status;
 }
 
-function statusBadgeStatus(status: string): 'success' | 'error' | 'processing' | 'default' {
+function statusBadgeStatus(
+  status: string,
+): 'success' | 'error' | 'processing' | 'default' {
   const map: Record<string, 'success' | 'error' | 'processing' | 'default'> = {
     COMPLETED: 'success',
     FAILED: 'error',
