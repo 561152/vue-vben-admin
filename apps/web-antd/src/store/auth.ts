@@ -13,6 +13,7 @@ import { defineStore } from 'pinia';
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { clearUserCache } from '#/api/core/user';
 import { $t } from '#/locales';
+import { useBrandingStore } from '#/store/branding';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -51,6 +52,9 @@ export const useAuthStore = defineStore('auth', () => {
 
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes(accessCodes);
+
+        // 初始化品牌配置，确保 store 注册到 Pinia 使 resetAllStores() 可清理
+        await useBrandingStore().fetchBranding();
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
