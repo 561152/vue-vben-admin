@@ -1,5 +1,60 @@
 <template>
   <Page title="AI 配置" description="配置 AI 功能的模型参数和场景设置">
+    <!-- 基础配置卡片 -->
+    <Card class="basic-config-card mb-6" title="基础配置">
+      <Alert
+        message="配置自定义 API 可使用您自己的模型服务"
+        description="启用自定义 Provider 后，系统将使用您配置的 API 地址和密钥调用模型，而不是平台默认服务。"
+        type="info"
+        show-icon
+        class="mb-4"
+      />
+      <Form layout="vertical" :model="basicConfig">
+        <FormItem label="启用自定义 Provider">
+          <Switch
+            v-model:checked="basicConfig.enableCustomProvider"
+            checked-children="启用"
+            un-checked-children="禁用"
+          />
+        </FormItem>
+        <FormItem
+          v-if="basicConfig.enableCustomProvider"
+          label="API 地址"
+          required
+        >
+          <Input
+            v-model:value="basicConfig.oneApiBaseUrl"
+            placeholder="例如: https://api.openai.com/v1"
+          />
+          <div class="form-hint">
+            模型服务的 API 地址，需要支持 OpenAI 格式的接口
+          </div>
+        </FormItem>
+        <FormItem
+          v-if="basicConfig.enableCustomProvider"
+          label="API Key"
+          required
+        >
+          <InputPassword
+            v-model:value="basicConfig.oneApiKey"
+            placeholder="输入您的 API Key"
+          />
+          <div class="form-hint">
+            API 密钥将安全存储，仅用于调用您配置的模型服务
+          </div>
+        </FormItem>
+        <FormItem v-if="basicConfig.enableCustomProvider">
+          <Button
+            type="primary"
+            :loading="savingBasicConfig"
+            @click="saveBasicConfig"
+          >
+            保存基础配置
+          </Button>
+        </FormItem>
+      </Form>
+    </Card>
+
     <!-- 配额信息卡片 -->
     <Card class="quota-card mb-6">
       <Row :gutter="24">
@@ -265,6 +320,9 @@ import {
   SelectOption,
   Slider,
   InputNumber,
+  Input,
+  Switch,
+  Alert,
 } from 'ant-design-vue';
 import {
   ThunderboltOutlined,
@@ -306,9 +364,18 @@ interface QuotaInfo {
   usagePercent: number;
 }
 
+const InputPassword = Input.Password;
+
 const loading = ref(false);
 const saving = ref(false);
+const savingBasicConfig = ref(false);
 const editModalVisible = ref(false);
+
+const basicConfig = reactive({
+  enableCustomProvider: false,
+  oneApiBaseUrl: '',
+  oneApiKey: '',
+});
 
 const scenarios = ref<ScenarioConfig[]>([]);
 const models = ref<ModelInfo[]>([]);
@@ -342,10 +409,23 @@ const getScenarioName = (scenario: string): string => {
 const fetchConfig = async () => {
   loading.value = true;
   try {
-    const res = await requestClient.get<{ scenarios: ScenarioConfig[] }>(
-      '/settings/ai-config',
-    );
+    const res = await requestClient.get<{
+      scenarios: ScenarioConfig[];
+      basicConfig?: {
+        enableCustomProvider: boolean;
+        oneApiBaseUrl?: string;
+        oneApiKey?: string;
+      };
+    }>('/settings/ai-config');
+
     scenarios.value = res.scenarios || [];
+
+    // 加载基础配置
+    if (res.basicConfig) {
+      basicConfig.enableCustomProvider = res.basicConfig.enableCustomProvider;
+      basicConfig.oneApiBaseUrl = res.basicConfig.oneApiBaseUrl || '';
+      basicConfig.oneApiKey = res.basicConfig.oneApiKey || '';
+    }
   } catch (error: any) {
     message.error(error.message || '获取配置失败');
   } finally {
@@ -435,6 +515,34 @@ const resetScenario = async (scenario: string) => {
   });
 };
 
+const saveBasicConfig = async () => {
+  if (basicConfig.enableCustomProvider) {
+    if (!basicConfig.oneApiBaseUrl || !basicConfig.oneApiKey) {
+      message.error('请填写 API 地址和 API Key');
+      return;
+    }
+  }
+
+  savingBasicConfig.value = true;
+  try {
+    await requestClient.put('/settings/ai-config/basic', {
+      enableCustomProvider: basicConfig.enableCustomProvider,
+      oneApiBaseUrl: basicConfig.enableCustomProvider
+        ? basicConfig.oneApiBaseUrl
+        : null,
+      oneApiKey: basicConfig.enableCustomProvider
+        ? basicConfig.oneApiKey
+        : null,
+    });
+    message.success('基础配置保存成功');
+    await fetchConfig();
+  } catch (error: any) {
+    message.error(error.message || '保存失败');
+  } finally {
+    savingBasicConfig.value = false;
+  }
+};
+
 onMounted(() => {
   fetchConfig();
   fetchModels();
@@ -443,6 +551,18 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 基础配置卡片 */
+.basic-config-card {
+  border-radius: 12px;
+}
+
+.form-hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-color-secondary, #999);
+  line-height: 1.5;
+}
+
 /* 配额卡片 */
 .quota-card {
   border-radius: 12px;

@@ -228,7 +228,10 @@ const handleCompare = async () => {
   const [left, right] = v1.version < v2.version ? [v1, v2] : [v2, v1];
 
   try {
-    const diff = computeDiff(left.templateContent, right.templateContent);
+    const diff = computeDiff(
+      left.systemPrompt || left.userPromptTpl || '',
+      right.systemPrompt || right.userPromptTpl || '',
+    );
     const additions = diff.filter((d) => d.type === 'add').length;
     const deletions = diff.filter((d) => d.type === 'delete').length;
 
@@ -298,20 +301,20 @@ const formatDate = (dateStr: string) => {
 };
 
 /**
- * 获取变更类型标签
+ * 获取变更类型标签信息
  */
-const getChangeTypeTag = (changeLog: string | null) => {
+const getChangeTypeTag = (changeLog: string | null): { text: string; color: string } | null => {
   if (!changeLog) return null;
   if (changeLog.includes('创建')) {
-    return <Tag color="green">创建</Tag>;
+    return { text: '创建', color: 'green' };
   }
   if (changeLog.includes('修改') || changeLog.includes('更新')) {
-    return <Tag color="blue">更新</Tag>;
+    return { text: '更新', color: 'blue' };
   }
   if (changeLog.includes('回滚')) {
-    return <Tag color="orange">回滚</Tag>;
+    return { text: '回滚', color: 'orange' };
   }
-  return <Tag>修改</Tag>;
+  return { text: '修改', color: '' };
 };
 
 // ==================== 生命周期 ====================
@@ -412,7 +415,9 @@ watch(
                     >
                       当前
                     </Tag>
-                    {{ getChangeTypeTag(version.changeLog) }}
+                    <Tag v-if="getChangeTypeTag(version.changeLog)" :color="getChangeTypeTag(version.changeLog)!.color">
+                    {{ getChangeTypeTag(version.changeLog)!.text }}
+                  </Tag>
                   </Space>
                 </Descriptions.Item>
 
@@ -424,9 +429,9 @@ watch(
 
                 <Descriptions.Item label="创建者" :span="2">
                   <Avatar size="small" class="mr-2">
-                    {{ version.createdBy.charAt(0).toUpperCase() }}
+                    {{ (version.createdBy || '?').charAt(0).toUpperCase() }}
                   </Avatar>
-                  {{ version.createdBy }}
+                  {{ version.createdBy || '系统' }}
                 </Descriptions.Item>
 
                 <Descriptions.Item

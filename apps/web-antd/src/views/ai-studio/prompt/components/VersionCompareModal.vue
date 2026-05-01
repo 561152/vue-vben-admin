@@ -127,16 +127,16 @@ const computeDiff = (textA: string, textB: string) => {
 
 const systemPromptDiff = computed(() => {
   if (!versionAContent.value || !versionBContent.value) return [];
-  const contentA = (versionAContent.value.templateContent || '').split('---SYSTEM---')[0] || '';
-  const contentB = (versionBContent.value.templateContent || '').split('---SYSTEM---')[0] || '';
+  const contentA = (versionAContent.value.systemPrompt || '') || '';
+  const contentB = (versionBContent.value.systemPrompt || '') || '';
   return computeDiff(contentA.trim(), contentB.trim());
 });
 
 const userPromptDiff = computed(() => {
   if (!versionAContent.value || !versionBContent.value) return [];
   return computeDiff(
-    versionAContent.value.templateContent || '',
-    versionBContent.value.templateContent || '',
+    versionAContent.value.userPromptTpl || '',
+    versionBContent.value.userPromptTpl || '',
   );
 });
 

@@ -19,6 +19,12 @@ interface Role {
   id: string;
   name: string;
   code: string;
+  description?: string | null;
+  appModule?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
 }
 
 interface UserItem {
@@ -34,10 +40,9 @@ interface UserItem {
   createdAt: string;
   updatedAt: string;
   roles?: Array<{
-    id: string;
-    userId: string;
     roleId: string;
-    role: Role;
+    roleName: string;
+    roleCode: string;
   }>;
 }
 
@@ -98,8 +103,8 @@ const columns = [
         return h('span', { style: 'color: #999' }, '无');
       }
       return h(Space, { size: [4, 4], wrap: true }, () =>
-        record.roles!.map((ur) =>
-          h(Tag, { color: 'blue', key: ur.id }, () => ur.role.name),
+        record.roles!.map((role) =>
+          h(Tag, { color: 'blue', key: role.roleId }, () => role.roleName),
         ),
       );
     },

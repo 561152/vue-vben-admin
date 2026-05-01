@@ -54,6 +54,11 @@ const loadDetail = async () => {
     const recordId = route.params.id as string;
     detail.value = await getGradingRecord(recordId);
   } catch (error: any) {
+    console.error('[ERROR] Failed to load grading record:', {
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
     message.error(error.message || '加载失败');
   } finally {
     loading.value = false;

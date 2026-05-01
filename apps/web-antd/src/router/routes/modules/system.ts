@@ -23,6 +23,16 @@ const routes: RouteRecordRaw[] = [
           title: '通用配置',
         },
       },
+      {
+        name: 'AiConfig',
+        path: 'ai-config',
+        component: () => import('#/views/settings/ai-config/index.vue'),
+        meta: {
+          icon: 'lucide:bot',
+          title: 'AI 配置',
+          permissions: ['SETTINGS:AI_CONFIG:MANAGE'],
+        },
+      },
     ],
   },
 ];

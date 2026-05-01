@@ -178,6 +178,11 @@ const handlePrint = async (
   }
 };
 
+// 点击图片跳转到详情页
+const handleImageClick = (recordId: string) => {
+  router.push(`/ai-tutor/grading/${recordId}`);
+};
+
 // 初始化
 onMounted(() => {
   loadData();
@@ -216,6 +221,7 @@ onMounted(() => {
             <div
               v-if="record.paperImageUrls && record.paperImageUrls.length > 0"
               class="paper-thumbnail"
+              @click="handleImageClick(record.recordId)"
             >
               <img
                 :src="record.paperImageUrls[0].thumbnail"

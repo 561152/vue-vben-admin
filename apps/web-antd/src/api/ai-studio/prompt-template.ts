@@ -149,19 +149,17 @@ export interface UpdatePromptTemplateData extends Partial<CreatePromptTemplateDa
 
 export interface PromptTemplateVersion {
   id: string;
-  promptTemplateId: string;
+  templateId: string;
   version: number;
-  templateContent: string;
+  systemPrompt: string | null;
+  userPromptTpl: string;
   variables: unknown;
+  outputSchema: unknown;
   modelConfig: unknown;
   changeLog: string | null;
-  createdBy: string;
+  createdBy: string | null;
   createdAt: string;
-}
-
-export interface PromptVersionListResponse {
-  data: PromptTemplateVersion[];
-  total: number;
+  isActive: boolean;
 }
 
 export interface CategoryOption {
@@ -220,15 +218,16 @@ export async function publishPromptTemplate(id: string, changeLog?: string) {
 
 /**
  * 获取提示词模板版本历史
+ * 后端返回数组（TransformInterceptor 解包后直接是数组）
  */
 export async function getPromptTemplateVersions(
   id: string,
-  params?: { limit?: number; offset?: number },
+  _params?: { limit?: number; offset?: number },
 ) {
-  return requestClient.get<PromptVersionListResponse>(
+  const versions = await requestClient.get<PromptTemplateVersion[]>(
     `/prompt-templates/${id}/versions`,
-    { params },
   );
+  return { data: versions, total: versions.length };
 }
 
 /**
