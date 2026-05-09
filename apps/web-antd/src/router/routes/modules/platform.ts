@@ -92,6 +92,17 @@ const routes: RouteRecordRaw[] = [
           permissions: ['PLATFORM:MASTRA_STUDIO:ACCESS'],
         },
       },
+      {
+        name: 'PlatformAiConfig',
+        path: 'ai-config',
+        component: () => import('#/views/platform/ai-config/index.vue'),
+        meta: {
+          icon: 'ant-design:api-outlined',
+          title: 'AI 配置',
+          appModule: 'PLATFORM',
+          permissions: ['PLATFORM:AI_CONFIG:VIEW'],
+        },
+      },
     ],
   },
 ];
