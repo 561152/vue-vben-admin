@@ -30,6 +30,10 @@ import { useCrudTable, useModalForm } from '#/composables';
 import dayjs from 'dayjs';
 import { MaterialPicker } from '#/components';
 import type { Material, MaterialType } from '#/components';
+import {
+  materialsToMessageAttachments,
+  type MessageAttachment,
+} from '../shared/attachments';
 
 // ==================== 类型定义 ====================
 
@@ -42,15 +46,6 @@ interface ScheduledMessage {
   targetType: 'CUSTOMER' | 'TAG' | 'ALL';
   targetCount: number;
   createdAt: string;
-}
-
-interface MessageAttachment {
-  id?: string;
-  type: 'image' | 'video' | 'file' | 'link';
-  materialId?: number; // For usage tracking
-  mediaId?: number;
-  url?: string;
-  name?: string;
 }
 
 interface FormState {
@@ -156,44 +151,13 @@ const { visible, formState, isEditing, openCreate, openEdit, submit } =
 
 // ==================== 素材选择逻辑 ====================
 
-function generateAttachmentId(): string {
-  return `att_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
 function handleOpenMaterialPicker() {
   materialPickerType.value = 'ALL';
   materialPickerVisible.value = true;
 }
 
 function handleMaterialSelect(selectedMaterials: Material[]) {
-  const newAttachments: MessageAttachment[] = selectedMaterials.map(
-    (material) => {
-      const att: MessageAttachment = {
-        id: generateAttachmentId(),
-        type: material.type.toLowerCase() as
-          | 'image'
-          | 'video'
-          | 'file'
-          | 'link',
-        materialId: material.id, // Important: for usage tracking
-        name: material.name,
-      };
-
-      if (
-        material.type === 'IMAGE' ||
-        material.type === 'VIDEO' ||
-        material.type === 'FILE'
-      ) {
-        if (material.mediaIds && material.mediaIds.length > 0) {
-          att.mediaId = material.mediaIds[0];
-        }
-      } else if (material.type === 'LINK' && material.linkUrl) {
-        att.url = material.linkUrl;
-      }
-
-      return att;
-    },
-  );
+  const newAttachments = materialsToMessageAttachments(selectedMaterials);
 
   formState.value.attachments = [
     ...formState.value.attachments,

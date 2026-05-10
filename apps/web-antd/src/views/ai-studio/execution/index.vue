@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed, h } from 'vue';
+import { ref, onMounted } from 'vue';
 import {
   Table,
   Button,
@@ -31,13 +31,10 @@ import {
   CloseCircleOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
-import {
-  getFeatureModules,
-  type FeatureModule,
-} from '#/api/ai-studio/pipeline';
 import dayjs from 'dayjs';
 import ExecutionFlowView from './components/ExecutionFlowView.vue';
 import GradingQuestionList from './components/GradingQuestionList.vue';
+import { useFeatureModules } from '../composables/useFeatureModules';
 import type {
   GradingQuestion,
   GradingSummary,
@@ -80,9 +77,8 @@ const dataSource = ref<ExecutionItem[]>([]);
 const pagination = ref({ current: 1, pageSize: 20, total: 0 });
 
 // 功能模块筛选
-const featureModules = ref<FeatureModule[]>([]);
-// 只有当用户有功能模块权限时才显示筛选器
-const showFeatureFilter = computed(() => featureModules.value.length > 0);
+const { featureModules, showFeatureFilter, loadFeatureModules } =
+  useFeatureModules();
 
 // Filters
 const filters = ref({
@@ -223,22 +219,6 @@ const fetchData = async () => {
     message.error('获取执行记录失败');
   } finally {
     loading.value = false;
-  }
-};
-
-// 加载功能模块列表（根据用户权限过滤）
-const loadFeatureModules = async () => {
-  try {
-    const modules = await getFeatureModules();
-    featureModules.value = modules || [];
-  } catch (error: any) {
-    // 403 或其他权限错误时不显示筛选器
-    if (error?.response?.status === 403) {
-      console.warn('No permission to view feature modules');
-    } else {
-      console.error('Failed to load feature modules:', error);
-    }
-    featureModules.value = [];
   }
 };
 

@@ -40,6 +40,7 @@ import { useCrudTable } from '#/composables';
 import CustomerFilterDrawer from './components/CustomerFilterDrawer.vue';
 import { MaterialPicker } from '#/components';
 import type { Material, MaterialType } from '#/components';
+import { generateAttachmentId } from '../shared/attachments';
 
 interface FilterConditions {
   tagIds: number[];
@@ -241,10 +242,6 @@ const filterSummary = computed(() => {
 });
 
 // ==================== 事件处理 ====================
-
-function generateAttachmentId(): string {
-  return `att_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
 
 function handleOpenMaterialPicker(type?: 'image' | 'video' | 'file') {
   if (createForm.value.attachments.length >= 9) {

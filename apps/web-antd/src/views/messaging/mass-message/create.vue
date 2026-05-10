@@ -33,18 +33,13 @@ import { requestClient } from '#/api/request';
 import { refreshWecomMediaId } from '#/api/crm';
 import AttachmentEditor from './components/AttachmentEditor.vue';
 import type { Attachment } from './components/AttachmentEditor.vue';
+import { useCustomerTags } from '../shared/useCustomerTags';
 
 // Types
 interface Department {
   id: string;
   name: string;
   children?: Department[];
-}
-
-interface TagItem {
-  id: number;
-  name: string;
-  customerCount?: number;
 }
 
 // State
@@ -55,7 +50,7 @@ const sendSuccess = ref(false);
 
 // Data
 const departments = ref<Department[]>([]);
-const tags = ref<TagItem[]>([]);
+const { loadTags } = useCustomerTags();
 const previewCount = ref(0);
 
 // Modal
@@ -148,20 +143,6 @@ async function fetchDepartments() {
       '/departments/tree',
     );
     departments.value = res.items || [];
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-async function fetchTags() {
-  try {
-    const res = await requestClient.get<{ items: TagItem[] }>(
-      '/customer/tag',
-      {
-        params: { pageSize: 100 },
-      },
-    );
-    tags.value = res.items || [];
   } catch (e) {
     console.error(e);
   }
@@ -383,7 +364,7 @@ watch(
 
 onMounted(() => {
   fetchDepartments();
-  fetchTags();
+  loadTags();
 });
 </script>
 

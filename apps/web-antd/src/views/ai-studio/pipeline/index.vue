@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Table,
@@ -17,6 +17,7 @@ import {
   Tooltip,
   Upload,
 } from 'ant-design-vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
 import {
   PlusOutlined,
   PlayCircleOutlined,
@@ -32,14 +33,13 @@ import {
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import {
-  getFeatureModules,
   checkDeletePipeline,
   deletePipeline,
-  type FeatureModule,
   type DeleteCheckResponse,
 } from '#/api/ai-studio/pipeline';
 import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
 import dayjs from 'dayjs';
+import { useFeatureModules } from '../composables/useFeatureModules';
 
 interface PipelineItem {
   id: number;
@@ -69,10 +69,9 @@ const formState = ref({
 });
 
 // 功能模块筛选
-const featureModules = ref<FeatureModule[]>([]);
 const selectedFeatureCode = ref<string | undefined>(undefined);
-// 只有当用户有功能模块权限时才显示筛选器
-const showFeatureFilter = computed(() => featureModules.value.length > 0);
+const { featureModules, showFeatureFilter, loadFeatureModules } =
+  useFeatureModules();
 
 const detailVisible = ref(false);
 const detailPipeline = ref<PipelineItem | null>(null);
@@ -199,25 +198,9 @@ const fetchData = async () => {
   }
 };
 
-// 加载功能模块列表（根据用户权限过滤）
-const loadFeatureModules = async () => {
-  try {
-    const modules = await getFeatureModules();
-    featureModules.value = modules || [];
-  } catch (error: any) {
-    // 403 或其他权限错误时不显示筛选器
-    if (error?.response?.status === 403) {
-      console.warn('No permission to view feature modules');
-    } else {
-      console.error('Failed to load feature modules:', error);
-    }
-    featureModules.value = [];
-  }
-};
-
 // 功能模块筛选变化
-const handleFeatureCodeChange = (value: string | undefined) => {
-  selectedFeatureCode.value = value;
+const handleFeatureCodeChange = (value: SelectValue) => {
+  selectedFeatureCode.value = typeof value === 'string' ? value : undefined;
   pagination.value.current = 1; // 重置到第一页
   fetchData();
 };
@@ -525,7 +508,8 @@ const handleDeleteConfirm = async (confirmationText: string) => {
     fetchData();
   } catch (error: any) {
     console.error('Failed to delete pipeline:', error);
-    const errorMsg = error?.response?.data?.message || error?.message || '删除失败';
+    const errorMsg =
+      error?.response?.data?.message || error?.message || '删除失败';
     message.error(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);
   } finally {
     deleteModalLoading.value = false;

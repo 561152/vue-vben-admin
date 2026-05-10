@@ -21,6 +21,7 @@ import {
   Divider,
   Spin,
 } from 'ant-design-vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
 import {
   SendOutlined,
   TeamOutlined,
@@ -36,13 +37,7 @@ import {
   type PreviewMassMessageResponse,
 } from '#/api/crm';
 import { requestClient } from '#/api/request';
-
-interface TagItem {
-  id: number;
-  name: string;
-  color?: string;
-  customerCount?: number;
-}
+import { useCustomerTags } from '../shared/useCustomerTags';
 
 interface UserItem {
   id: number;
@@ -58,7 +53,7 @@ const sendResult = ref<{ campaignId: number; totalTarget: number } | null>(
   null,
 );
 
-const tags = ref<TagItem[]>([]);
+const { tags, loadTags } = useCustomerTags();
 const users = ref<UserItem[]>([]);
 const templates = ref<MessageTemplate[]>([]);
 const preview = ref<PreviewMassMessageResponse | null>(null);
@@ -97,20 +92,6 @@ const previewColumns = [
     ellipsis: true,
   },
 ];
-
-async function fetchTags() {
-  try {
-    const res = await requestClient.get<{ items: TagItem[] }>(
-      '/customer/tag',
-      {
-        params: { pageSize: 100 },
-      },
-    );
-    tags.value = res.items || [];
-  } catch (e) {
-    console.error(e);
-  }
-}
 
 async function fetchUsers() {
   try {
@@ -226,8 +207,8 @@ function handleReset() {
   };
 }
 
-function handleTemplateChange(templateId: number | undefined) {
-  if (templateId) {
+function handleTemplateChange(templateId: SelectValue) {
+  if (typeof templateId === 'number') {
     const template = templates.value.find((t) => t.id === templateId);
     if (template) {
       formState.value.textContent = template.content.text || '';
@@ -257,7 +238,7 @@ function goToStatistics() {
 }
 
 onMounted(() => {
-  fetchTags();
+  loadTags();
   fetchUsers();
   fetchTemplates();
 });

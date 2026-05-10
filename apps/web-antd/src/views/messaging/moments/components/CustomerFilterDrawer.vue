@@ -30,6 +30,7 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
+import { useCustomerTags } from '../../shared/useCustomerTags';
 
 // ==================== Types ====================
 
@@ -37,13 +38,6 @@ interface Department {
   id: number;
   name: string;
   children?: Department[];
-}
-
-interface TagItem {
-  id: number;
-  name: string;
-  color?: string;
-  customerCount?: number;
 }
 
 interface UserItem {
@@ -87,7 +81,7 @@ const emit = defineEmits<{
 const loading = ref(false);
 const previewLoading = ref(false);
 const departments = ref<Department[]>([]);
-const tags = ref<TagItem[]>([]);
+const { tags, loadTags } = useCustomerTags();
 const users = ref<UserItem[]>([]);
 const previewCount = ref(0);
 
@@ -266,20 +260,6 @@ async function fetchDepartments() {
       '/departments/tree',
     );
     departments.value = res.items || [];
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-async function fetchTags() {
-  try {
-    const res = await requestClient.get<{ items: TagItem[] }>(
-      '/customer/tag',
-      {
-        params: { pageSize: 100 },
-      },
-    );
-    tags.value = res.items || [];
   } catch (e) {
     console.error(e);
   }
@@ -562,7 +542,7 @@ watch(
 
 onMounted(() => {
   fetchDepartments();
-  fetchTags();
+  loadTags();
   fetchUsers();
 });
 </script>

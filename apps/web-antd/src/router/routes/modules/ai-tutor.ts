@@ -107,7 +107,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'OcrRecognition',
         path: 'ocr',
-        component: () => import('#/views/ai-tutor/ocr/index.vue'),
+        redirect: '/ai-tutor/quick-grading',
         meta: {
           title: '题目识别',
           appModule: 'LMS',
@@ -120,7 +120,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'HomeworkGrading',
         path: 'homework',
-        component: () => import('#/views/ai-tutor/homework/index.vue'),
+        redirect: '/ai-tutor/quick-grading',
         meta: {
           title: '作业批改',
           appModule: 'LMS',
@@ -133,7 +133,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'PaperAnalysis',
         path: 'paper',
-        component: () => import('#/views/ai-tutor/paper/index.vue'),
+        redirect: '/ai-doctor/diagnosis?tab=paper',
         meta: {
           title: '试卷分析',
           appModule: 'LMS',
@@ -146,7 +146,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'LearningProgress',
         path: 'progress',
-        component: () => import('#/views/ai-tutor/progress/index.vue'),
+        redirect: '/growth-profile/progress',
         meta: {
           title: '学习进度',
           appModule: 'LMS',
@@ -159,7 +159,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MistakeBook',
         path: 'mistakes',
-        component: () => import('#/views/ai-tutor/mistakes/index.vue'),
+        redirect: '/ai-doctor/follow-up?tab=mistakes',
         meta: {
           title: '错题本',
           appModule: 'LMS',
@@ -172,6 +172,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'MistakeReview',
         path: 'mistake-review',
+        redirect: '/ai-doctor/follow-up?tab=review',
         meta: {
           title: '错题审核',
           appModule: 'LMS',
@@ -182,8 +183,7 @@ const routes: RouteRecordRaw[] = [
           {
             name: 'MistakeList',
             path: '',
-            component: () =>
-              import('#/views/ai-tutor/mistake-review/MistakeListPage.vue'),
+            redirect: '/ai-doctor/follow-up?tab=review',
             meta: {
               title: '错题列表',
               appModule: 'LMS',
@@ -194,8 +194,7 @@ const routes: RouteRecordRaw[] = [
           {
             name: 'MistakeDetail',
             path: ':mistakeId',
-            component: () =>
-              import('#/views/ai-tutor/mistake-review/MistakeDetailPage.vue'),
+            redirect: '/ai-doctor/follow-up?tab=review',
             meta: {
               title: '错题详情',
               appModule: 'LMS',
@@ -211,8 +210,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'QuestionBankImport',
         path: 'question-import',
-        component: () =>
-          import('#/views/ai-tutor/mistake-review/QuestionBankImportPage.vue'),
+        redirect: '/ai-tutor/question-bank',
         meta: {
           title: '题库导入',
           appModule: 'LMS',
