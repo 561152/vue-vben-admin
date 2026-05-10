@@ -5,7 +5,11 @@ import { message } from 'ant-design-vue';
 
 import { requestClient } from '#/api/request';
 
-import type { AiCredentialDto, CredentialScope, ScenarioBindingDto } from './credentials.api';
+import type {
+  AiCredentialDto,
+  CredentialScope,
+  ScenarioBindingDto,
+} from './credentials.api';
 import type { AiScenarioKey } from './scenario-capability.map';
 
 import { getScenarioBindings } from './credentials.api';
@@ -28,7 +32,9 @@ interface RowState {
   topP: null | number;
 }
 
-const rows = reactive<Record<AiScenarioKey, RowState>>({} as Record<AiScenarioKey, RowState>);
+const rows = reactive<Record<AiScenarioKey, RowState>>(
+  {} as Record<AiScenarioKey, RowState>,
+);
 const loaded = ref(false);
 
 for (const s of ALL_SCENARIOS) {
@@ -50,7 +56,9 @@ function basePath(): string {
 
 async function load() {
   try {
-    const bindings: ScenarioBindingDto[] = await getScenarioBindings(props.scope);
+    const bindings: ScenarioBindingDto[] = await getScenarioBindings(
+      props.scope,
+    );
     for (const b of bindings) {
       const row = rows[b.scenario as AiScenarioKey];
       if (row) {
@@ -73,8 +81,7 @@ async function saveRow(scenario: AiScenarioKey) {
   try {
     const [credId, modelName] = row.binding.split(':') as [string, string];
     await requestClient.put(`${basePath()}/${scenario}`, {
-      credentialId: credId ? Number(credId) : null,
-      modelName: modelName ?? null,
+      modelName: credId && modelName ? `${credId}:${modelName}` : null,
       temperature: row.temperature,
       maxTokens: row.maxTokens,
       timeout: row.timeout,
@@ -173,32 +180,36 @@ async function saveRow(scenario: AiScenarioKey) {
 <style scoped>
 .scenario-table {
   width: 100%;
-  border-collapse: collapse;
   font-size: 12px;
+  border-collapse: collapse;
 }
+
 .scenario-table th,
 .scenario-table td {
-  border-bottom: 1px solid var(--ant-color-border, #d9d9d9);
   padding: 6px 8px;
   text-align: left;
+  border-bottom: 1px solid var(--ant-color-border, #d9d9d9);
 }
+
 .num-input {
   width: 80px;
   padding: 2px 6px;
   border: 1px solid var(--ant-color-border, #d9d9d9);
   border-radius: 3px;
 }
+
 .btn-save {
   padding: 3px 10px;
-  border: 1px solid var(--ant-color-primary, #1677ff);
-  background: var(--ant-color-primary, #1677ff);
-  color: #fff;
-  border-radius: 3px;
-  cursor: pointer;
   font-size: 12px;
+  color: #fff;
+  cursor: pointer;
+  background: var(--ant-color-primary, #1677ff);
+  border: 1px solid var(--ant-color-primary, #1677ff);
+  border-radius: 3px;
 }
+
 .btn-save[disabled] {
-  opacity: 0.5;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>
