@@ -1,7 +1,7 @@
 <template>
   <div class="lms-home-dashboard">
     <!-- 欢迎卡片 -->
-    <Card class="mb-4 welcome-card">
+    <Card class="welcome-card mb-4">
       <div class="welcome-content">
         <div class="welcome-text">
           <h2>{{ greetingMessage }}，{{ userName }}</h2>
@@ -37,15 +37,11 @@
         </Col>
 
         <Col :xs="24" :sm="8">
-          <Card
-            hoverable
-            class="quick-action-card"
-            @click="goTo('/ai-tutor/chat')"
-          >
+          <Card hoverable class="quick-action-card" @click="goTo('/chat')">
             <div class="action-content">
               <MessageOutlined class="action-icon" style="color: #52c41a" />
-              <h3>智能辅导</h3>
-              <p class="text-gray-500">启发式讲解</p>
+              <h3>新建会话</h3>
+              <p class="text-gray-500">统一智能体入口</p>
             </div>
           </Card>
         </Col>
@@ -122,7 +118,9 @@
                     :value="stats.todayStats.accuracy"
                     suffix="%"
                     prefix="✓"
-                    :value-style="{ color: getAccuracyColor(stats.todayStats.accuracy) }"
+                    :value-style="{
+                      color: getAccuracyColor(stats.todayStats.accuracy),
+                    }"
                   />
                 </Col>
               </Row>
@@ -151,7 +149,11 @@
                     :value="stats.weeklyStats.averageAccuracy"
                     suffix="%"
                     prefix="✓"
-                    :value-style="{ color: getAccuracyColor(stats.weeklyStats.averageAccuracy) }"
+                    :value-style="{
+                      color: getAccuracyColor(
+                        stats.weeklyStats.averageAccuracy,
+                      ),
+                    }"
                   />
                 </Col>
               </Row>
@@ -223,11 +225,18 @@
           @click="goTo('/ai-tutor')"
         >
           <ul class="module-menu">
-            <li><a @click.stop="goTo('/ai-tutor/quick-grading')">拍照批改</a></li>
-            <li><a @click.stop="goTo('/ai-tutor/calculator')">数学计算器</a></li>
-            <li><a @click.stop="goTo('/ai-tutor/chat')">智能辅导</a></li>
-            <li><a @click.stop="goTo('/ai-tutor/grading-history')">批改历史</a></li>
-            <li><a @click.stop="goTo('/ai-tutor/question-bank')">题库导入</a></li>
+            <li>
+              <a @click.stop="goTo('/ai-tutor/quick-grading')">拍照批改</a>
+            </li>
+            <li>
+              <a @click.stop="goTo('/ai-tutor/calculator')">数学计算器</a>
+            </li>
+            <li>
+              <a @click.stop="goTo('/ai-tutor/grading-history')">批改历史</a>
+            </li>
+            <li>
+              <a @click.stop="goTo('/ai-tutor/question-bank')">题库导入</a>
+            </li>
           </ul>
         </Card>
       </Col>
@@ -241,10 +250,14 @@
         >
           <ul class="module-menu">
             <li><a @click.stop="goTo('/ai-doctor/diagnosis')">诊断中心</a></li>
-            <li><a @click.stop="goTo('/ai-doctor/prescription')">学习处方</a></li>
+            <li>
+              <a @click.stop="goTo('/ai-doctor/prescription')">学习处方</a>
+            </li>
             <li><a @click.stop="goTo('/ai-doctor/follow-up')">复诊追踪</a></li>
             <li><a @click.stop="goTo('/ai-doctor/counselor')">AI 咨询师</a></li>
-            <li><a @click.stop="goTo('/ai-doctor/parent-report')">家长报告</a></li>
+            <li>
+              <a @click.stop="goTo('/ai-doctor/parent-report')">家长报告</a>
+            </li>
           </ul>
         </Card>
       </Col>
@@ -257,9 +270,15 @@
           @click="goTo('/growth-profile')"
         >
           <ul class="module-menu">
-            <li><a @click.stop="goTo('/growth-profile/progress')">学习进度</a></li>
-            <li><a @click.stop="goTo('/growth-profile/achievements')">荣誉墙</a></li>
-            <li><a @click.stop="goTo('/growth-profile/reports')">阶段报告</a></li>
+            <li>
+              <a @click.stop="goTo('/growth-profile/progress')">学习进度</a>
+            </li>
+            <li>
+              <a @click.stop="goTo('/growth-profile/achievements')">荣誉墙</a>
+            </li>
+            <li>
+              <a @click.stop="goTo('/growth-profile/reports')">阶段报告</a>
+            </li>
           </ul>
         </Card>
       </Col>
@@ -415,8 +434,8 @@ onMounted(() => {
 }
 
 .welcome-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
   :deep(.ant-card-body) {
     padding: 24px;
@@ -425,19 +444,19 @@ onMounted(() => {
 
 .welcome-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .welcome-text {
   h2 {
-    color: white;
-    font-size: 24px;
     margin-bottom: 8px;
+    font-size: 24px;
+    color: white;
   }
 
   p {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgb(255 255 255 / 85%);
   }
 }
 
@@ -446,29 +465,29 @@ onMounted(() => {
   transition: all 0.3s ease;
 
   &:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
 
 .action-content {
-  text-align: center;
   padding: 16px 0;
+  text-align: center;
 
   .action-icon {
-    font-size: 48px;
     margin-bottom: 12px;
+    font-size: 48px;
   }
 
   h3 {
+    margin: 8px 0;
     font-size: 18px;
     font-weight: 600;
-    margin: 8px 0;
   }
 
   p {
-    font-size: 14px;
     margin-top: 8px;
+    font-size: 14px;
   }
 }
 
@@ -478,45 +497,45 @@ onMounted(() => {
 
 .achievement-mini-content {
   display: flex;
-  align-items: center;
   gap: 12px;
+  align-items: center;
 }
 
 .achievement-mini-icon {
-  font-size: 36px;
   flex-shrink: 0;
+  font-size: 36px;
 }
 
 .achievement-mini-info {
   flex: 1;
 
   h4 {
+    margin: 0 0 4px;
     font-size: 14px;
     font-weight: 600;
-    margin: 0 0 4px;
   }
 
   p {
-    font-size: 12px;
     margin: 0;
+    font-size: 12px;
   }
 }
 
 .module-card {
   height: 100%;
-  transition: all 0.3s ease;
   margin-bottom: 16px;
+  transition: all 0.3s ease;
 
   &:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
 
 .module-menu {
-  list-style: none;
   padding: 0;
   margin: 0;
+  list-style: none;
 
   li {
     padding: 8px 0;

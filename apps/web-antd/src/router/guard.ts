@@ -1,4 +1,4 @@
-import type { Router } from 'vue-router';
+import type { LocationQueryRaw, Router } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
 import { preferences } from '@vben/preferences';
@@ -11,6 +11,8 @@ import { hasAppModule, hasPermission } from '#/utils/permissions';
 
 import { generateAccess } from './access';
 import { getRedirectTarget } from './redirects';
+
+const DEFAULT_HOME_PATH = '/chat';
 
 /**
  * 通用守卫配置
@@ -54,7 +56,7 @@ function setupRedirectGuard(router: Router) {
     if (redirectTarget) {
       // Parse redirect target to handle query params
       const [path, queryString] = redirectTarget.split('?');
-      const query: Record<string, string> = { ...to.query };
+      const query: LocationQueryRaw = { ...to.query };
 
       // Add migration marker
       query._migrated = 'true';
@@ -94,7 +96,7 @@ function setupAccessGuard(router: Router) {
         return decodeURIComponent(
           (to.query?.redirect as string) ||
             userStore.userInfo?.homePath ||
-            preferences.app.defaultHomePath,
+            DEFAULT_HOME_PATH,
         );
       }
       return true;
@@ -113,7 +115,7 @@ function setupAccessGuard(router: Router) {
           path: LOGIN_PATH,
           // 如不需要，直接删除 query
           query:
-            to.fullPath === preferences.app.defaultHomePath
+            to.fullPath === DEFAULT_HOME_PATH
               ? {}
               : { redirect: encodeURIComponent(to.fullPath) },
           // 携带当前跳转的页面，登录后重新跳转该页面
@@ -167,8 +169,8 @@ function setupAccessGuard(router: Router) {
     accessStore.setAccessRoutes(accessibleRoutes);
     accessStore.setIsAccessChecked(true);
     const redirectPath = (from.query.redirect ??
-      (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+      (to.path === DEFAULT_HOME_PATH
+        ? userInfo.homePath || DEFAULT_HOME_PATH
         : to.fullPath)) as string;
 
     return {

@@ -39,12 +39,14 @@ export interface ScopeInfo {
   displayName: string;
   description?: string;
   icon?: string;
+  defaultAgentId?: string;
   agents: Array<{
     id: string;
     displayName: string;
     description: string;
     icon: string;
     category: string;
+    capabilities?: string[];
   }>;
 }
 
@@ -56,15 +58,19 @@ export async function listScopes(): Promise<{ scopes: ScopeInfo[] }> {
 
 export async function listSessions(
   scopeKey?: string,
+  options: { page?: number; size?: number } = {},
 ): Promise<{ items: ChatSession[]; total: number }> {
-  const params = scopeKey ? { scopeKey } : {};
+  const params = {
+    ...options,
+    ...(scopeKey ? { scope: scopeKey } : {}),
+  };
   return requestClient.get('/ai-chat/sessions', { params });
 }
 
 export async function createSession(data: {
   scopeKey: string;
   title?: string;
-  defaultAgentId?: string;
+  agentId?: string;
 }): Promise<{ session: ChatSession }> {
   return requestClient.post('/ai-chat/sessions', data);
 }
@@ -77,9 +83,12 @@ export async function getSession(
 
 export async function updateSession(
   sessionId: string,
-  data: { title?: string },
+  data: { defaultAgentId?: string; title?: string },
 ): Promise<{ session: ChatSession | null }> {
-  return requestClient.patch(`/ai-chat/sessions/${sessionId}`, data);
+  return requestClient.request(`/ai-chat/sessions/${sessionId}`, {
+    data,
+    method: 'PATCH',
+  });
 }
 
 export async function deleteSession(
@@ -147,6 +156,7 @@ export async function* sendMessageStream(
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
+      buffer = buffer.replace(/\r\n/g, '\n');
 
       // Split by double newline (SSE event boundary)
       const parts = buffer.split('\n\n');
@@ -160,6 +170,9 @@ export async function* sendMessageStream(
         }
       }
     }
+
+    buffer += decoder.decode();
+    buffer = buffer.replace(/\r\n/g, '\n');
 
     // Process remaining buffer
     if (buffer.trim()) {
@@ -211,6 +224,7 @@ export async function* regenerateMessageStream(
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
+      buffer = buffer.replace(/\r\n/g, '\n');
       const parts = buffer.split('\n\n');
       buffer = parts.pop() || '';
 
@@ -221,6 +235,9 @@ export async function* regenerateMessageStream(
         }
       }
     }
+
+    buffer += decoder.decode();
+    buffer = buffer.replace(/\r\n/g, '\n');
 
     if (buffer.trim()) {
       const event = parseSSEEvent(buffer);
@@ -236,41 +253,76 @@ export async function* regenerateMessageStream(
 // ==================== SSE Parsing ====================
 
 function parseSSEEvent(raw: string): ChatMessageEvent | null {
-  const lines = raw.split('\n');
+  const lines = raw.replace(/\r\n/g, '\n').split('\n');
   let eventType = 'message';
-  let dataStr = '';
+  const dataLines: string[] = [];
 
   for (const line of lines) {
     if (line.startsWith('event:')) {
       eventType = line.slice(6).trim();
     } else if (line.startsWith('data:')) {
-      dataStr += line.slice(5).trim();
+      dataLines.push(line.slice(5).trim());
     } else if (line.startsWith('id:')) {
       // ignore
     }
   }
 
+  const dataStr = dataLines.join('\n');
   if (!dataStr) return null;
 
   try {
-    const parsed = JSON.parse(dataStr);
-    // Backend double-encodes: data = JSON.stringify({messageId, data, timestamp})
-    // After first parse, parsed.data is still a JSON string — parse it again
-    let innerData = parsed.data;
-    if (typeof innerData === 'string') {
-      try {
-        innerData = JSON.parse(innerData);
-      } catch {
-        /* keep as string */
-      }
-    }
+    const parsed = parseJsonValue(dataStr);
+    const envelope = normalizeSSEEnvelope(parsed);
+    if (!envelope) return null;
+
+    const payload = parseJsonValue(envelope.data);
     return {
-      type: (parsed.type || eventType) as ChatMessageEvent['type'],
-      messageId: parsed.messageId || '',
-      data: innerData || {},
-      timestamp: parsed.timestamp || new Date().toISOString(),
+      type: (envelope.type || eventType) as ChatMessageEvent['type'],
+      messageId: toStringValue(envelope.messageId),
+      data: isRecord(payload) ? payload : {},
+      timestamp: toStringValue(envelope.timestamp) || new Date().toISOString(),
     };
   } catch {
     return null;
   }
+}
+
+function parseJsonValue(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeSSEEnvelope(value: unknown): Record<string, unknown> | null {
+  const parsed = parseJsonValue(value);
+  if (!isRecord(parsed)) return null;
+
+  const nested = parseJsonValue(parsed.data);
+  if (
+    isRecord(nested) &&
+    ('messageId' in nested || 'timestamp' in nested || 'data' in nested) &&
+    !('messageId' in parsed)
+  ) {
+    return {
+      ...nested,
+      type: parsed.type || nested.type,
+    };
+  }
+
+  return {
+    ...parsed,
+    data: nested,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toStringValue(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }

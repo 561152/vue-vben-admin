@@ -61,6 +61,29 @@ describe('useAccessStore', () => {
     expect(store.tabs[0]?.query).toEqual({ id: '1' });
   });
 
+  it('uses activePath as stable key when fullPathKey is disabled', () => {
+    const store = useTabbarStore();
+    const initialTab: any = {
+      fullPath: '/chat',
+      meta: {
+        activePath: '/chat',
+        fullPathKey: false,
+      },
+      name: 'ChatHome',
+      path: '/chat',
+      query: {},
+    };
+    store.addTab(initialTab);
+    store.addTab({
+      ...initialTab,
+      fullPath: '/chat/session-1',
+      name: 'ChatSession',
+      path: '/chat/session-1',
+    });
+    expect(store.tabs.length).toBe(1);
+    expect(store.tabs[0]?.fullPath).toBe('/chat/session-1');
+  });
+
   it('closes all tabs', async () => {
     const store = useTabbarStore();
     store.addTab({

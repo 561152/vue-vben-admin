@@ -11,5 +11,6 @@ export const overridesPreferences = defineOverridesPreferences({
     name: import.meta.env.VITE_APP_TITLE,
     // 使用前端静态菜单模式（支持前端定义的所有路由）
     accessMode: 'frontend',
+    defaultHomePath: '/chat',
   },
 });

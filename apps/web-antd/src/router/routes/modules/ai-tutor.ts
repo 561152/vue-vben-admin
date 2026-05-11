@@ -2,12 +2,11 @@ import type { RouteRecordRaw } from 'vue-router';
 
 /**
  * AI 教师路由 - Phase 1 重组版
- * 精简为 5 个核心功能：
+ * 精简为 4 个核心功能：
  * 1. 拍照批改（合并题目识别+作业批改）
  * 2. 数学计算器
- * 3. 智能辅导
- * 4. 批改历史
- * 5. 题库管理
+ * 3. 批改历史
+ * 4. 题库管理
  */
 const routes: RouteRecordRaw[] = [
   {
@@ -47,20 +46,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
 
-      // 3. 智能辅导
-      {
-        name: 'AITutorChat',
-        path: 'chat',
-        component: () => import('#/views/ai-tutor/chat/index.vue'),
-        meta: {
-          icon: 'ant-design:message-outlined',
-          title: '智能辅导',
-          appModule: 'LMS',
-          permissions: ['LMS:TUTOR:USE'],
-        },
-      },
-
-      // 4. 批改历史
+      // 3. 批改历史
       {
         name: 'GradingHistory',
         path: 'grading-history',
@@ -87,7 +73,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
 
-      // 5. 题库管理
+      // 4. 题库管理
       {
         name: 'QuestionBank',
         path: 'question-bank',

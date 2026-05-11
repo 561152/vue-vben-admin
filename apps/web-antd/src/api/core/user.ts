@@ -101,12 +101,12 @@ export async function getUserInfoApi(): Promise<UserInfo> {
 
   // 转换为前端需要的 UserInfo 格式
   return {
-    userId: result.id,
+    userId: String(result.id),
     avatar: result.avatar || '',
     realName: result.realName || result.username,
     roles: roleNames,
     desc: result.tenant.name,
-    homePath: '/dashboard',
+    homePath: '/chat',
     token: '',
   };
 }

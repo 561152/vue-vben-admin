@@ -347,7 +347,7 @@ const isReasonableness = (m: any): m is ReasonablenessResult =>
       <List size="small" :data-source="verification.suggestions">
         <template #renderItem="{ item }">
           <ListItem>
-            <CheckCircleOutlined style=" margin-right: 8px;color: #1890ff" />
+            <CheckCircleOutlined style="margin-right: 8px; color: #1890ff" />
             {{ item }}
           </ListItem>
         </template>

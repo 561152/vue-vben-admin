@@ -375,8 +375,8 @@ const handleClear = () => {
             <Button block @click="router.push('/ai-studio/execution')">
               查看执行管理
             </Button>
-            <Button block @click="router.push('/ai-tutor/chat')">
-              智能辅导对话
+            <Button block @click="router.push('/chat')">
+              新建智能体会话
             </Button>
             <Button block @click="router.push('/growth-profile/progress')">
               查看学习进度

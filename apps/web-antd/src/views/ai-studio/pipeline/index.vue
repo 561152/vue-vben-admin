@@ -505,7 +505,7 @@ const handleDeleteConfirm = async (confirmationText: string) => {
     await deletePipeline(deletingPipelineKey.value, confirmationText);
     message.success('删除成功');
     deleteModalVisible.value = false;
-    fetchData();
+    await fetchData();
   } catch (error: any) {
     console.error('Failed to delete pipeline:', error);
     const errorMsg =

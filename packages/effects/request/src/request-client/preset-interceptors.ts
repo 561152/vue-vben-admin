@@ -26,6 +26,10 @@ export const defaultResponseInterceptor = ({
         return response;
       }
 
+      if (status === 204) {
+        return undefined;
+      }
+
       if (status >= 200 && status < 400) {
         if (config.responseReturn === 'body') {
           return responseData;

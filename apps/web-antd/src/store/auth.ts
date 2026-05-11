@@ -4,7 +4,6 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
-import { preferences } from '@vben/preferences';
 import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 
 import { notification } from 'ant-design-vue';
@@ -14,6 +13,8 @@ import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { clearUserCache } from '#/api/core/user';
 import { $t } from '#/locales';
 import { useBrandingStore } from '#/store/branding';
+
+const DEFAULT_HOME_PATH = '/chat';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -61,9 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
         } else {
           onSuccess
             ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
+            : await router.push(userInfo.homePath || DEFAULT_HOME_PATH);
         }
 
         if (userInfo?.realName) {
