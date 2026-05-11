@@ -23,7 +23,7 @@ import {
 } from '@ant-design/icons-vue';
 import { mathCalculate, getMathEngineStatus } from '#/api/ai';
 import type { MathCalculateResult } from '#/api/ai';
-import MathRenderer from '../chat/components/MathRenderer.vue';
+import MathRenderer from '../../chat/components/MathRenderer.vue';
 
 // 状态
 const expression = ref('');

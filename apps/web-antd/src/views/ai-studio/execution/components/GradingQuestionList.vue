@@ -1,7 +1,10 @@
 <template>
   <div class="grading-question-list">
     <Spin :spinning="loading">
-      <Empty v-if="!loading && questions.length === 0" description="暂无题目数据" />
+      <Empty
+        v-if="!loading && questions.length === 0"
+        description="暂无题目数据"
+      />
 
       <Table
         v-else
@@ -50,15 +53,23 @@
           <template v-else-if="column.key === 'errorAnalysis'">
             <div class="error-analysis">
               <div v-if="record.errorType" class="mb-2">
-                <Tag color="orange">{{ getErrorTypeLabel(record.errorType) }}</Tag>
+                <Tag color="orange">{{
+                  getErrorTypeLabel(record.errorType)
+                }}</Tag>
               </div>
               <div class="text-gray-700">
                 {{ record.errorAnalysis || '（无分析）' }}
               </div>
-              <div v-if="record.suggestions && record.suggestions.length > 0" class="mt-2">
-                <div class="text-xs text-gray-500 mb-1">改进建议：</div>
+              <div
+                v-if="record.suggestions && record.suggestions.length > 0"
+                class="mt-2"
+              >
+                <div class="mb-1 text-xs text-gray-500">改进建议：</div>
                 <ul class="pl-4 text-sm">
-                  <li v-for="(suggestion, index) in record.suggestions" :key="index">
+                  <li
+                    v-for="(suggestion, index) in record.suggestions"
+                    :key="index"
+                  >
                     {{ suggestion }}
                   </li>
                 </ul>
@@ -78,10 +89,16 @@
             <span class="text-green-600">{{ summary.correctCount }}</span>
           </DescriptionsItem>
           <DescriptionsItem label="错误数">
-            <span class="text-red-600">{{ summary.totalQuestions - summary.correctCount }}</span>
+            <span class="text-red-600">{{
+              summary.totalQuestions - summary.correctCount
+            }}</span>
           </DescriptionsItem>
           <DescriptionsItem label="准确率">
-            <span :class="summary.accuracy >= 80 ? 'text-green-600' : 'text-orange-600'">
+            <span
+              :class="
+                summary.accuracy >= 80 ? 'text-green-600' : 'text-orange-600'
+              "
+            >
               {{ summary.accuracy.toFixed(1) }}%
             </span>
           </DescriptionsItem>
@@ -95,10 +112,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Spin, Empty, Table, Tag, Card, Descriptions, DescriptionsItem } from 'ant-design-vue';
+import {
+  Spin,
+  Empty,
+  Table,
+  Tag,
+  Card,
+  Descriptions,
+  DescriptionsItem,
+} from 'ant-design-vue';
 
-interface GradingQuestion {
+export interface GradingQuestion {
   questionNumber: string;
   questionContent: string;
   studentAnswer: string;
@@ -110,7 +134,7 @@ interface GradingQuestion {
   suggestions?: string[];
 }
 
-interface GradingSummary {
+export interface GradingSummary {
   totalQuestions: number;
   correctCount: number;
   totalScore: number;
@@ -190,13 +214,13 @@ function getErrorTypeLabel(errorType: string): string {
 .student-answer,
 .error-analysis {
   line-height: 1.6;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .text-red-500 {
-  color: #ef4444;
   font-weight: 600;
+  color: #ef4444;
 }
 
 .text-red-600 {

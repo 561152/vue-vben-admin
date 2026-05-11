@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Table,
   Button,
@@ -32,6 +33,7 @@ import {
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import ExecutionFlowView from './components/ExecutionFlowView.vue';
 import GradingQuestionList from './components/GradingQuestionList.vue';
 import { useFeatureModules } from '../composables/useFeatureModules';
@@ -54,6 +56,7 @@ interface ExecutionItem {
   errorMessage: string | null;
   currentStep?: string;
   durationMs: number | null;
+  traceId?: string | null;
   startedAt: string;
   completedAt: string | null;
   triggeredBy: string;
@@ -84,7 +87,7 @@ const { featureModules, showFeatureFilter, loadFeatureModules } =
 const filters = ref({
   pipelineName: '',
   status: undefined as string | undefined,
-  dateRange: [] as any[],
+  dateRange: undefined as [Dayjs, Dayjs] | undefined,
   featureCode: undefined as string | undefined,
 });
 
@@ -109,6 +112,8 @@ const gradingSummary = ref<GradingSummary>({
   accuracy: 0,
 });
 const hasGradingDetails = ref(false);
+
+const router = useRouter();
 
 // Drawer 宽度控制
 const drawerWidth = ref(800);
@@ -200,8 +205,8 @@ const fetchData = async () => {
         pageSize: pagination.value.pageSize,
         pipelineName: filters.value.pipelineName || undefined,
         status: filters.value.status,
-        startDate: filters.value.dateRange[0]?.format('YYYY-MM-DD'),
-        endDate: filters.value.dateRange[1]?.format('YYYY-MM-DD'),
+        startDate: filters.value.dateRange?.[0]?.format('YYYY-MM-DD'),
+        endDate: filters.value.dateRange?.[1]?.format('YYYY-MM-DD'),
         featureCode: filters.value.featureCode || undefined,
       },
     });
@@ -237,7 +242,7 @@ const handleReset = () => {
   filters.value = {
     pipelineName: '',
     status: undefined,
-    dateRange: [],
+    dateRange: undefined,
     featureCode: undefined,
   };
   pagination.value.current = 1;
@@ -314,20 +319,21 @@ const showDetail = async (record: ExecutionItem) => {
   }
 
   // Mock step execution statuses
+  const completedSteps = record.completedSteps ?? 0;
   stepExecutions.value = pipelineSteps.value.map((step, index) => ({
     stepKey: step.stepKey,
     name: step.name,
     status:
-      index < record.completedSteps
+      index < completedSteps
         ? 'COMPLETED'
-        : index === record.completedSteps && record.status === 'RUNNING'
+        : index === completedSteps && record.status === 'RUNNING'
           ? 'RUNNING'
-          : index === record.completedSteps && record.status === 'FAILED'
+          : index === completedSteps && record.status === 'FAILED'
             ? 'FAILED'
             : 'PENDING',
     startedAt: record.startedAt,
-    completedAt: index < record.completedSteps ? record.startedAt : null,
-    duration: index < record.completedSteps ? 50 + index * 20 : null,
+    completedAt: index < completedSteps ? record.startedAt : null,
+    duration: index < completedSteps ? 50 + index * 20 : null,
   }));
 
   // Mock step logs
@@ -349,7 +355,7 @@ const showDetail = async (record: ExecutionItem) => {
 };
 
 // Drawer 拖拽调整宽度
-const handleResizeStart = (e: MouseEvent) => {
+const handleResizeStart = (_e: MouseEvent) => {
   isDragging.value = true;
   document.body.style.cursor = 'ew-resize';
   document.body.style.userSelect = 'none';
@@ -396,6 +402,27 @@ const handleRetry = async (id: number) => {
     console.error('Failed to retry execution:', error);
     message.error('重试失败');
   }
+};
+
+const openTrace = (traceId: string) => {
+  router.push(`/ai-studio/trace/${traceId}`);
+};
+
+const isExecutionItem = (record: unknown): record is ExecutionItem => {
+  if (typeof record !== 'object' || record === null) return false;
+  const candidate = record as Record<string, unknown>;
+  return (
+    typeof candidate.id === 'number' &&
+    typeof candidate.pipelineKey === 'string'
+  );
+};
+
+const showDetailFromRecord = (record: unknown) => {
+  if (isExecutionItem(record)) void showDetail(record);
+};
+
+const showErrorFromRecord = (record: unknown) => {
+  if (isExecutionItem(record)) void showError(record);
 };
 
 const getStatusTagColor = (status: string) => {
@@ -549,7 +576,7 @@ onMounted(() => {
                 type="link"
                 size="small"
                 danger
-                @click="showError(record)"
+                @click="showErrorFromRecord(record)"
               >
                 查看原因
               </Button>
@@ -559,8 +586,21 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Tooltip title="查看详情">
-                <Button type="link" size="small" @click="showDetail(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="showDetailFromRecord(record)"
+                >
                   <template #icon><EyeOutlined /></template>
+                </Button>
+              </Tooltip>
+              <Tooltip title="查看 Trace" v-if="record.traceId">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="openTrace(record.traceId)"
+                >
+                  Trace
                 </Button>
               </Tooltip>
               <Tooltip title="取消" v-if="record.status === 'RUNNING'">

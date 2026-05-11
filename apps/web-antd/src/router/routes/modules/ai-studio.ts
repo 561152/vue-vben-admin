@@ -101,6 +101,28 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'AITrace',
+        path: 'trace',
+        component: () => import('#/views/ai-studio/trace/index.vue'),
+        meta: {
+          icon: 'ant-design:branches-outlined',
+          title: 'Trace Viewer',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:TRACE:LIST'],
+        },
+      },
+      {
+        name: 'AITraceDetail',
+        path: 'trace/:traceId',
+        component: () => import('#/views/ai-studio/trace/detail.vue'),
+        meta: {
+          hideInMenu: true,
+          title: 'Trace 详情',
+          appModule: 'AI_STUDIO',
+          permissions: ['AI_STUDIO:TRACE:VIEW'],
+        },
+      },
+      {
         name: 'AIMetrics',
         path: 'metrics',
         component: () => import('#/views/ai-studio/metrics/index.vue'),
