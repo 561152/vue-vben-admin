@@ -1,5 +1,10 @@
 import { defineConfig } from '@vben/vite-config';
 
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const currentDir = dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig(async () => {
   return {
     application: {},
@@ -22,6 +27,14 @@ export default defineConfig(async () => {
             target: process.env.VITE_API_URL || 'http://127.0.0.1:5100',
             ws: true,
           },
+        },
+      },
+      resolve: {
+        alias: {
+          '@vue/devtools-api': resolve(
+            currentDir,
+            '../../node_modules/vue-router/node_modules/@vue/devtools-api/lib/esm/index.js',
+          ),
         },
       },
     },

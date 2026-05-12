@@ -16,8 +16,9 @@
   },
   "type": "module",
   "scripts": {
-    "build": "node scripts/verify-route-structure.mjs && pnpm vite build --mode production",
+    "build": "node scripts/verify-route-structure.mjs && pnpm vite build --mode production && node scripts/verify-browser-bundle.mjs",
     "verify:routes": "node scripts/verify-route-structure.mjs",
+    "verify:bundle": "node scripts/verify-browser-bundle.mjs",
     "build:analyze": "pnpm vite build --mode analyze",
     "dev": "pnpm vite --mode development",
     "preview": "vite preview",
