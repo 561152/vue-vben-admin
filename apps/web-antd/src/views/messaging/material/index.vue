@@ -30,6 +30,7 @@ import {
   FileOutlined,
   FolderOpenOutlined,
   ImportOutlined,
+  DeleteOutlined,
   ExportOutlined,
   HistoryOutlined,
 } from '@ant-design/icons-vue';
@@ -43,7 +44,7 @@ import ImportExportModal from './components/ImportExportModal.vue';
 import VersionManager from './components/VersionManager.vue';
 import AIAssistant from './components/AIAssistant.vue';
 import { useMaterialLibrary } from './composables/useMaterialLibrary';
-import type { MaterialItem, MaterialFormState } from './types';
+import type { MaterialItem, MaterialFormState, CategoryItem } from './types';
 
 // ==================== 路由 ====================
 const router = useRouter();
@@ -98,29 +99,47 @@ const versionManagerVisible = ref(false);
 const versionManagerMaterial = ref<MaterialItem | null>(null);
 
 // 分类树数据
+function flattenCategories(items: CategoryItem[]): CategoryItem[] {
+  return items.flatMap((item) => [
+    item,
+    ...flattenCategories(item.children || []),
+  ]);
+}
+
+function getCategoryErrorMessage(error: unknown) {
+  const responseData =
+    error && typeof error === 'object' && 'response' in error
+      ? (error as { response?: { data?: { error?: string; message?: string } } })
+          .response?.data
+      : undefined;
+
+  return responseData?.message || responseData?.error || '删除分类失败';
+}
+
+const categoryOptions = computed(() => flattenCategories(categories.value));
+
 const categoryTreeData = computed(() => {
-  const buildTree = (items: any[], parentId: number | null = null): any[] => {
-    return items
-      .filter((item) => item.parentId === parentId)
-      .map((item) => ({
-        key: item.id,
-        title: `${item.name} (${item.materialCount || 0})`,
-        icon: () => h(FolderOutlined),
-        children: buildTree(items, item.id),
-      }));
+  const buildTree = (items: CategoryItem[]): any[] => {
+    return items.map((item) => ({
+      key: item.id,
+      title: `${item.name} (${item.materialCount || 0})`,
+      category: item,
+      icon: () => h(FolderOutlined),
+      children: buildTree(item.children || []),
+    }));
   };
 
   return [
     {
       key: 'all',
-      title: `全部分类 (${materials.value.length})`,
+      title: `全部分类 (${pagination.total})`,
       icon: () => h(FolderOpenOutlined),
     },
     ...buildTree(categories.value),
   ];
 });
 
-function handleCategorySelect(selectedKeys: string[]) {
+function handleCategorySelect(selectedKeys: Array<number | string>) {
   const key = selectedKeys[0];
   if (key === 'all') {
     selectedCategoryId.value = null;
@@ -128,6 +147,33 @@ function handleCategorySelect(selectedKeys: string[]) {
     selectedCategoryId.value = Number(key);
   }
   fetchMaterials();
+}
+
+async function deleteCategory(category: CategoryItem) {
+  try {
+    await requestClient.delete(`/messaging/material/categories/${category.id}`);
+    message.success('分类删除成功');
+
+    if (selectedCategoryId.value === category.id) {
+      selectedCategoryId.value = null;
+    }
+
+    await fetchCategories();
+    await fetchMaterials();
+  } catch (error) {
+    message.error(getCategoryErrorMessage(error));
+  }
+}
+
+function handleDeleteCategory(category: CategoryItem) {
+  Modal.confirm({
+    title: '确认删除分类',
+    content: `确定要删除分类"${category.name}"吗？仅空分类可以删除。`,
+    okText: '删除',
+    cancelText: '取消',
+    okButtonProps: { danger: true },
+    onOk: () => deleteCategory(category),
+  });
 }
 
 async function handleCreateCategory() {
@@ -276,20 +322,32 @@ onMounted(() => {
         </template>
 
         <Tree
-          v-if="categories.length"
           :tree-data="categoryTreeData"
           :selected-keys="[selectedCategoryId ?? 'all']"
           default-expand-all
           @select="handleCategorySelect"
         >
-          <template #title="{ title, icon }">
+          <template #title="{ title, icon, category }">
             <span class="tree-node">
-              <component :is="icon" />
-              {{ title }}
+              <span class="tree-node__label">
+                <component :is="icon" />
+                {{ title }}
+              </span>
+              <Button
+                v-if="category"
+                :data-testid="`delete-category-${category.id}`"
+                type="text"
+                danger
+                size="small"
+                class="tree-node__delete"
+                title="删除分类"
+                @click.stop="handleDeleteCategory(category)"
+              >
+                <DeleteOutlined />
+              </Button>
             </span>
           </template>
         </Tree>
-        <Empty v-else description="暂无分类" />
       </Card>
 
       <!-- 右侧内容区 -->
@@ -501,7 +559,7 @@ onMounted(() => {
             style="width: 200px"
           >
             <Select.Option
-              v-for="cat in categories"
+              v-for="cat in categoryOptions"
               :key="cat.id"
               :value="cat.id"
             >
@@ -547,7 +605,7 @@ onMounted(() => {
             allow-clear
           >
             <Select.Option
-              v-for="cat in categories.filter((c) => c.parentId === null)"
+              v-for="cat in categoryOptions"
               :key="cat.id"
               :value="cat.id"
             >
@@ -602,8 +660,28 @@ onMounted(() => {
 
 .tree-node {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+}
+
+.tree-node__label {
+  display: inline-flex;
+  min-width: 0;
   gap: 6px;
   align-items: center;
+}
+
+.tree-node__delete {
+  flex-shrink: 0;
+  opacity: 0.45;
+}
+
+.tree-node:hover .tree-node__delete,
+.tree-node__delete:focus-visible {
+  opacity: 1;
 }
 
 .content-area {

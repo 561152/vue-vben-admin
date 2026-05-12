@@ -164,7 +164,7 @@ const importColumns = [
 
 <template>
   <Modal
-    :visible="visible"
+    :open="visible"
     :title="null"
     :footer="null"
     width="640px"

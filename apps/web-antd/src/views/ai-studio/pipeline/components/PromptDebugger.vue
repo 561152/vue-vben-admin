@@ -594,7 +594,7 @@ watch(
 
       <!-- 变量追踪弹窗 -->
       <Modal
-        v-model:visible="traceModalVisible"
+        v-model:open="traceModalVisible"
         :title="`变量追踪: ${selectedVariable?.name}`"
         width="600px"
         :footer="null"

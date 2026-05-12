@@ -144,7 +144,7 @@ const handleCopyLink = () => {
 
 <template>
   <Modal
-    :visible="visible"
+    :open="visible"
     title="导出提示词"
     width="800px"
     :footer="null"
