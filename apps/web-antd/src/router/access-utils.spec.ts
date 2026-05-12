@@ -31,6 +31,34 @@ describe('filterRoutesByAccess', () => {
     expect(result).toHaveLength(0);
   });
 
+  it('should remove education parent route when user has no child permissions', () => {
+    const hasAppModule = (module: string) => module === 'LMS';
+    const hasPermission = () => false;
+
+    const routes: RouteRecordRaw[] = [
+      {
+        name: 'AITutor',
+        path: '/ai-tutor',
+        redirect: '/ai-tutor/quick-grading',
+        meta: { appModule: 'LMS', title: 'AI 教师' },
+        children: [
+          {
+            name: 'QuickGrading',
+            path: 'quick-grading',
+            meta: {
+              appModule: 'LMS',
+              permissions: ['LMS:TUTOR:USE'],
+              title: '拍照批改',
+            },
+          },
+        ],
+      },
+    ];
+
+    const result = filterRoutesByAccess(routes, hasAppModule, hasPermission);
+    expect(result).toHaveLength(0);
+  });
+
   it('should keep parent route when at least one child has permission', () => {
     const hasAppModule = (module: string) => module === 'OPERATIONS';
     const hasPermission = (perm: string) =>
