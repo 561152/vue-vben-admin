@@ -312,11 +312,11 @@ const wrongQuestionChartRef = ref<HTMLElement | null>(null);
 // 报告表单
 const reportForm = reactive<{
   type: 'MONTHLY' | 'SEMESTER' | 'CUSTOM';
-  monthDate: Dayjs | null;
+  monthDate: Dayjs | undefined;
   year: number;
   semester: number;
-  startDate: Dayjs | null;
-  endDate: Dayjs | null;
+  startDate: Dayjs | undefined;
+  endDate: Dayjs | undefined;
 }>({
   type: 'MONTHLY',
   monthDate: dayjs(),
@@ -342,9 +342,10 @@ const handleGenerate = async () => {
     };
 
     if (reportForm.type === 'MONTHLY') {
+      const monthDate = reportForm.monthDate ?? dayjs();
       apiUrl = '/api/lms/growth-profile/reports/generate/monthly';
-      requestData.year = reportForm.monthDate?.year();
-      requestData.month = reportForm.monthDate?.month() + 1;
+      requestData.year = monthDate.year();
+      requestData.month = monthDate.month() + 1;
     } else if (reportForm.type === 'SEMESTER') {
       apiUrl = '/api/lms/growth-profile/reports/generate/semester';
       requestData.year = reportForm.year;
@@ -414,10 +415,11 @@ const renderCharts = () => {
       tooltip: {
         trigger: 'axis',
         formatter: (params: any) => {
-          const value = params[0].value;
+          const firstParam = Array.isArray(params) ? params[0] : undefined;
+          const value = Number(firstParam?.value ?? 0);
           const hours = Math.floor(value / 60);
           const minutes = value % 60;
-          return `${params[0].name}<br/>${hours}小时${minutes}分钟`;
+          return `${firstParam?.name ?? ''}<br/>${hours}小时${minutes}分钟`;
         },
       },
       xAxis: {

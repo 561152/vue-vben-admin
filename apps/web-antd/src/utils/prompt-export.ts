@@ -260,8 +260,9 @@ function extractVariablesFromTemplate(template: string): string[] {
   const matches: string[] = [];
   let match;
   while ((match = regex.exec(template)) !== null) {
-    if (!matches.includes(match[1])) {
-      matches.push(match[1]);
+    const variableName = match[1];
+    if (variableName && !matches.includes(variableName)) {
+      matches.push(variableName);
     }
   }
   return matches;

@@ -21,7 +21,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'clear'): void;
   (e: 'delete'): void;
-  (e: 'changeCategory', categoryId: number): void;
+  (e: 'changeCategory', categoryId: number | null): void;
   (e: 'addTags', tags: string[]): void;
   (e: 'removeTags', tags: string[]): void;
   (e: 'changeStatus', status: MaterialStatus): void;
@@ -38,7 +38,7 @@ const categoryMenuItems = computed(() => {
   items.push({
     key: 'null',
     label: '未分类',
-    onClick: () => emit('changeCategory', null as any),
+    onClick: () => emit('changeCategory', null),
   });
 
   // 添加分隔线
@@ -209,7 +209,7 @@ function handleDelete() {
             description="删除后将移至回收站，可在30天内恢复"
             okText="删除"
             cancelText="取消"
-            okButtonProps="{ danger: true }"
+            :okButtonProps="{ danger: true }"
             @confirm="handleDelete"
           >
             <Button type="primary" danger size="small">

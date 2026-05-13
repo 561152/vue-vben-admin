@@ -21,7 +21,7 @@ import {
   CloudUploadOutlined,
   FolderOpenOutlined,
 } from '@ant-design/icons-vue';
-import { uploadMedia, type WecomMedia } from '#/api/crm';
+import { uploadMedia } from '#/api/crm';
 import { MaterialPicker } from '#/components';
 import type { Material, MaterialType } from '#/components';
 

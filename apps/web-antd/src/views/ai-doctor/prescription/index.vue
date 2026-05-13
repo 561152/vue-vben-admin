@@ -1,14 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import {
-  Card,
-  Button,
-  Input,
-  Table,
-  Tag,
-  Space,
-  message,
-} from 'ant-design-vue';
+import { Card, Input, Table, Tag, Space, message } from 'ant-design-vue';
 import { SearchOutlined, FileTextOutlined } from '@ant-design/icons-vue';
 
 const loading = ref(false);

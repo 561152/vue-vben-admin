@@ -20,12 +20,7 @@ import {
   Tooltip,
   Typography,
 } from 'ant-design-vue';
-
-interface VariableMapping {
-  sourceVar: string; // 上游步骤输出变量
-  targetVar: string; // Prompt 模板变量
-  transform?: string; // 可选的转换函数
-}
+import type { SelectValue } from 'ant-design-vue/es/select';
 
 interface SourceVariable {
   name: string;
@@ -112,7 +107,9 @@ const compatibilityWarnings = computed(() => {
     severity: 'error' | 'warning';
   }> = [];
 
-  for (const [targetName, sourceName] of Object.entries(currentMappings.value)) {
+  for (const [targetName, sourceName] of Object.entries(
+    currentMappings.value,
+  )) {
     const target = props.targetVariables.find((v) => v.name === targetName);
     const source = props.sourceVariables.find((v) => v.name === sourceName);
 
@@ -169,7 +166,7 @@ const checkTypeCompatibility = (
     number: ['boolean', 'json'],
     boolean: ['number', 'json'],
     json: ['number', 'boolean'],
-    'image_url': ['string', 'text', 'number', 'boolean', 'json'],
+    image_url: ['string', 'text', 'number', 'boolean', 'json'],
   };
 
   if (safeConversions[sourceType]?.includes(targetType)) {
@@ -261,13 +258,28 @@ const getSourceVarOptions = (targetVar: TargetVariable) => {
   });
 };
 
+const handleMappingChange = (targetName: string, value: SelectValue) => {
+  if (typeof value === 'string' || typeof value === 'number') {
+    currentMappings.value = {
+      ...currentMappings.value,
+      [targetName]: String(value),
+    };
+    return;
+  }
+
+  clearMapping(targetName);
+};
+
 // ==================== 监听 ====================
 
 // 自动应用映射建议
 watch(
   () => [props.targetVariables, props.sourceVariables],
   () => {
-    if (autoMapEnabled.value && Object.keys(currentMappings.value).length === 0) {
+    if (
+      autoMapEnabled.value &&
+      Object.keys(currentMappings.value).length === 0
+    ) {
       applyAutoMap();
     }
   },
@@ -435,12 +447,7 @@ watch(
               placeholder="选择变量"
               style="width: 200px"
               allow-clear
-              @change="
-                (val) => {
-                  if (val) currentMappings[target.name] = val;
-                  else clearMapping(target.name);
-                }
-              "
+              @change="(val) => handleMappingChange(target.name, val)"
             >
               <Select.Option
                 v-for="option in getSourceVarOptions(target)"

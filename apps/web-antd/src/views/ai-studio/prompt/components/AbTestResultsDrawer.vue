@@ -25,7 +25,6 @@ import {
   type AbTestResults,
   AbTestStatus,
   getAbTestResults,
-  type VersionMetrics,
 } from '#/api/ai-studio/prompt-ab-testing';
 
 interface Props {
@@ -60,9 +59,6 @@ const statusLabels: Record<string, string> = {
   [AbTestStatus.PAUSED]: '已暂停',
   [AbTestStatus.COMPLETED]: '已完成',
 };
-
-const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
-const formatMs = (ms: number) => `${ms}ms`;
 
 const loadResults = async () => {
   if (!props.testId || !props.templateId) return;
@@ -107,10 +103,18 @@ watch(
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="开始时间">
-              {{ results.startedAt ? new Date(results.startedAt).toLocaleString('zh-CN') : '-' }}
+              {{
+                results.startedAt
+                  ? new Date(results.startedAt).toLocaleString('zh-CN')
+                  : '-'
+              }}
             </Descriptions.Item>
             <Descriptions.Item label="结束时间">
-              {{ results.endedAt ? new Date(results.endedAt).toLocaleString('zh-CN') : '-' }}
+              {{
+                results.endedAt
+                  ? new Date(results.endedAt).toLocaleString('zh-CN')
+                  : '-'
+              }}
             </Descriptions.Item>
           </Descriptions>
         </Card>
@@ -121,7 +125,10 @@ watch(
             <Card
               size="small"
               :title="`对照组 (v${results.controlMetrics.version})`"
-              :head-style="{ background: '#f0f5ff', borderBottom: '2px solid #1890ff' }"
+              :head-style="{
+                background: '#f0f5ff',
+                borderBottom: '2px solid #1890ff',
+              }"
             >
               <Space direction="vertical" class="w-full" :size="12">
                 <Statistic
@@ -155,7 +162,10 @@ watch(
             <Card
               size="small"
               :title="`实验组 (v${results.treatmentMetrics.version})`"
-              :head-style="{ background: '#f6ffed', borderBottom: '2px solid #52c41a' }"
+              :head-style="{
+                background: '#f6ffed',
+                borderBottom: '2px solid #52c41a',
+              }"
             >
               <Space direction="vertical" class="w-full" :size="12">
                 <Statistic
@@ -205,7 +215,12 @@ watch(
                     <MinusOutlined v-else style="color: #999" />
                     <span
                       :style="{
-                        color: results.latencyDiffPercent < 0 ? '#52c41a' : results.latencyDiffPercent > 0 ? '#ff4d4f' : '#999',
+                        color:
+                          results.latencyDiffPercent < 0
+                            ? '#52c41a'
+                            : results.latencyDiffPercent > 0
+                              ? '#ff4d4f'
+                              : '#999',
                       }"
                     >
                       {{ Math.abs(results.latencyDiffPercent).toFixed(1) }}%
@@ -229,10 +244,17 @@ watch(
                     <MinusOutlined v-else style="color: #999" />
                     <span
                       :style="{
-                        color: results.successRateDiff > 0 ? '#52c41a' : results.successRateDiff < 0 ? '#ff4d4f' : '#999',
+                        color:
+                          results.successRateDiff > 0
+                            ? '#52c41a'
+                            : results.successRateDiff < 0
+                              ? '#ff4d4f'
+                              : '#999',
                       }"
                     >
-                      {{ (Math.abs(results.successRateDiff) * 100).toFixed(2) }}%
+                      {{
+                        (Math.abs(results.successRateDiff) * 100).toFixed(2)
+                      }}%
                     </span>
                   </Space>
                 </template>
@@ -253,7 +275,12 @@ watch(
                     <MinusOutlined v-else style="color: #999" />
                     <span
                       :style="{
-                        color: results.tokenDiffPercent < 0 ? '#52c41a' : results.tokenDiffPercent > 0 ? '#ff4d4f' : '#999',
+                        color:
+                          results.tokenDiffPercent < 0
+                            ? '#52c41a'
+                            : results.tokenDiffPercent > 0
+                              ? '#ff4d4f'
+                              : '#999',
                       }"
                     >
                       {{ Math.abs(results.tokenDiffPercent).toFixed(1) }}%
@@ -274,10 +301,17 @@ watch(
               </Tag>
               <Tag v-if="results.recommendedVersion" color="blue">
                 <CheckCircleOutlined />
-                推荐：{{ results.recommendedVersion === 'treatment' ? '实验组' : '对照组' }}
+                推荐：{{
+                  results.recommendedVersion === 'treatment'
+                    ? '实验组'
+                    : '对照组'
+                }}
               </Tag>
             </Space>
-            <Typography.Paragraph v-if="results.recommendation" type="secondary">
+            <Typography.Paragraph
+              v-if="results.recommendation"
+              type="secondary"
+            >
               {{ results.recommendation }}
             </Typography.Paragraph>
           </Space>

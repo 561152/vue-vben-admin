@@ -31,7 +31,6 @@ import {
   Slider,
   Space,
   Spin,
-  Switch,
   Tag,
   Tabs,
   Typography,
@@ -45,6 +44,8 @@ import {
   publishPromptTemplate,
   updatePromptTemplate,
   type CreatePromptTemplateData,
+  type PromptModelConfig,
+  type PromptVariable as ApiPromptVariable,
 } from '#/api/ai-studio/prompt-template';
 import { usePromptEditCache } from '#/composables/useLruCache';
 
@@ -125,6 +126,60 @@ const exportModalVisible = ref(false);
 // 版本对比弹窗
 const versionCompareVisible = ref(false);
 
+const defaultModelConfig = (): PromptModelConfig => ({
+  model: 'gpt-4o',
+  temperature: 0.7,
+  top_p: 1,
+  max_tokens: 2048,
+});
+
+const ensureModelConfig = (): PromptModelConfig => {
+  formData.value.modelConfig ??= defaultModelConfig();
+  return formData.value.modelConfig;
+};
+
+const isPromptVariableType = (
+  type: string,
+): type is ApiPromptVariable['type'] =>
+  ['boolean', 'image_url', 'json', 'number', 'string', 'text'].includes(type);
+
+const normalizeVariables = (
+  variables:
+    | Array<{
+        defaultValue?: unknown;
+        description?: string;
+        name: string;
+        required: boolean;
+        type: string;
+      }>
+    | undefined,
+): ApiPromptVariable[] =>
+  (variables ?? []).map((variable) => ({
+    ...variable,
+    type: isPromptVariableType(variable.type) ? variable.type : 'string',
+  }));
+
+const normalizeModelConfig = (
+  modelConfig: PromptModelConfig | null | undefined,
+): PromptModelConfig => modelConfig ?? defaultModelConfig();
+
+const toCacheString = (value: string | null | undefined): string | undefined =>
+  value ?? undefined;
+
+const formDescription = computed({
+  get: () => formData.value.description ?? undefined,
+  set: (value: string | undefined) => {
+    formData.value.description = value ?? '';
+  },
+});
+
+const formCategory = computed({
+  get: () => formData.value.category ?? undefined,
+  set: (value: string | undefined) => {
+    formData.value.category = value ?? '';
+  },
+});
+
 // ==================== 表单规则 ====================
 
 const rules = {
@@ -166,14 +221,9 @@ const loadPromptDetail = async () => {
       templateContent: data.templateContent,
       variables: data.variables || [],
       defaultValues: data.defaultValues || {},
-      modelConfig: data.modelConfig || {
-        model: 'gpt-4o',
-        temperature: 0.7,
-        top_p: 1,
-        max_tokens: 2048,
-      },
+      modelConfig: normalizeModelConfig(data.modelConfig),
       tags: data.tags || [],
-      isActive: data.isActive,
+      isActive: data.isActive ?? false,
     };
   } catch (error) {
     message.error('加载提示词详情失败');
@@ -245,7 +295,10 @@ const handlePublish = async () => {
       await updatePromptTemplate(promptId.value, formData.value);
     } else {
       const res = await createPromptTemplate(formData.value);
-      promptId.value = res.id;
+      await publishPromptTemplate(res.id);
+      message.success('发布成功');
+      goBack();
+      return;
     }
 
     // 再发布
@@ -315,10 +368,10 @@ const saveToCache = () => {
     key: formData.value.key,
     templateContent: formData.value.templateContent,
     variables: formData.value.variables || [],
-    modelConfig: formData.value.modelConfig,
-    category: formData.value.category,
+    modelConfig: formData.value.modelConfig ?? undefined,
+    category: toCacheString(formData.value.category),
     tags: formData.value.tags,
-    description: formData.value.description,
+    description: toCacheString(formData.value.description),
     updatedAt: Date.now(),
   });
 };
@@ -353,7 +406,7 @@ const restoreFromCache = (cacheKey: string) => {
           description: cached.description || '',
           category: cached.category || '',
           templateContent: cached.templateContent,
-          variables: cached.variables || [],
+          variables: normalizeVariables(cached.variables),
           modelConfig: cached.modelConfig || formData.value.modelConfig,
           tags: cached.tags || [],
         };
@@ -492,7 +545,7 @@ onUnmounted(() => {
             @click="restoreFromCache(prompt.key)"
           >
             {{ prompt.name }}
-            <span style="font-size: 11px; opacity: 0.7; margin-left: 4px">
+            <span style="margin-left: 4px; font-size: 11px; opacity: 0.7">
               {{ new Date(prompt.updatedAt).toLocaleDateString() }}
             </span>
           </Tag>
@@ -537,7 +590,7 @@ onUnmounted(() => {
 
             <Form.Item label="描述" name="description">
               <Input.TextArea
-                v-model:value="formData.description"
+                v-model:value="formDescription"
                 :rows="2"
                 placeholder="请输入提示词描述"
               />
@@ -547,7 +600,7 @@ onUnmounted(() => {
               <Col :span="12">
                 <Form.Item label="分类" name="category">
                   <Select
-                    v-model:value="formData.category"
+                    v-model:value="formCategory"
                     placeholder="选择或输入分类"
                     allow-clear
                     show-search
@@ -611,9 +664,10 @@ onUnmounted(() => {
           <!-- 变量定义 -->
           <Tabs.TabPane key="variables" tab="变量定义">
             <VariableEditor
-              v-model="formData.variables"
+              :model-value="normalizeVariables(formData.variables)"
               :template="formData.templateContent"
               auto-extract
+              @update:model-value="formData.variables = $event"
               @change="handleVariablesChange"
             />
           </Tabs.TabPane>
@@ -623,7 +677,7 @@ onUnmounted(() => {
             <Row :gutter="24">
               <Col :span="12">
                 <Form.Item label="默认模型">
-                  <Select v-model:value="formData.modelConfig!.model">
+                  <Select v-model:value="ensureModelConfig().model">
                     <Select.Option
                       v-for="model in modelOptions"
                       :key="model.value"
@@ -637,7 +691,7 @@ onUnmounted(() => {
               <Col :span="12">
                 <Form.Item label="最大 Token">
                   <InputNumber
-                    v-model:value="formData.modelConfig!.max_tokens"
+                    v-model:value="ensureModelConfig().max_tokens"
                     :min="100"
                     :max="4096"
                     :step="100"
@@ -649,27 +703,27 @@ onUnmounted(() => {
 
             <Form.Item label="Temperature (创造性)">
               <Slider
-                v-model:value="formData.modelConfig!.temperature"
+                v-model:value="ensureModelConfig().temperature"
                 :min="0"
                 :max="2"
                 :step="0.1"
               />
               <template #help>
                 值越低越保守，值越高越有创造性 (当前:
-                {{ formData.modelConfig!.temperature }})
+                {{ ensureModelConfig().temperature }})
               </template>
             </Form.Item>
 
             <Form.Item label="Top P (多样性)">
               <Slider
-                v-model:value="formData.modelConfig!.top_p"
+                v-model:value="ensureModelConfig().top_p"
                 :min="0"
                 :max="1"
                 :step="0.1"
               />
               <template #help>
                 控制输出的多样性，1.0 表示最大多样性 (当前:
-                {{ formData.modelConfig!.top_p }})
+                {{ ensureModelConfig().top_p }})
               </template>
             </Form.Item>
           </Tabs.TabPane>
@@ -678,8 +732,8 @@ onUnmounted(() => {
           <Tabs.TabPane key="preview" tab="实时预览">
             <PromptPreview
               :template="formData.templateContent"
-              :variables="formData.variables || []"
-              :model-config="formData.modelConfig"
+              :variables="normalizeVariables(formData.variables)"
+              :model-config="normalizeModelConfig(formData.modelConfig)"
             />
           </Tabs.TabPane>
 

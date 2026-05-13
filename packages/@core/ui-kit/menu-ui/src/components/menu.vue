@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { UseResizeObserverReturn } from '@vueuse/core';
 
-import type { SetupContext, VNodeArrayChildren } from 'vue';
+import type { SetupContext, VNode, VNodeArrayChildren } from 'vue';
 
 import type {
   MenuItemClicked,
@@ -12,6 +12,7 @@ import type {
 
 import {
   computed,
+  isVNode,
   nextTick,
   reactive,
   ref,
@@ -67,6 +68,13 @@ const items = ref<MenuProvider['items']>({});
 const subMenus = ref<MenuProvider['subMenus']>({});
 const mouseInChild = ref(false);
 
+function isKeyedVNode(item: unknown): item is VNode & { key: string | number } {
+  return (
+    isVNode(item) &&
+    (typeof item.key === 'string' || typeof item.key === 'number')
+  );
+}
+
 const isMenuPopup = computed<MenuProvider['isMenuPopup']>(() => {
   return (
     props.mode === 'horizontal' || (props.mode === 'vertical' && props.collapse)
@@ -86,7 +94,11 @@ const getSlot = computed(() => {
   const slotMore =
     sliceIndex.value === -1 ? [] : originalSlot.slice(sliceIndex.value);
 
-  return { showSlotMore: slotMore.length > 0, slotDefault, slotMore };
+  return {
+    showSlotMore: slotMore.length > 0,
+    slotDefault: slotDefault.filter(isKeyedVNode),
+    slotMore: slotMore.filter(isKeyedVNode),
+  };
 });
 
 watch(

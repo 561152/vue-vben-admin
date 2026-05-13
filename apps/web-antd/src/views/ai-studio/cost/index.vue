@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, h } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import {
   Card,
   Row,
@@ -12,10 +12,11 @@ import {
   Space,
   Tabs,
   Progress,
-  Tooltip,
   Button,
   Spin,
 } from 'ant-design-vue';
+import type { Formatter } from 'ant-design-vue/es/statistic/utils';
+import type { Dayjs } from 'dayjs';
 import {
   DollarOutlined,
   ThunderboltOutlined,
@@ -27,7 +28,6 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
-import dayjs from 'dayjs';
 
 interface CostOverview {
   totalTokens: number;
@@ -77,7 +77,7 @@ interface UserCost {
 
 const loading = ref(false);
 const timeRange = ref('7d');
-const dateRange = ref<any[]>([]);
+const dateRange = ref<[Dayjs, Dayjs] | undefined>(undefined);
 const selectedModule = ref('all');
 const activeTab = ref('overview');
 const accessDenied = ref(false);
@@ -128,6 +128,9 @@ const formatCost = (cost: number): string => {
   if (cost >= 1) return `¥${cost.toFixed(2)}`;
   return `¥${cost.toFixed(4)}`;
 };
+
+const statisticTokenFormatter: Formatter = ({ value }) =>
+  formatTokens(Number(value));
 
 // 模块成本表格列
 const moduleCostColumns = [
@@ -297,8 +300,8 @@ const fetchCostData = async () => {
     const response = await requestClient.get('/ai-studio/cost', {
       params: {
         timeRange: timeRange.value,
-        startDate: dateRange.value[0]?.format('YYYY-MM-DD'),
-        endDate: dateRange.value[1]?.format('YYYY-MM-DD'),
+        startDate: dateRange.value?.[0]?.format('YYYY-MM-DD'),
+        endDate: dateRange.value?.[1]?.format('YYYY-MM-DD'),
         module:
           selectedModule.value !== 'all' ? selectedModule.value : undefined,
       },
@@ -373,7 +376,7 @@ const exportReport = async () => {
 // 处理时间范围变化
 const handleTimeRangeChange = () => {
   if (timeRange.value !== 'custom') {
-    dateRange.value = [];
+    dateRange.value = undefined;
   }
   fetchCostData();
 };
@@ -453,7 +456,7 @@ onMounted(() => {
                 title="Token 总消耗"
                 :value="overview.totalTokens"
                 :prefix="h(ThunderboltOutlined)"
-                :formatter="(value: number) => formatTokens(value)"
+                :formatter="statisticTokenFormatter"
               >
                 <template #suffix>
                   <span
@@ -499,7 +502,7 @@ onMounted(() => {
               <Statistic
                 title="输入 Token"
                 :value="overview.promptTokens"
-                :formatter="(value: number) => formatTokens(value)"
+                :formatter="statisticTokenFormatter"
               />
               <div class="stat-sub">
                 占比:
@@ -516,7 +519,7 @@ onMounted(() => {
               <Statistic
                 title="输出 Token"
                 :value="overview.completionTokens"
-                :formatter="(value: number) => formatTokens(value)"
+                :formatter="statisticTokenFormatter"
               />
               <div class="stat-sub">
                 占比:

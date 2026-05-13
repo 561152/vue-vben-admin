@@ -8,12 +8,9 @@ import {
   Timeline,
   Tag,
   Collapse,
-  Descriptions,
   Alert,
-  Spin,
   Tooltip,
   Progress,
-  Divider,
 } from 'ant-design-vue';
 import {
   PlayCircleOutlined,
@@ -330,15 +327,6 @@ const getStatusIcon = (status: string) => {
     skipped: ClockCircleOutlined,
   };
   return icons[status] || ClockCircleOutlined;
-};
-
-// 格式化耗时
-const formatDuration = (startTime?: number, endTime?: number) => {
-  if (!startTime) return '-';
-  const end = endTime || Date.now();
-  const duration = end - startTime;
-  if (duration < 1000) return `${duration}ms`;
-  return `${(duration / 1000).toFixed(2)}s`;
 };
 
 watch(() => inputJson.value, validateInput);

@@ -2,30 +2,21 @@
 import { computed, ref, watch } from 'vue';
 import {
   Alert,
-  Button,
   Card,
   Col,
   Empty,
   Form,
   Input,
   InputNumber,
-  List,
   Modal,
   Row,
   Select,
-  Space,
   Spin,
   Tag,
   Typography,
   message,
 } from 'ant-design-vue';
-import {
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  FileTextOutlined,
-  PlusOutlined,
-  WarningOutlined,
-} from '@ant-design/icons-vue';
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
 import type {
   CreateBindingParams,
   PipelinePromptBinding,
@@ -84,6 +75,13 @@ const formState = ref<CreateBindingParams>({
   priority: 0,
   variableMappings: {},
   condition: undefined,
+});
+
+const variableMappings = computed({
+  get: () => formState.value.variableMappings ?? {},
+  set: (value: Record<string, string>) => {
+    formState.value.variableMappings = value;
+  },
 });
 
 // 选中的模板（必须先定义，才能在 usePromptParser 中使用）
@@ -203,7 +201,8 @@ const loadTemplates = async () => {
   templatesLoading.value = true;
   try {
     const response = await getPromptTemplates({
-      pageSize: 100,
+      limit: 100,
+      offset: 0,
     });
     templates.value = response.items;
   } catch (error) {
@@ -258,7 +257,7 @@ const doSave = async () => {
         {
           bindingType: formState.value.bindingType as BindingType,
           priority: formState.value.priority,
-          variableMappings: formState.value.variableMappings,
+          variableMappings: formState.value.variableMappings ?? {},
           condition: formState.value.condition,
         },
       );
@@ -462,7 +461,7 @@ const sourceVariables = computed(() => {
               }"
             >
               <VariableMapper
-                v-model="formState.variableMappings"
+                v-model="variableMappings"
                 :source-variables="sourceVariables"
                 :target-variables="templateVariables"
                 show-type-check

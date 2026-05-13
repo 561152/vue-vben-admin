@@ -12,7 +12,8 @@ import type { SetupContext } from 'vue';
 
 import type { VbenFormProps } from '@vben-core/form-ui';
 
-import type { ExtendedVxeGridApi, VxeGridProps } from './types';
+import type { ExtendedVxeGridApi } from './api';
+import type { VxeGridProps } from './types';
 
 import {
   computed,
@@ -315,7 +316,9 @@ async function init() {
       '[Vben Vxe Table]: The formConfig in the grid is not supported, please use the `formOptions` props',
     );
   }
-  props.api?.setState?.({ gridOptions: defaultGridOptions });
+  props.api?.setState?.({
+    gridOptions: defaultGridOptions,
+  } as Partial<VxeGridProps>);
   // form 由 vben-form 代替，所以需要保证query相关事件可以拿到参数
   extendProxyOptions(props.api, defaultGridOptions, () =>
     formApi.getLatestSubmissionValues(),
@@ -326,7 +329,7 @@ async function init() {
 watch(
   formOptions,
   () => {
-    formApi.setState((prev) => {
+    formApi.setState((prev: VbenFormProps) => {
       const finalFormOptions: VbenFormProps = mergeWithArrayOverride(
         {},
         formOptions.value,

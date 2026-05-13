@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, h, computed } from 'vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
+import type { ValueType } from 'ant-design-vue/es/input-number/src/utils/MiniDecimal';
 import {
   Card,
   Row,
@@ -19,12 +21,10 @@ import {
   Select,
   Avatar,
   List,
-  Badge,
   Divider,
   Form,
   InputNumber,
   Switch,
-  Tooltip,
 } from 'ant-design-vue';
 import {
   TeamOutlined,
@@ -38,11 +38,9 @@ import {
   LinkOutlined,
   CrownOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
   EyeOutlined,
   PlusOutlined,
   SettingOutlined,
-  HistoryOutlined,
 } from '@ant-design/icons-vue';
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import type { EchartsUIType } from '@vben/plugins/echarts';
@@ -94,7 +92,7 @@ const { renderEcharts: renderTrendChart } = useEcharts(trendChartRef);
 // Tab 2: 推荐人管理
 const searchKeyword = ref('');
 const searchCode = ref('');
-const dateRange = ref<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+const dateRange = ref<[dayjs.Dayjs, dayjs.Dayjs] | undefined>(undefined);
 const referrerList = ref<ReferralUser[]>([]);
 const referrerLoading = ref(false);
 const referrerPagination = ref({
@@ -104,7 +102,7 @@ const referrerPagination = ref({
 });
 
 // Tab 3: 推荐关系
-const selectedCustomer = ref<string | null>(null);
+const selectedCustomer = ref<SelectValue>(undefined);
 const customerOptions = ref<Array<{ label: string; value: string }>>([]);
 const customerSearchLoading = ref(false);
 const referrerInfo = ref<{
@@ -321,6 +319,9 @@ const referralColumns = [
   },
 ];
 
+const formatPoints = (value: ValueType) => `${value ?? 0} 积分`;
+const formatCurrency = (value: ValueType) => `¥${value ?? 0}`;
+
 const rewardRecordColumns = [
   {
     title: '时间',
@@ -520,11 +521,13 @@ async function searchCustomers(keyword: string) {
 }
 
 async function loadRelationships() {
-  if (!selectedCustomer.value) return;
+  const customerId =
+    typeof selectedCustomer.value === 'string' ? selectedCustomer.value : '';
+  if (!customerId) return;
 
   relationshipsLoading.value = true;
   try {
-    const response = await getReferralRelationships(selectedCustomer.value, {
+    const response = await getReferralRelationships(customerId, {
       page: relationshipsPagination.value.current,
       pageSize: relationshipsPagination.value.pageSize,
     });
@@ -644,7 +647,7 @@ async function handleSaveSettings() {
 function resetSearch() {
   searchKeyword.value = '';
   searchCode.value = '';
-  dateRange.value = null;
+  dateRange.value = undefined;
   loadReferrerList();
 }
 
@@ -951,7 +954,7 @@ onMounted(() => {
                       v-model:value="rewardSettings.referrerReward"
                       style="width: 100%"
                       :min="0"
-                      :formatter="(value: number) => `${value} 积分`"
+                      :formatter="formatPoints"
                     />
                   </Form.Item>
 
@@ -960,7 +963,7 @@ onMounted(() => {
                       v-model:value="rewardSettings.refereeReward"
                       style="width: 100%"
                       :min="0"
-                      :formatter="(value: number) => `${value} 积分`"
+                      :formatter="formatPoints"
                     />
                   </Form.Item>
 
@@ -969,7 +972,7 @@ onMounted(() => {
                       v-model:value="rewardSettings.minPurchaseAmount"
                       style="width: 100%"
                       :min="0"
-                      :formatter="(value: number) => `¥${value}`"
+                      :formatter="formatCurrency"
                     />
                     <div class="mt-1 text-xs text-gray-500">
                       被推荐人需达到此消费金额，推荐人才能获得奖励

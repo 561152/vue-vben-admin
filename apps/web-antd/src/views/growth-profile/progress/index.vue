@@ -33,7 +33,6 @@ import MigrationNotice from '#/components/MigrationNotice.vue';
 // 状态
 const isLoading = ref(false);
 const progress = ref<any | null>(null);
-const studentId = ref('1'); // TODO: 从用户状态获取
 
 // 会话表格列
 const sessionColumns = [
@@ -61,7 +60,7 @@ const loadProgress = async () => {
   isLoading.value = true;
   try {
     // TODO: 调用实际 API
-    // progress.value = await getStudentProgress(studentId.value);
+    // progress.value = await getStudentProgress('1');
 
     // 模拟数据
     progress.value = {
@@ -81,9 +80,9 @@ const loadProgress = async () => {
       pendingMistakes: 12,
       knowledgePoints: [
         { topic: '分数运算', mastery: 0.85 },
-        { topic: '几何图形', mastery: 0.70 },
-        { topic: '应用题', mastery: 0.60 },
-        { topic: '方程求解', mastery: 0.80 },
+        { topic: '几何图形', mastery: 0.7 },
+        { topic: '应用题', mastery: 0.6 },
+        { topic: '方程求解', mastery: 0.8 },
       ],
     };
   } catch (error) {
@@ -205,7 +204,10 @@ onMounted(loadProgress);
         <Table
           :columns="sessionColumns"
           :data-source="
-            progress?.recentSessions?.map((s: any, i: number) => ({ ...s, key: i })) || []
+            progress?.recentSessions?.map((s: any, i: number) => ({
+              ...s,
+              key: i,
+            })) || []
           "
           :pagination="false"
         >

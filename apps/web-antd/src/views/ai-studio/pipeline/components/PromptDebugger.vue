@@ -1,14 +1,10 @@
 <script lang="tsx" setup>
 import { computed, ref, watch } from 'vue';
 import {
-  BugOutlined,
-  CheckCircleOutlined,
   CopyOutlined,
   EyeOutlined,
   PlayCircleOutlined,
   PlusOutlined,
-  SaveOutlined,
-  WarningOutlined,
 } from '@ant-design/icons-vue';
 import {
   Alert,
@@ -19,18 +15,18 @@ import {
   Descriptions,
   Empty,
   Input,
+  InputNumber,
   Modal,
   Row,
   Select,
   Space,
   Switch,
   Table,
-  Tabs,
   Tag,
-  Tooltip,
   Typography,
   message,
 } from 'ant-design-vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
 
 import {
   getStepPromptBindings,
@@ -56,6 +52,11 @@ interface TestCase {
   data: Record<string, unknown>;
 }
 
+interface PromptDebugBinding extends PipelinePromptBinding {
+  stepKey?: string;
+  promptTemplate?: PromptTemplate;
+}
+
 interface Props {
   pipelineKey: string;
   steps: StepInfo[];
@@ -68,7 +69,7 @@ const props = defineProps<Props>();
 const loading = ref(false);
 const selectedStepKey = ref<string>('');
 const selectedBindingId = ref<string>('');
-const bindings = ref<PipelinePromptBinding[]>([]);
+const bindings = ref<PromptDebugBinding[]>([]);
 
 // 测试用例
 const testCases = ref<TestCase[]>([]);
@@ -78,7 +79,6 @@ const testData = ref<Record<string, unknown>>({});
 // 显示选项
 const showRaw = ref(false);
 const highlightVars = ref(true);
-const highlightedContentRef = ref<HTMLElement | null>(null);
 
 // 变量追踪
 const traceModalVisible = ref(false);
@@ -97,11 +97,6 @@ const llmSteps = computed(() => {
   return props.steps.filter(
     (s) => s.type === 'LLM' || s.type === 'llm' || s.type === 'ai-completion',
   );
-});
-
-// 当前选中的步骤
-const selectedStep = computed(() => {
-  return llmSteps.value.find((s) => s.key === selectedStepKey.value);
 });
 
 // 当前步骤的绑定列表
@@ -124,7 +119,6 @@ const {
   variables: extractedVars,
   render,
   detectRisks,
-  validateData,
   createTestData,
 } = usePromptParser(
   computed(() => selectedPrompt.value?.templateContent || ''),
@@ -224,8 +218,9 @@ const loadBindings = async () => {
     const active = res.find((b) => b.isActive);
     if (active) {
       selectedBindingId.value = active.id;
-    } else if (res.length > 0) {
-      selectedBindingId.value = res[0].id;
+    } else {
+      const firstBinding = res[0];
+      if (firstBinding) selectedBindingId.value = firstBinding.id;
     }
   } finally {
     loading.value = false;
@@ -251,18 +246,8 @@ const createTestCase = () => {
 /**
  * 保存测试用例
  */
-const saveTestCase = () => {
-  const current = testCases.value.find((c) => c.id === activeTestCaseId.value);
-  if (current) {
-    current.data = { ...testData.value };
-    message.success('保存成功');
-  }
-};
-
-/**
- * 切换测试用例
- */
-const switchTestCase = (caseId: string) => {
+const switchTestCase = (caseId: SelectValue) => {
+  if (typeof caseId !== 'string') return;
   activeTestCaseId.value = caseId;
   const tc = testCases.value.find((c) => c.id === caseId);
   if (tc) {
@@ -341,12 +326,42 @@ watch(selectedStepKey, () => {
 watch(
   () => props.steps,
   () => {
-    if (llmSteps.value.length > 0 && !selectedStepKey.value) {
-      selectedStepKey.value = llmSteps.value[0].key;
+    const firstStep = llmSteps.value[0];
+    if (firstStep && !selectedStepKey.value) {
+      selectedStepKey.value = firstStep.key;
     }
   },
   { immediate: true },
 );
+
+const toInputString = (value: unknown): string | undefined => {
+  if (typeof value === 'string' || typeof value === 'number')
+    return String(value);
+  if (typeof value === 'boolean') return String(value);
+  if (value === null || value === undefined) return undefined;
+  return JSON.stringify(value, null, 2);
+};
+
+const toInputNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const toInputBoolean = (value: unknown): boolean => {
+  return typeof value === 'boolean' ? value : Boolean(value);
+};
+
+const setJsonTestData = (name: string, value: string) => {
+  try {
+    testData.value[name] = value.trim() ? JSON.parse(value) : undefined;
+  } catch {
+    testData.value[name] = value;
+  }
+};
 
 // 初始化测试数据
 watch(
@@ -468,19 +483,40 @@ watch(
 
                   <Input.TextArea
                     v-if="variable.type === 'text'"
-                    v-model:value="testData[variable.name]"
+                    :value="toInputString(testData[variable.name])"
                     :rows="3"
                     size="small"
+                    @update:value="(value) => (testData[variable.name] = value)"
+                  />
+                  <Input.TextArea
+                    v-else-if="variable.type === 'json'"
+                    :value="toInputString(testData[variable.name])"
+                    :rows="3"
+                    size="small"
+                    @update:value="
+                      (value) => setJsonTestData(variable.name, value)
+                    "
+                  />
+                  <InputNumber
+                    v-else-if="variable.type === 'number'"
+                    :value="toInputNumber(testData[variable.name])"
+                    size="small"
+                    style="width: 100%"
+                    @update:value="(value) => (testData[variable.name] = value)"
                   />
                   <Switch
                     v-else-if="variable.type === 'boolean'"
-                    v-model:checked="testData[variable.name]"
+                    :checked="toInputBoolean(testData[variable.name])"
                     size="small"
+                    @update:checked="
+                      (value) => (testData[variable.name] = value)
+                    "
                   />
                   <Input
                     v-else
-                    v-model:value="testData[variable.name]"
+                    :value="toInputString(testData[variable.name])"
                     size="small"
+                    @update:value="(value) => (testData[variable.name] = value)"
                   />
                 </div>
               </div>

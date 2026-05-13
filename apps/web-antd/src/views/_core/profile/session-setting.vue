@@ -16,82 +16,78 @@ import {
   SafetyOutlined,
 } from '@ant-design/icons-vue';
 
-const { $t } = useI18n();
+const { t } = useI18n();
 
 const sessions = ref<AuthApi.UserSession[]>([]);
 const loading = ref(false);
 
-// 加载会话列表
 async function loadSessions() {
   loading.value = true;
   try {
     const result = await getSessionsApi();
     sessions.value = result.sessions;
   } catch (error) {
-    message.error($t('authentication.loadSessionsFailed'));
+    message.error(t('authentication.loadSessionsFailed'));
     console.error('Failed to load sessions:', error);
   } finally {
     loading.value = false;
   }
 }
 
-// 撤销指定会话
 async function handleRevokeSession(session: AuthApi.UserSession) {
   if (session.isCurrent) {
-    message.warning($t('authentication.cannotRevokeCurrentSession'));
+    message.warning(t('authentication.cannotRevokeCurrentSession'));
     return;
   }
 
   Modal.confirm({
-    title: $t('authentication.revokeSessionConfirmTitle'),
-    content: $t('authentication.revokeSessionConfirmContent', {
+    title: t('authentication.revokeSessionConfirmTitle'),
+    content: t('authentication.revokeSessionConfirmContent', {
       device: session.deviceInfo,
     }),
-    okText: $t('common.confirm'),
-    cancelText: $t('common.cancel'),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
     onOk: async () => {
       try {
         await revokeSessionApi(session.id);
-        message.success($t('authentication.revokeSessionSuccess'));
+        message.success(t('authentication.revokeSessionSuccess'));
         await loadSessions();
       } catch (error) {
-        message.error($t('authentication.revokeSessionFailed'));
+        message.error(t('authentication.revokeSessionFailed'));
         console.error('Failed to revoke session:', error);
       }
     },
   });
 }
 
-// 撤销所有其他会话
 async function handleRevokeAllOthers() {
   const otherSessionsCount = sessions.value.filter((s) => !s.isCurrent).length;
 
   if (otherSessionsCount === 0) {
-    message.info($t('authentication.noOtherSessions'));
+    message.info(t('authentication.noOtherSessions'));
     return;
   }
 
   Modal.confirm({
-    title: $t('authentication.revokeAllOthersConfirmTitle'),
-    content: $t('authentication.revokeAllOthersConfirmContent', {
+    title: t('authentication.revokeAllOthersConfirmTitle'),
+    content: t('authentication.revokeAllOthersConfirmContent', {
       count: otherSessionsCount,
     }),
-    okText: $t('common.confirm'),
-    cancelText: $t('common.cancel'),
+    okText: t('common.confirm'),
+    cancelText: t('common.cancel'),
     onOk: async () => {
       try {
         const result = await revokeOtherSessionsApi();
         message.success(result.message);
         await loadSessions();
       } catch (error) {
-        message.error($t('authentication.revokeAllOthersFailed'));
+        message.error(t('authentication.revokeAllOthersFailed'));
         console.error('Failed to revoke other sessions:', error);
       }
     },
   });
 }
 
-// 根据设备信息返回图标
 function getDeviceIcon(deviceInfo: string) {
   const lowerDevice = deviceInfo.toLowerCase();
   if (lowerDevice.includes('ios') || lowerDevice.includes('iphone')) {
@@ -109,7 +105,6 @@ function getDeviceIcon(deviceInfo: string) {
   return DesktopOutlined;
 }
 
-// 格式化时间
 function formatDate(date: Date): string {
   return new Date(date).toLocaleString('zh-CN', {
     year: 'numeric',
@@ -120,10 +115,7 @@ function formatDate(date: Date): string {
   });
 }
 
-// 计算当前会话和其他会话
-const currentSession = computed(() =>
-  sessions.value.find((s) => s.isCurrent),
-);
+const currentSession = computed(() => sessions.value.find((s) => s.isCurrent));
 const otherSessions = computed(() =>
   sessions.value.filter((s) => !s.isCurrent),
 );
@@ -138,10 +130,10 @@ onMounted(() => {
     <div class="session-header">
       <h3 class="session-title">
         <SafetyOutlined class="title-icon" />
-        {{ $t('authentication.sessionManagement') }}
+        {{ t('authentication.sessionManagement') }}
       </h3>
       <p class="session-description">
-        {{ $t('authentication.sessionManagementDesc') }}
+        {{ t('authentication.sessionManagementDesc') }}
       </p>
     </div>
 
@@ -149,7 +141,7 @@ onMounted(() => {
       <!-- 当前会话 -->
       <div v-if="currentSession" class="session-section">
         <h4 class="section-title">
-          {{ $t('authentication.currentSession') }}
+          {{ t('authentication.currentSession') }}
         </h4>
         <div class="session-card current-session-card">
           <div class="session-icon">
@@ -162,7 +154,7 @@ onMounted(() => {
             <div class="session-device">
               {{ currentSession.deviceInfo }}
               <a-tag color="green" class="current-tag">
-                {{ $t('authentication.currentDevice') }}
+                {{ t('authentication.currentDevice') }}
               </a-tag>
             </div>
             <div class="session-detail">
@@ -171,15 +163,15 @@ onMounted(() => {
                 {{ currentSession.ipAddress }}
               </span>
               <span class="detail-item">
-                <span class="detail-label">{{
-                  $t('authentication.loginTime')
-                }}:</span>
+                <span class="detail-label"
+                  >{{ t('authentication.loginTime') }}:</span
+                >
                 {{ formatDate(currentSession.loginAt) }}
               </span>
               <span class="detail-item">
-                <span class="detail-label">{{
-                  $t('authentication.lastActiveTime')
-                }}:</span>
+                <span class="detail-label"
+                  >{{ t('authentication.lastActiveTime') }}:</span
+                >
                 {{ formatDate(currentSession.lastActiveAt) }}
               </span>
             </div>
@@ -191,15 +183,11 @@ onMounted(() => {
       <div v-if="otherSessions.length > 0" class="session-section">
         <div class="section-header">
           <h4 class="section-title">
-            {{ $t('authentication.otherSessions') }}
+            {{ t('authentication.otherSessions') }}
             <span class="session-count">({{ otherSessions.length }})</span>
           </h4>
-          <Button
-            danger
-            size="small"
-            @click="handleRevokeAllOthers"
-          >
-            {{ $t('authentication.revokeAllOthers') }}
+          <Button danger size="small" @click="handleRevokeAllOthers">
+            {{ t('authentication.revokeAllOthers') }}
           </Button>
         </div>
 
@@ -223,26 +211,22 @@ onMounted(() => {
                   {{ session.ipAddress }}
                 </span>
                 <span class="detail-item">
-                  <span class="detail-label">{{
-                    $t('authentication.loginTime')
-                  }}:</span>
+                  <span class="detail-label"
+                    >{{ t('authentication.loginTime') }}:</span
+                  >
                   {{ formatDate(session.loginAt) }}
                 </span>
                 <span class="detail-item">
-                  <span class="detail-label">{{
-                    $t('authentication.lastActiveTime')
-                  }}:</span>
+                  <span class="detail-label"
+                    >{{ t('authentication.lastActiveTime') }}:</span
+                  >
                   {{ formatDate(session.lastActiveAt) }}
                 </span>
               </div>
             </div>
             <div class="session-action">
-              <Button
-                danger
-                size="small"
-                @click="handleRevokeSession(session)"
-              >
-                {{ $t('authentication.logout') }}
+              <Button danger size="small" @click="handleRevokeSession(session)">
+                {{ t('authentication.logout') }}
               </Button>
             </div>
           </div>
@@ -251,7 +235,7 @@ onMounted(() => {
 
       <!-- 无其他会话 -->
       <div v-if="otherSessions.length === 0 && !loading" class="empty-state">
-        <a-empty :description="$t('authentication.noOtherSessionsDesc')" />
+        <a-empty :description="t('authentication.noOtherSessionsDesc')" />
       </div>
     </a-spin>
   </div>
@@ -321,7 +305,7 @@ onMounted(() => {
   transition: all 0.3s;
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgbat(0, 0, 0, 0.08);
   }
 
   &.current-session-card {
@@ -392,7 +376,7 @@ onMounted(() => {
 }
 
 /* 移动端适配 */
-@media (max-width: 768px) {
+@media t(max-width: 768px) {
   .session-setting {
     padding: 16px;
   }

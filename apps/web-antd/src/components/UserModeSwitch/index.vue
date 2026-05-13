@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Space, Switch, Tooltip, message } from 'ant-design-vue';
 import {
   UserOutlined,
@@ -54,9 +54,9 @@ const switching = ref(false);
 
 // ==================== Computed ====================
 
-const isChildMode = computed({
+const isChildMode = computed<boolean>({
   get: () => modeStore.isChildMode,
-  set: (value: boolean) => {
+  set: () => {
     // Switch 组件的双向绑定
     // 实际的切换逻辑在 handleModeChange 中
   },
@@ -64,19 +64,20 @@ const isChildMode = computed({
 
 // ==================== Methods ====================
 
-async function handleModeChange(checked: boolean) {
+async function handleModeChange(checked: boolean | number | string) {
   switching.value = true;
 
   try {
     // 切换模式
-    const newMode = checked ? 'CHILD' : 'PARENT';
+    const isChecked = checked === true;
+    const newMode = isChecked ? 'CHILD' : 'PARENT';
     modeStore.switchMode(newMode);
 
     // 发出事件
     emit('change', newMode);
 
     // 提示消息
-    const modeText = checked ? '孩子模式' : '家长模式';
+    const modeText = isChecked ? '孩子模式' : '家长模式';
     message.success(`已切换到${modeText}`);
   } catch (error: any) {
     message.error(`切换失败: ${error.message}`);

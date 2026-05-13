@@ -11,13 +11,13 @@ import {
   Select,
   message,
   Tag,
-  Popconfirm,
   Card,
   Drawer,
   Tooltip,
   Upload,
 } from 'ant-design-vue';
 import type { SelectValue } from 'ant-design-vue/es/select';
+import type { ColumnsType } from 'ant-design-vue/es/table';
 import {
   PlusOutlined,
   PlayCircleOutlined,
@@ -29,7 +29,6 @@ import {
   CodeOutlined,
   SlidersOutlined,
   CloudUploadOutlined,
-  UploadOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import {
@@ -47,7 +46,7 @@ interface PipelineItem {
   name: string;
   description: string | null;
   triggerType: string;
-  steps: any[];
+  steps?: unknown[];
   isActive: boolean;
   isSystem: boolean;
   version: number;
@@ -92,13 +91,7 @@ const uploadLoading = ref(false);
 
 const router = useRouter();
 
-const statusOptions = [
-  { value: 'DRAFT', label: '草稿', color: 'default' },
-  { value: 'PUBLISHED', label: '已发布', color: 'green' },
-  { value: 'DEPRECATED', label: '已废弃', color: 'red' },
-];
-
-const columns = [
+const columns: ColumnsType<PipelineItem> = [
   {
     title: 'ID',
     dataIndex: 'id',
@@ -170,6 +163,56 @@ const columns = [
     fixed: 'right' as const,
   },
 ];
+
+const isNullableString = (value: unknown): value is string | null => {
+  return value === null || typeof value === 'string';
+};
+
+const isPipelineItem = (record: unknown): record is PipelineItem => {
+  if (!record || typeof record !== 'object') {
+    return false;
+  }
+
+  const item = record as Partial<Record<keyof PipelineItem, unknown>>;
+  return (
+    typeof item.id === 'number' &&
+    typeof item.key === 'string' &&
+    typeof item.name === 'string' &&
+    isNullableString(item.description) &&
+    typeof item.triggerType === 'string' &&
+    (item.steps === undefined || Array.isArray(item.steps)) &&
+    typeof item.isActive === 'boolean' &&
+    typeof item.isSystem === 'boolean' &&
+    typeof item.version === 'number' &&
+    isNullableString(item.publishedAt) &&
+    typeof item.createdAt === 'string' &&
+    typeof item.updatedAt === 'string'
+  );
+};
+
+const isPipelineActive = (record: unknown) => {
+  return isPipelineItem(record) && record.isActive;
+};
+
+const isPipelineSystem = (record: unknown) => {
+  return isPipelineItem(record) && record.isSystem;
+};
+
+const getPipelinePublishedAt = (record: unknown) => {
+  return isPipelineItem(record) ? record.publishedAt : null;
+};
+
+const withPipelineItem = (
+  record: unknown,
+  handler: (pipeline: PipelineItem) => void | Promise<void>,
+) => {
+  if (!isPipelineItem(record)) {
+    message.error('流程数据异常，请刷新后重试');
+    return;
+  }
+
+  void handler(record);
+};
 
 const fetchData = async () => {
   loading.value = true;
@@ -351,7 +394,7 @@ const handleExecuteSubmit = async () => {
       executeFormState.value,
     );
 
-    const response = await requestClient.post(
+    await requestClient.post(
       `/ai-studio/pipelines/${executePipeline.value.key}/execute`,
       { inputData },
     );
@@ -524,18 +567,6 @@ const handleDeleteCancel = () => {
   deleteCheckData.value = null;
 };
 
-// 旧的删除方法（保留兼容性）
-const handleDelete = async (key: string) => {
-  try {
-    await requestClient.delete(`/ai-studio/pipelines/${key}`);
-    message.success('删除成功');
-    fetchData();
-  } catch (error) {
-    console.error('Failed to delete pipeline:', error);
-    message.error('删除失败');
-  }
-};
-
 onMounted(() => {
   loadFeatureModules();
   fetchData();
@@ -582,29 +613,49 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'isActive'">
-            <Tag :color="record.isActive ? 'green' : 'default'">
-              {{ record.isActive ? '已启用' : '已禁用' }}
+            <Tag :color="isPipelineActive(record) ? 'green' : 'default'">
+              {{ isPipelineActive(record) ? '已启用' : '已禁用' }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
               <Tooltip title="查看详情">
-                <Button type="link" size="small" @click="showDetail(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, showDetail)"
+                >
                   <template #icon><EyeOutlined /></template>
                 </Button>
               </Tooltip>
-              <Tooltip v-if="record.isSystem" title="参数调优">
-                <Button type="link" size="small" @click="handleTune(record)">
+              <Tooltip v-if="isPipelineSystem(record)" title="参数调优">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, handleTune)"
+                >
                   <template #icon><SlidersOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip v-else title="设计流程">
-                <Button type="link" size="small" @click="showDesign(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, showDesign)"
+                >
                   <template #icon><ApartmentOutlined /></template>
                 </Button>
               </Tooltip>
-              <Tooltip :title="record.publishedAt ? '重新发布' : '发布流程'">
-                <Button type="link" size="small" @click="handlePublish(record)">
+              <Tooltip
+                :title="
+                  getPipelinePublishedAt(record) ? '重新发布' : '发布流程'
+                "
+              >
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, handlePublish)"
+                >
                   <template #icon><CloudUploadOutlined /></template>
                 </Button>
               </Tooltip>
@@ -612,14 +663,18 @@ onMounted(() => {
                 <Button
                   type="link"
                   size="small"
-                  @click="handleExecute(record)"
-                  :disabled="!record.publishedAt"
+                  @click="withPipelineItem(record, handleExecute)"
+                  :disabled="!getPipelinePublishedAt(record)"
                 >
                   <template #icon><PlayCircleOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="编辑">
-                <Button type="link" size="small" @click="showEdit(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, showEdit)"
+                >
                   <template #icon><EditOutlined /></template>
                 </Button>
               </Tooltip>
@@ -627,13 +682,17 @@ onMounted(() => {
                 <Button
                   type="link"
                   size="small"
-                  @click="handleDuplicate(record)"
+                  @click="withPipelineItem(record, handleDuplicate)"
                 >
                   <template #icon><CopyOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="导出代码">
-                <Button type="link" size="small" @click="exportAsCode(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withPipelineItem(record, exportAsCode)"
+                >
                   <template #icon><CodeOutlined /></template>
                 </Button>
               </Tooltip>
@@ -642,7 +701,7 @@ onMounted(() => {
                   type="link"
                   danger
                   size="small"
-                  @click="handleDeleteClick(record)"
+                  @click="withPipelineItem(record, handleDeleteClick)"
                 >
                   <template #icon><DeleteOutlined /></template>
                 </Button>

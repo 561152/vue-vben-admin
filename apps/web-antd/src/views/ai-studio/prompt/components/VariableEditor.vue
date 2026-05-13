@@ -1,5 +1,5 @@
 <script lang="tsx" setup>
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import {
   DeleteOutlined,
@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography,
 } from 'ant-design-vue';
+import type { ColumnsType } from 'ant-design-vue/es/table';
 
 import type { PromptVariable } from '#/utils/prompt-engine';
 
@@ -89,14 +90,6 @@ const removeVariable = (id: string) => {
 /**
  * 更新变量
  */
-const updateVariable = (id: string, updates: Partial<VariableEditorItem>) => {
-  const variable = variables.value.find((v) => v.id === id);
-  if (variable) {
-    Object.assign(variable, updates);
-    emitUpdate();
-  }
-};
-
 /**
  * 发送更新事件
  */
@@ -117,7 +110,10 @@ const autoExtractVariables = () => {
   let match;
 
   while ((match = regex.exec(props.template)) !== null) {
-    extracted.add(match[1]);
+    const variableName = match[1];
+    if (variableName) {
+      extracted.add(variableName);
+    }
   }
 
   // 保留已有定义的变量，添加新提取的
@@ -174,12 +170,11 @@ watch(
       autoExtractVariables();
     }
   },
-  { debounce: 500 },
 );
 
 // ==================== 表格列定义 ====================
 
-const columns = [
+const columns: ColumnsType<VariableEditorItem> = [
   {
     title: '变量名',
     key: 'name',
@@ -194,7 +189,7 @@ const columns = [
     title: '必填',
     key: 'required',
     width: 80,
-    align: 'center',
+    align: 'center' as const,
   },
   {
     title: '描述',
@@ -210,7 +205,7 @@ const columns = [
     title: '操作',
     key: 'action',
     width: 80,
-    align: 'center',
+    align: 'center' as const,
   },
 ];
 </script>
@@ -327,7 +322,7 @@ const columns = [
     <div class="mt-3">
       <Typography.Text type="secondary" class="text-xs">
         提示：变量名只能包含字母、数字、下划点和点号，且不能以数字开头。使用
-        <code v-pre>{{变量名}}</code>
+        <code v-pre>{{ 变量名 }}</code>
         语法在模板中引用变量。
       </Typography.Text>
     </div>

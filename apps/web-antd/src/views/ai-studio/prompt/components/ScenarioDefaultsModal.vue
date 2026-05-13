@@ -1,15 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
 
-import {
-  CheckOutlined,
-  SettingOutlined,
-} from '@ant-design/icons-vue';
+import { CheckOutlined, SettingOutlined } from '@ant-design/icons-vue';
 import {
   Button,
   Drawer,
   Empty,
-  Form,
   message,
   Select,
   Space,
@@ -18,6 +14,7 @@ import {
   Tag,
   Typography,
 } from 'ant-design-vue';
+import type { DefaultOptionType } from 'ant-design-vue/es/select';
 
 import {
   AI_SCENARIO_LABELS,
@@ -70,6 +67,11 @@ const templateOptions = computed(() =>
     label: `${t.name} (${t.key})`,
   })),
 );
+
+const filterOption = (input: string, option?: DefaultOptionType) =>
+  String(option?.label ?? '')
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 const loadData = async () => {
   loading.value = true;
@@ -183,9 +185,7 @@ watch(
               placeholder="选择默认模板"
               style="width: 100%"
               show-search
-              :filter-option="(input: string, option: { label: string }) =>
-                option.label.toLowerCase().includes(input.toLowerCase())
-              "
+              :filter-option="filterOption"
               allow-clear
             />
           </template>

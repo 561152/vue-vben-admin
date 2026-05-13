@@ -1,12 +1,7 @@
 <script lang="tsx" setup>
 import { computed, ref, watch } from 'vue';
 
-import {
-  AlertOutlined,
-  CheckCircleOutlined,
-  EyeOutlined,
-  WarningOutlined,
-} from '@ant-design/icons-vue';
+import { CheckCircleOutlined, WarningOutlined } from '@ant-design/icons-vue';
 import {
   Alert,
   Button,
@@ -42,6 +37,19 @@ const testData = ref<Record<string, unknown>>({});
 const strictMode = ref(false);
 const showRaw = ref(false);
 const activeTab = ref('preview');
+
+const toInputValue = (value: unknown): string | number | undefined => {
+  if (typeof value === 'string' || typeof value === 'number') return value;
+  if (typeof value === 'boolean') return String(value);
+  if (value === null || value === undefined) return undefined;
+  return JSON.stringify(value);
+};
+
+const toBooleanValue = (value: unknown): boolean => Boolean(value);
+
+const setTestDataValue = (name: string, value: unknown) => {
+  testData.value[name] = value;
+};
 
 // ==================== PromptEngine ====================
 
@@ -243,7 +251,7 @@ watch(
             <Alert
               v-if="securityRisks.length > 0"
               type="warning"
-              :message="安全风险提示"
+              message="安全风险提示"
               class="mb-3"
             >
               <template #description>
@@ -351,30 +359,35 @@ watch(
             <div class="variable-value">
               <Input.TextArea
                 v-if="variable.type === 'text'"
-                v-model:value="testData[variable.name]"
+                :value="toInputValue(testData[variable.name])"
                 :placeholder="'输入 ' + variable.name + ' 的值'"
                 :rows="3"
+                @update:value="setTestDataValue(variable.name, $event)"
               />
               <Input.TextArea
                 v-else-if="variable.type === 'json'"
-                v-model:value="testData[variable.name]"
+                :value="toInputValue(testData[variable.name])"
                 placeholder="输入 JSON 格式的值"
                 :rows="3"
+                @update:value="setTestDataValue(variable.name, $event)"
               />
               <Input
                 v-else-if="variable.type === 'number'"
-                v-model:value="testData[variable.name]"
+                :value="toInputValue(testData[variable.name])"
                 type="number"
                 placeholder="输入数字"
+                @update:value="setTestDataValue(variable.name, $event)"
               />
               <Switch
                 v-else-if="variable.type === 'boolean'"
-                v-model:checked="testData[variable.name]"
+                :checked="toBooleanValue(testData[variable.name])"
+                @update:checked="setTestDataValue(variable.name, $event)"
               />
               <Input
                 v-else
-                v-model:value="testData[variable.name]"
+                :value="toInputValue(testData[variable.name])"
                 :placeholder="'输入 ' + variable.name + ' 的值'"
+                @update:value="setTestDataValue(variable.name, $event)"
               />
             </div>
           </div>
@@ -395,13 +408,13 @@ watch(
 
           <Collapse v-if="variableReplacements.length > 0">
             <Collapse.Panel
-              v-for="[name, info] in variableReplacements"
-              :key="name"
+              v-for="info in variableReplacements"
+              :key="info.name"
             >
               <template #header>
                 <Space>
                   <CheckCircleOutlined :style="{ color: '#52c41a' }" />
-                  <span>{{ name }}</span>
+                  <span>{{ info.name }}</span>
                 </Space>
               </template>
               <div class="trace-detail">

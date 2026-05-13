@@ -7,7 +7,6 @@ import {
   Tabs,
   TabPane,
   Empty,
-  Table,
   Timeline,
   TimelineItem,
   Tooltip,
@@ -17,7 +16,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   SendOutlined,
-  HistoryOutlined,
   FileTextOutlined,
   PictureOutlined,
   VideoCameraOutlined,
@@ -29,7 +27,6 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   ReloadOutlined,
-  SwapOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import AIAssistant from './AIAssistant.vue';
@@ -110,6 +107,18 @@ const TypeIcon = computed(() => {
   if (!props.material) return FileTextOutlined;
   return typeIcons[props.material.type] || FileTextOutlined;
 });
+
+function getTypeColor(type: string): string {
+  return typeColors[type] || typeColors.TEXT || '#595959';
+}
+
+function getTypeLabel(type: string): string {
+  return typeLabels[type] || type;
+}
+
+function getStatusConfig(status: string) {
+  return statusConfig[status] || statusConfig.DRAFT!;
+}
 
 // 方法
 function close() {
@@ -254,18 +263,18 @@ async function handleApplyTags(tags: string[]) {
         <div class="header-main">
           <div
             class="material-icon"
-            :style="{ color: typeColors[material.type] }"
+            :style="{ color: getTypeColor(material.type) }"
           >
             <component :is="TypeIcon" />
           </div>
           <div class="header-info">
             <h3 class="material-title">{{ material.name }}</h3>
             <div class="header-meta">
-              <Tag :color="statusConfig[material.status].color">
-                <component :is="statusConfig[material.status].icon" />
-                {{ statusConfig[material.status].label }}
+              <Tag :color="getStatusConfig(material.status).color">
+                <component :is="getStatusConfig(material.status).icon" />
+                {{ getStatusConfig(material.status).label }}
               </Tag>
-              <span class="type-label">{{ typeLabels[material.type] }}</span>
+              <span class="type-label">{{ getTypeLabel(material.type) }}</span>
             </div>
           </div>
         </div>
@@ -295,7 +304,10 @@ async function handleApplyTags(tags: string[]) {
             >
               {{ material.content || '无内容' }}
             </div>
-            <div v-else-if="material.type === 'LINK'" class="preview-link">
+            <div
+              v-else-if="material.type === 'LINK' && material.linkUrl"
+              class="preview-link"
+            >
               <a :href="material.linkUrl" target="_blank">{{
                 material.linkUrl
               }}</a>
@@ -303,7 +315,7 @@ async function handleApplyTags(tags: string[]) {
             </div>
             <div v-else class="preview-placeholder">
               <component :is="TypeIcon" />
-              <p>{{ typeLabels[material.type] }}素材</p>
+              <p>{{ getTypeLabel(material.type) }}素材</p>
             </div>
           </div>
 
@@ -444,7 +456,7 @@ async function handleApplyTags(tags: string[]) {
             >
               <div
                 class="similar-icon"
-                :style="{ color: typeColors[item.type] }"
+                :style="{ color: getTypeColor(item.type) }"
               >
                 <component :is="typeIcons[item.type] || FileTextOutlined" />
               </div>

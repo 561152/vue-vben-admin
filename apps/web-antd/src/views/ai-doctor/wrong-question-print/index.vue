@@ -102,17 +102,33 @@
       @ok="handlePrint"
       :confirm-loading="printing"
     >
-      <Form :model="printForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+      <Form
+        :model="printForm"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 18 }"
+      >
         <FormItem label="打印学生">
-          <Select v-model:value="printForm.studentIds" mode="multiple" placeholder="选择学生">
-            <SelectOption v-for="student in students" :key="student.id" :value="student.id">
+          <Select
+            v-model:value="printForm.studentIds"
+            mode="multiple"
+            placeholder="选择学生"
+          >
+            <SelectOption
+              v-for="student in students"
+              :key="student.id"
+              :value="student.id"
+            >
               {{ student.name }}
             </SelectOption>
           </Select>
         </FormItem>
 
         <FormItem label="科目筛选">
-          <Select v-model:value="printForm.subject" placeholder="全部科目" allow-clear>
+          <Select
+            v-model:value="printForm.subject"
+            placeholder="全部科目"
+            allow-clear
+          >
             <SelectOption value="MATH">数学</SelectOption>
             <SelectOption value="CHINESE">语文</SelectOption>
             <SelectOption value="ENGLISH">英语</SelectOption>
@@ -166,10 +182,21 @@
       @ok="handleGenerateStatistics"
       :confirm-loading="generatingStatistics"
     >
-      <Form :model="statisticsForm" :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
+      <Form
+        :model="statisticsForm"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 18 }"
+      >
         <FormItem label="学生">
-          <Select v-model:value="statisticsForm.studentId" placeholder="选择学生">
-            <SelectOption v-for="student in students" :key="student.id" :value="student.id">
+          <Select
+            v-model:value="statisticsForm.studentId"
+            placeholder="选择学生"
+          >
+            <SelectOption
+              v-for="student in students"
+              :key="student.id"
+              :value="student.id"
+            >
               {{ student.name }}
             </SelectOption>
           </Select>
@@ -226,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import {
   Card,
   Button,
@@ -408,13 +435,16 @@ async function loadWrongQuestions() {
 async function loadPrintHistory() {
   try {
     loadingHistory.value = true;
-    const response = await axios.get('/api/ai-doctor/wrong-questions/print/history', {
-      params: {
-        studentId: selectedStudentId.value,
-        page: historyPagination.current,
-        pageSize: historyPagination.pageSize,
+    const response = await axios.get(
+      '/api/ai-doctor/wrong-questions/print/history',
+      {
+        params: {
+          studentId: selectedStudentId.value,
+          page: historyPagination.current,
+          pageSize: historyPagination.pageSize,
+        },
       },
-    });
+    );
 
     printHistory.value = response.data.items || [];
     historyPagination.total = response.data.total || 0;
@@ -495,7 +525,7 @@ async function handlePrint() {
       const response = await axios.post(
         '/api/ai-doctor/wrong-questions/print/single',
         requestData,
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       );
 
       // 下载文件
@@ -514,11 +544,11 @@ async function handlePrint() {
       requestData.studentIds = printForm.studentIds;
       const response = await axios.post(
         '/api/ai-doctor/wrong-questions/print/batch',
-        requestData
+        requestData,
       );
 
       message.success(
-        `批量打印任务已创建，任务ID: ${response.data.jobId}。请稍后在打印历史中查看。`
+        `批量打印任务已创建，任务ID: ${response.data.jobId}。请稍后在打印历史中查看。`,
       );
       printModalVisible.value = false;
     }
@@ -550,7 +580,7 @@ async function handleGenerateStatistics() {
     const response = await axios.post(
       '/api/ai-doctor/wrong-questions/print/statistics',
       requestData,
-      { responseType: 'blob' }
+      { responseType: 'blob' },
     );
 
     // 下载文件

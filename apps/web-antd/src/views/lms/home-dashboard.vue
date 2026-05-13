@@ -319,8 +319,11 @@ const loading = ref(false);
 const statsTab = ref<string>('today');
 
 // 用户信息
-const userName = computed(() => userStore.user?.username || '学习者');
-const userAvatar = computed(() => userStore.user?.avatar || '');
+const userName = computed(
+  () =>
+    userStore.userInfo?.realName || userStore.userInfo?.username || '学习者',
+);
+const userAvatar = computed(() => userStore.userInfo?.avatar || '');
 
 // 问候语
 const greetingMessage = computed(() => {
@@ -393,7 +396,7 @@ const handleTask = (task: any) => {
 
 // 获取优先级颜色
 const getPriorityColor = (priority: string): string => {
-  const colors = {
+  const colors: Record<string, string> = {
     HIGH: 'red',
     MEDIUM: 'orange',
     LOW: 'default',
@@ -403,7 +406,7 @@ const getPriorityColor = (priority: string): string => {
 
 // 获取优先级标签
 const getPriorityLabel = (priority: string): string => {
-  const labels = {
+  const labels: Record<string, string> = {
     HIGH: '紧急',
     MEDIUM: '普通',
     LOW: '低',

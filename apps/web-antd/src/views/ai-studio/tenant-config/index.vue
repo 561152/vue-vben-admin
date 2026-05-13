@@ -2,8 +2,11 @@
   <Page>
     <a-tabs v-model:activeKey="tab">
       <a-tab-pane key="redaction" tab="Redaction 规则">
-        <RedactionRuleEditor v-model:rule="rule" :registry="registry"
-          @save="onSave" />
+        <RedactionRuleEditor
+          v-model:rule="rule"
+          :registry="registry"
+          @save="onSave"
+        />
       </a-tab-pane>
       <a-tab-pane key="agents" tab="Agent 工具开关">
         <AgentToolToggleList />
@@ -18,8 +21,11 @@ import { Page } from '@vben/common-ui';
 import { message } from 'ant-design-vue';
 import RedactionRuleEditor from './components/RedactionRuleEditor.vue';
 import AgentToolToggleList from './components/AgentToolToggleList.vue';
-import { tenantConfigApi, type TenantRedactionRule, type CoverageRegistryColumn }
-  from './api';
+import {
+  tenantConfigApi,
+  type TenantRedactionRule,
+  type CoverageRegistryColumn,
+} from './api';
 
 const tab = ref<'redaction' | 'agents'>('redaction');
 const rule = ref<TenantRedactionRule>({});

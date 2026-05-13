@@ -1,8 +1,5 @@
-import type {
-  DrawerApiOptions,
-  DrawerProps,
-  ExtendedDrawerApi,
-} from './drawer';
+import type { DrawerApiOptions, DrawerProps } from './drawer';
+import type { ExtendedDrawerApi } from './drawer-api';
 
 import {
   defineComponent,

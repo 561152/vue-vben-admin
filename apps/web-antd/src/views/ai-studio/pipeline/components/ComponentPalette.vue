@@ -1,14 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import {
-  Input,
-  Collapse,
-  Tag,
-  Empty,
-  Spin,
-  Tooltip,
-  Badge,
-} from 'ant-design-vue';
+import { Input, Collapse, Empty, Spin, Tooltip, Badge } from 'ant-design-vue';
 import {
   SearchOutlined,
   RobotOutlined,
@@ -40,6 +32,14 @@ interface Props {
 interface Emits {
   (e: 'drag-start', component: ComponentItem): void;
   (e: 'component-click', component: ComponentItem): void;
+}
+
+interface ComponentGroups {
+  llm: ComponentItem[];
+  ocr: ComponentItem[];
+  tool: ComponentItem[];
+  retrieval: ComponentItem[];
+  transform: ComponentItem[];
 }
 
 const props = defineProps<Props>();
@@ -82,7 +82,7 @@ const groupedComponents = computed(() => {
           .includes(searchKeyword.value.toLowerCase())),
   );
 
-  const groups: Record<string, ComponentItem[]> = {
+  const groups: ComponentGroups = {
     llm: [],
     ocr: [],
     tool: [],
@@ -94,8 +94,14 @@ const groupedComponents = computed(() => {
     const type = comp.type.toLowerCase();
     if (type === 'model' || type === 'llm') {
       groups.llm.push(comp);
-    } else if (groups[type]) {
-      groups[type].push(comp);
+    } else if (type === 'ocr') {
+      groups.ocr.push(comp);
+    } else if (type === 'tool') {
+      groups.tool.push(comp);
+    } else if (type === 'retrieval') {
+      groups.retrieval.push(comp);
+    } else if (type === 'transform') {
+      groups.transform.push(comp);
     } else {
       groups.tool.push(comp);
     }
@@ -186,11 +192,6 @@ const getTypeIcon = (type: string) => {
 // 获取类型颜色
 const getTypeColor = (type: string) => {
   return typeConfig[type.toUpperCase()]?.color || '#8c8c8c';
-};
-
-// 获取类型标签
-const getTypeLabel = (type: string) => {
-  return typeConfig[type.toUpperCase()]?.label || type;
 };
 
 onMounted(() => {

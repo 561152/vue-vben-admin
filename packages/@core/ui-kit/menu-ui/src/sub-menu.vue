@@ -3,9 +3,9 @@ import type { MenuRecordRaw } from '@vben-core/typings';
 
 import { computed } from 'vue';
 
-import { MenuBadge, MenuItem, SubMenu as SubMenuComp } from './components';
-// eslint-disable-next-line import/no-self-import
-import SubMenu from './sub-menu.vue';
+import MenuBadge from './components/menu-badge.vue';
+import MenuItem from './components/menu-item.vue';
+import SubMenuComp from './components/sub-menu.vue';
 
 interface Props {
   /**

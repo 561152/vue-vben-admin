@@ -19,7 +19,6 @@ import {
   StarOutlined,
   PlusCircleOutlined,
   RiseOutlined,
-  FallOutlined,
   CalendarOutlined,
   MessageOutlined,
 } from '@ant-design/icons-vue';

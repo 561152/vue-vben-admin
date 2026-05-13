@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, h } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import {
   Card,
   Row,
@@ -207,12 +207,6 @@ const topOwnersColumns: RankingColumn[] = [
   },
 ];
 
-const regionColumns: RankingColumn[] = [
-  { title: '排名', key: 'rank', width: 60, isRank: true },
-  { title: '省份', dataIndex: 'province', key: 'province' },
-  { title: '客户数', dataIndex: 'count', key: 'count', width: 100 },
-];
-
 const topCustomersColumns = [
   { title: '排名', key: 'rank', width: 60 },
   { title: '客户名称', dataIndex: 'name', key: 'name' },
@@ -324,9 +318,7 @@ export default {
     :loading="loading"
   >
     <template #actions>
-      <Button type="primary" @click="refresh">
-        <ReloadOutlined /> 刷新
-      </Button>
+      <Button type="primary" @click="refresh"> <ReloadOutlined /> 刷新 </Button>
     </template>
 
     <!-- 统计卡片 - 第一行 -->

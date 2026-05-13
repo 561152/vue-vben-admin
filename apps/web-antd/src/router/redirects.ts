@@ -94,7 +94,7 @@ export function getNewLocationLabel(newPath: string): string {
   };
 
   // Extract base path (without query params)
-  const basePath = newPath.split('?')[0];
+  const [basePath = ''] = newPath.split('?');
   return labels[basePath] || '新位置';
 }
 
@@ -108,7 +108,7 @@ export function getReverseRedirects(): Record<string, string[]> {
   const reverse: Record<string, string[]> = {};
 
   for (const [oldPath, newPath] of Object.entries(ROUTE_REDIRECTS)) {
-    const basePath = newPath.split('?')[0];
+    const [basePath = ''] = newPath.split('?');
     if (!reverse[basePath]) {
       reverse[basePath] = [];
     }

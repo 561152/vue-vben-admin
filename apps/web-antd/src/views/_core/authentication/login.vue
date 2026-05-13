@@ -1,12 +1,10 @@
 <script lang="ts" setup>
 import type { VbenFormSchema } from '@vben/common-ui';
 
-import { computed, markRaw, ref, onMounted } from 'vue';
+import { computed, markRaw, ref, onMounted, type Ref } from 'vue';
 
 // 等待租户加载完成的辅助函数
-function waitForTenantsLoading(
-  isLoadingRef: globalThis.Ref<boolean>,
-): Promise<void> {
+function waitForTenantsLoading(isLoadingRef: Ref<boolean>): Promise<void> {
   return new Promise((resolve) => {
     const check = () => {
       if (!isLoadingRef.value) {
@@ -94,7 +92,7 @@ async function handleUsernameBlur(username: string) {
       usernameError.value = $t('authentication.userNotFound');
     } else if (tenants.value.length === 1) {
       // 单租户：不显示任何UI，后端自动匹配
-      selectedTenant.value = tenants.value[0].code;
+      selectedTenant.value = tenants.value[0]?.code ?? '';
     } else {
       // 多租户（2+）：选择上次登录的租户
       const rememberedData = RememberMeHelper.decrypt();
@@ -105,7 +103,7 @@ async function handleUsernameBlur(username: string) {
       const lastTenantExists = tenants.value.find((t) => t.code === lastTenant);
       selectedTenant.value = lastTenantExists
         ? lastTenant!
-        : tenants.value[0].code;
+        : (tenants.value[0]?.code ?? '');
 
       // 自动设置租户代码到表单
       setTimeout(() => {

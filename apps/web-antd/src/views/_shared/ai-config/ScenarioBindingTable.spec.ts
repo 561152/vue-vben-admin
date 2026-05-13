@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AiCredentialDto } from './credentials.api';
 import ScenarioBindingTable from './ScenarioBindingTable.vue';
 
 const getScenarioBindingsMock = vi.fn();
@@ -22,7 +23,7 @@ vi.mock('ant-design-vue', () => ({
   message: { success: vi.fn(), error: vi.fn() },
 }));
 
-const CREDS = [
+const CREDS: AiCredentialDto[] = [
   {
     id: 1,
     provider: 'OPENAI',
@@ -65,16 +66,20 @@ describe('ScenarioBindingTable', () => {
     ]);
   });
 
-  it("each row shows the capability expected by capabilityFor()", async () => {
+  it('each row shows the capability expected by capabilityFor()', async () => {
     getScenarioBindingsMock.mockResolvedValue([]);
     const wrapper = mount(ScenarioBindingTable, {
       props: { scope: 'tenant', credentials: CREDS },
     });
     await flushPromises();
     const ocrRow = wrapper.find('[data-scenario="VISION_OCR"]');
-    expect(ocrRow.find('[data-testid="scenario-capability"]').text()).toBe('VISION');
+    expect(ocrRow.find('[data-testid="scenario-capability"]').text()).toBe(
+      'VISION',
+    );
     const embedRow = wrapper.find('[data-scenario="EMBEDDING"]');
-    expect(embedRow.find('[data-testid="scenario-capability"]').text()).toBe('EMBEDDING');
+    expect(embedRow.find('[data-testid="scenario-capability"]').text()).toBe(
+      'EMBEDDING',
+    );
   });
 
   it('inline DefaultModelPicker per row receives correct capability filter', async () => {
@@ -98,7 +103,9 @@ describe('ScenarioBindingTable', () => {
     });
     await flushPromises();
     const llmRow = wrapper.find('[data-scenario="LLM_CHAT"]');
-    await llmRow.find('[data-testid="scenario-input-temperature"]').setValue('0.5');
+    await llmRow
+      .find('[data-testid="scenario-input-temperature"]')
+      .setValue('0.5');
     await llmRow.find('[data-testid="scenario-save"]').trigger('click');
     await flushPromises();
     const [path] = putScenarioParamsMock.mock.calls[0] as [string, unknown];

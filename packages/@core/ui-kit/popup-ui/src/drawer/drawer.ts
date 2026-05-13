@@ -1,8 +1,6 @@
-import type { Component, Ref } from 'vue';
+import type { Component } from 'vue';
 
 import type { ClassType, MaybePromise } from '@vben-core/typings';
-
-import type { DrawerApi } from './drawer-api';
 
 export type DrawerPlacement = 'bottom' | 'left' | 'right' | 'top';
 
@@ -135,12 +133,6 @@ export interface DrawerState extends DrawerProps {
    */
   sharedData?: Record<string, any>;
 }
-
-export type ExtendedDrawerApi = DrawerApi & {
-  useStore: <T = NoInfer<DrawerState>>(
-    selector?: (state: NoInfer<DrawerState>) => T,
-  ) => Readonly<Ref<T>>;
-};
 
 export interface DrawerApiOptions extends DrawerState {
   /**

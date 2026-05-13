@@ -68,8 +68,10 @@
     "marked-katex-extension": "^5.1.6",
     "pinia": "catalog:",
     "socket.io-client": "^4.8.3",
+    "v-code-diff": "^1.13.1",
     "vibe-kanban-web-companion": "^0.0.5",
     "vue": "catalog:",
+    "vue-codemirror": "^6.1.1",
     "vue-router": "catalog:",
     "xlsx": "^0.18.5"
   },

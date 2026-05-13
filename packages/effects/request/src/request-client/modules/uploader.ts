@@ -1,12 +1,12 @@
-import type { RequestClient } from '../request-client';
+import type { RequestClientLike } from '../client-contract';
 import type { RequestClientConfig } from '../types';
 
 import { isUndefined } from '@vben/utils';
 
 class FileUploader {
-  private client: RequestClient;
+  private client: RequestClientLike;
 
-  constructor(client: RequestClient) {
+  constructor(client: RequestClientLike) {
     this.client = client;
   }
 
@@ -34,6 +34,10 @@ class FileUploader {
         ...config?.headers,
       },
     };
+
+    if (typeof this.client.post !== 'function') {
+      throw new Error('RequestClientLike.post is required for file uploads.');
+    }
 
     return this.client.post(url, formData, finalConfig);
   }

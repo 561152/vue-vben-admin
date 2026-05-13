@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import type { DrawerProps, ExtendedDrawerApi } from './drawer';
+import type { ExtendedDrawerApi } from './drawer-api';
+import type { DrawerProps } from './drawer';
 
 import {
   computed,
@@ -8,6 +9,7 @@ import {
   ref,
   unref,
   useId,
+  useTemplateRef,
   watch,
 } from 'vue';
 
@@ -54,7 +56,7 @@ const components = globalShareState.getComponents();
 const id = useId();
 provide('DISMISSABLE_DRAWER_ID', id);
 
-const wrapperRef = ref<HTMLElement>();
+useTemplateRef<HTMLElement>('wrapperRef');
 const { $t } = useSimpleLocale();
 const { isMobile } = useIsMobile();
 

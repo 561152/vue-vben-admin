@@ -66,11 +66,7 @@
               <Button type="link" size="small" @click="viewBankDetail(record)">
                 查看题目
               </Button>
-              <Button
-                type="link"
-                size="small"
-                @click="showUploadModal(record)"
-              >
+              <Button type="link" size="small" @click="showUploadModal(record)">
                 导入题目
               </Button>
               <Popconfirm
@@ -159,9 +155,7 @@
         @remove="fileList = []"
         accept=".xlsx,.xls,.json"
       >
-        <Button>
-          <UploadOutlined /> 选择文件
-        </Button>
+        <Button> <UploadOutlined /> 选择文件 </Button>
       </Upload>
 
       <Divider />
@@ -224,7 +218,11 @@
           </template>
 
           <template v-else-if="column.key === 'actions'">
-            <Button type="link" size="small" @click="viewQuestionDetail(record)">
+            <Button
+              type="link"
+              size="small"
+              @click="viewQuestionDetail(record)"
+            >
               查看详情
             </Button>
           </template>
@@ -250,16 +248,24 @@
             <Rate :value="selectedQuestion.difficulty" disabled />
           </DescriptionsItem>
           <DescriptionsItem label="题目内容">
-            <div class="whitespace-pre-wrap">{{ selectedQuestion.content }}</div>
+            <div class="whitespace-pre-wrap">
+              {{ selectedQuestion.content }}
+            </div>
           </DescriptionsItem>
           <DescriptionsItem label="答案" v-if="selectedQuestion.answer">
             <div class="whitespace-pre-wrap">{{ selectedQuestion.answer }}</div>
           </DescriptionsItem>
           <DescriptionsItem label="解析" v-if="selectedQuestion.solution">
-            <div class="whitespace-pre-wrap">{{ selectedQuestion.solution }}</div>
+            <div class="whitespace-pre-wrap">
+              {{ selectedQuestion.solution }}
+            </div>
           </DescriptionsItem>
           <DescriptionsItem label="知识点标签">
-            <Tag v-for="tag in selectedQuestion.tags" :key="tag" color="default">
+            <Tag
+              v-for="tag in selectedQuestion.tags"
+              :key="tag"
+              color="default"
+            >
               {{ tag }}
             </Tag>
           </DescriptionsItem>
@@ -272,6 +278,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { requestClient } from '#/api/request';
+import type { ColumnsType } from 'ant-design-vue/es/table';
 import {
   Card,
   Button,
@@ -339,13 +346,18 @@ const createForm = reactive({
 });
 
 // 表格列定义
-const bankColumns = [
+const bankColumns: ColumnsType = [
   { title: '题库名称', dataIndex: 'name', key: 'name', width: 200 },
   { title: '学科', dataIndex: 'subject', key: 'subject', width: 100 },
   { title: '年级', dataIndex: 'gradeLevel', key: 'gradeLevel', width: 100 },
-  { title: '题目数量', dataIndex: 'questionCount', key: 'questionCount', width: 120 },
+  {
+    title: '题目数量',
+    dataIndex: 'questionCount',
+    key: 'questionCount',
+    width: 120,
+  },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 150 },
-  { title: '操作', key: 'actions', fixed: 'right', width: 250 },
+  { title: '操作', key: 'actions', fixed: 'right' as const, width: 250 },
 ];
 
 const questionColumns = [
@@ -388,12 +400,15 @@ const viewBankDetail = async (bank: any) => {
 const loadQuestions = async (bankId: string) => {
   try {
     loadingQuestions.value = true;
-    const response = await requestClient.get(`/lms/question-bank/${bankId}/questions`, {
-      params: {
-        page: questionPagination.current,
-        limit: questionPagination.pageSize,
+    const response = await requestClient.get(
+      `/lms/question-bank/${bankId}/questions`,
+      {
+        params: {
+          page: questionPagination.current,
+          limit: questionPagination.pageSize,
+        },
       },
-    });
+    );
 
     questions.value = response.items;
     questionPagination.total = response.total;
@@ -498,9 +513,12 @@ const handleBeforeUpload = async (file: any) => {
 // 下载模板
 const downloadTemplate = async () => {
   try {
-    const response = await requestClient.get('/lms/question-bank/template/download', {
-      responseType: 'blob',
-    });
+    const response = await requestClient.get(
+      '/lms/question-bank/template/download',
+      {
+        responseType: 'blob',
+      },
+    );
 
     const url = window.URL.createObjectURL(new Blob([response]));
     const link = document.createElement('a');
@@ -578,8 +596,8 @@ onMounted(() => {
 }
 
 .question-content {
-  white-space: pre-wrap;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .upload-result {
@@ -588,8 +606,8 @@ onMounted(() => {
 
 .error-list {
   max-height: 200px;
-  overflow-y: auto;
   padding-left: 20px;
+  overflow-y: auto;
 
   li {
     margin-bottom: 8px;
@@ -604,7 +622,7 @@ onMounted(() => {
 }
 
 .whitespace-pre-wrap {
-  white-space: pre-wrap;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 </style>

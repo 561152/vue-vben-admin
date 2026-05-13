@@ -2,7 +2,7 @@
 import { h, ref } from 'vue';
 
 import { Button, DatePicker, message, Select, Space } from 'ant-design-vue';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   DownloadOutlined,
   PrinterOutlined,
@@ -117,11 +117,13 @@ async function handlePrint() {
         count: stage.count,
         percentage: stage.percentage,
       })),
-      performanceRanking: props.followUpData?.byUser?.slice(0, 5).map((user) => ({
-        name: user.userName,
-        deals: user.count,
-        revenue: 0, // 如有收入数据可补充
-      })),
+      performanceRanking: props.followUpData?.byUser
+        ?.slice(0, 5)
+        .map((user) => ({
+          name: user.userName,
+          deals: user.count,
+          revenue: 0, // 如有收入数据可补充
+        })),
     };
 
     await generatePdf({
@@ -152,6 +154,31 @@ const timeRangeOptions = [
   { label: '本年', value: 'year' },
   { label: '自定义', value: 'custom' },
 ];
+
+function isTimeRange(value: unknown): value is BiCrmApi.TimeRange {
+  return timeRangeOptions.some((option) => option.value === value);
+}
+
+function handleTimeRangeChange(value: unknown) {
+  if (isTimeRange(value)) {
+    emit('update:timeRange', value);
+  }
+}
+
+function handleCustomDateRangeChange(
+  value: [Dayjs, Dayjs] | [string, string] | null,
+) {
+  if (!value) {
+    emit('update:customDateRange', null);
+    return;
+  }
+
+  const [start, end] = value;
+  emit('update:customDateRange', [
+    dayjs.isDayjs(start) ? start : dayjs(start),
+    dayjs.isDayjs(end) ? end : dayjs(end),
+  ]);
+}
 </script>
 
 <template>
@@ -164,14 +191,14 @@ const timeRangeOptions = [
       <Select
         :value="timeRange"
         :options="timeRangeOptions"
-        @change="emit('update:timeRange', $event)"
+        @change="handleTimeRangeChange"
         style="width: 140px"
       />
 
       <DatePicker.RangePicker
         v-if="timeRange === 'custom'"
-        :value="customDateRange"
-        @change="emit('update:customDateRange', $event)"
+        :value="customDateRange ?? undefined"
+        @change="handleCustomDateRangeChange"
         format="YYYY-MM-DD"
         :placeholder="['开始日期', '结束日期']"
       />

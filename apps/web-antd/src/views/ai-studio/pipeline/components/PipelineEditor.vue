@@ -54,16 +54,8 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 // Vue Flow composable
-const {
-  nodes,
-  edges,
-  addNodes,
-  addEdges,
-  onConnect,
-  removeNodes,
-  removeEdges,
-  fitView,
-} = useVueFlow();
+const { nodes, edges, addNodes, addEdges, removeNodes, removeEdges, fitView } =
+  useVueFlow();
 
 // Panel visibility states
 const showComponentPalette = ref(true);
@@ -85,6 +77,10 @@ const nodeTypeConfig: Record<string, { color: string; bgColor: string }> = {
   retrieval: { color: '#fa8c16', bgColor: '#fff7e6' },
   transform: { color: '#8c8c8c', bgColor: '#fafafa' },
   start: { color: '#13c2c2', bgColor: '#e6fffb' },
+};
+const fallbackNodeTypeConfig = nodeTypeConfig.tool ?? {
+  color: '#d9d9d9',
+  bgColor: '#fafafa',
 };
 
 // History for undo/redo
@@ -191,6 +187,7 @@ const undo = () => {
   if (historyIndex.value > 0) {
     historyIndex.value--;
     const state = history.value[historyIndex.value];
+    if (!state) return;
     nodes.value = JSON.parse(JSON.stringify(state.nodes));
     edges.value = JSON.parse(JSON.stringify(state.edges));
     message.info('已撤销');
@@ -202,6 +199,7 @@ const redo = () => {
   if (historyIndex.value < history.value.length - 1) {
     historyIndex.value++;
     const state = history.value[historyIndex.value];
+    if (!state) return;
     nodes.value = JSON.parse(JSON.stringify(state.nodes));
     edges.value = JSON.parse(JSON.stringify(state.edges));
     message.info('已重做');
@@ -287,9 +285,10 @@ const handleDrop = (event: DragEvent) => {
       style: {
         background:
           nodeTypeConfig[componentData.type.toLowerCase()]?.bgColor ||
-          '#fafafa',
+          fallbackNodeTypeConfig.bgColor,
         borderColor:
-          nodeTypeConfig[componentData.type.toLowerCase()]?.color || '#d9d9d9',
+          nodeTypeConfig[componentData.type.toLowerCase()]?.color ||
+          fallbackNodeTypeConfig.color,
         borderWidth: '2px',
       },
     };
@@ -325,9 +324,11 @@ const handleComponentClick = (component: any) => {
     },
     style: {
       background:
-        nodeTypeConfig[component.type.toLowerCase()]?.bgColor || '#fafafa',
+        nodeTypeConfig[component.type.toLowerCase()]?.bgColor ||
+        fallbackNodeTypeConfig.bgColor,
       borderColor:
-        nodeTypeConfig[component.type.toLowerCase()]?.color || '#d9d9d9',
+        nodeTypeConfig[component.type.toLowerCase()]?.color ||
+        fallbackNodeTypeConfig.color,
       borderWidth: '2px',
     },
   };
@@ -345,8 +346,10 @@ const handleNodeConfigUpdate = (nodeData: PipelineStep) => {
     (n) => n.id === selectedNode.value.id,
   );
   if (nodeIndex !== -1) {
-    nodes.value[nodeIndex].data = {
-      ...nodes.value[nodeIndex].data,
+    const node = nodes.value[nodeIndex];
+    if (!node) return;
+    node.data = {
+      ...node.data,
       ...nodeData,
       label: nodeData.name,
     };
@@ -504,34 +507,6 @@ const autoLayout = () => {
 
   saveHistory();
   message.success('已自动整理布局');
-};
-
-// Add new node (generic)
-const addNewNode = () => {
-  const newId = `node_${Date.now()}`;
-  const newNode = {
-    id: newId,
-    type: 'default',
-    position: { x: 250, y: 250 },
-    data: {
-      label: '新节点',
-      stepKey: newId,
-      name: '新节点',
-      type: 'tool',
-      config: {},
-      inputMapping: {},
-      outputMapping: {},
-    },
-    style: {
-      background: nodeTypeConfig.tool.bgColor,
-      borderColor: nodeTypeConfig.tool.color,
-      borderWidth: '2px',
-    },
-  };
-
-  addNodes([newNode]);
-  saveHistory();
-  message.success('已添加新节点');
 };
 
 // Convert nodes and edges back to pipeline steps

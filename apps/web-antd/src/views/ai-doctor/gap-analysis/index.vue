@@ -35,14 +35,14 @@ import {
   RiseOutlined,
   FallOutlined,
 } from '@ant-design/icons-vue';
-import { useUserStore } from '#/store';
 import MigrationNotice from '#/components/MigrationNotice.vue';
 import axios from 'axios';
 
 // 状态
-const userStore = useUserStore();
 const loading = ref(false);
-const compareType = ref<'GRADE_AVERAGE' | 'CLASS_AVERAGE' | 'TARGET_SCHOOL' | 'TOP_STUDENT'>('GRADE_AVERAGE');
+const compareType = ref<
+  'GRADE_AVERAGE' | 'CLASS_AVERAGE' | 'TARGET_SCHOOL' | 'TOP_STUDENT'
+>('GRADE_AVERAGE');
 const targetId = ref<string | undefined>(undefined);
 const analysis = ref<any | null>(null);
 
@@ -109,8 +109,10 @@ const getGapTableData = (gaps: any) => {
   return Object.entries(gaps).map(([key, value]: [string, any]) => ({
     key,
     ability: key,
-    studentScore: analysis.value?.student?.abilities?.[key]?.toFixed(1) || 'N/A',
-    benchmarkScore: analysis.value?.benchmark?.abilities?.[key]?.toFixed(1) || 'N/A',
+    studentScore:
+      analysis.value?.student?.abilities?.[key]?.toFixed(1) || 'N/A',
+    benchmarkScore:
+      analysis.value?.benchmark?.abilities?.[key]?.toFixed(1) || 'N/A',
     gap: value.percentage,
     status: value.status,
   }));
@@ -160,6 +162,8 @@ const generatePrescription = () => {
 onMounted(() => {
   loadAnalysis();
 });
+
+const displayIndex = (index: string | number) => Number(index) + 1;
 </script>
 
 <template>
@@ -232,7 +236,10 @@ onMounted(() => {
                   suffix="%"
                   :precision="1"
                   :value-style="{
-                    color: analysis.student.accuracyRate >= 80 ? '#3f8600' : '#cf1322',
+                    color:
+                      analysis.student.accuracyRate >= 80
+                        ? '#3f8600'
+                        : '#cf1322',
                   }"
                 />
               </Card>
@@ -255,7 +262,9 @@ onMounted(() => {
                 <div class="radar-placeholder">
                   <Empty description="雷达图功能开发中...">
                     <template #image>
-                      <BarChartOutlined style="font-size: 48px; color: #1890ff" />
+                      <BarChartOutlined
+                        style="font-size: 48px; color: #1890ff"
+                      />
                     </template>
                     <div class="ability-list">
                       <div
@@ -264,10 +273,12 @@ onMounted(() => {
                         class="ability-item"
                       >
                         <span class="ability-name">{{ key }}</span>
-                        <span class="ability-value">{{ value.toFixed(1) }} 分</span>
+                        <span class="ability-value"
+                          >{{ value.toFixed(1) }} 分</span
+                        >
                       </div>
                     </div>
-                    <p style="color: #999; margin-top: 16px">
+                    <p style="margin-top: 16px; color: #999">
                       将显示五维能力雷达图
                     </p>
                   </Empty>
@@ -275,11 +286,17 @@ onMounted(() => {
               </Card>
             </Col>
             <Col :span="12">
-              <Card :title="getBenchmarkTitle(compareType)" size="small" class="radar-card">
+              <Card
+                :title="getBenchmarkTitle(compareType)"
+                size="small"
+                class="radar-card"
+              >
                 <div class="radar-placeholder">
                   <Empty description="雷达图功能开发中...">
                     <template #image>
-                      <BarChartOutlined style="font-size: 48px; color: #52c41a" />
+                      <BarChartOutlined
+                        style="font-size: 48px; color: #52c41a"
+                      />
                     </template>
                     <div class="ability-list">
                       <div
@@ -288,10 +305,12 @@ onMounted(() => {
                         class="ability-item"
                       >
                         <span class="ability-name">{{ key }}</span>
-                        <span class="ability-value">{{ value.toFixed(1) }} 分</span>
+                        <span class="ability-value"
+                          >{{ value.toFixed(1) }} 分</span
+                        >
                       </div>
                     </div>
-                    <p style="color: #999; margin-top: 16px">
+                    <p style="margin-top: 16px; color: #999">
                       将显示五维能力雷达图
                     </p>
                   </Empty>
@@ -345,13 +364,25 @@ onMounted(() => {
               >
                 <template #title>
                   <span class="priority-title">
-                    {{ index + 1 }}. {{ item.ability }}
+                    {{ displayIndex(index) }}. {{ item.ability }}
                   </span>
                   <Tag
-                    :color="item.urgency === 'high' ? 'error' : item.urgency === 'medium' ? 'warning' : 'default'"
+                    :color="
+                      item.urgency === 'high'
+                        ? 'error'
+                        : item.urgency === 'medium'
+                          ? 'warning'
+                          : 'default'
+                    "
                     class="ml-2"
                   >
-                    {{ item.urgency === 'high' ? '紧急' : item.urgency === 'medium' ? '中等' : '一般' }}
+                    {{
+                      item.urgency === 'high'
+                        ? '紧急'
+                        : item.urgency === 'medium'
+                          ? '中等'
+                          : '一般'
+                    }}
                   </Tag>
                 </template>
                 <template #description>
@@ -428,15 +459,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 300px;
+  padding: 20px;
   background: #f5f5f5;
   border-radius: 8px;
-  padding: 20px;
 }
 
 .ability-list {
-  margin-top: 16px;
   width: 100%;
   max-width: 300px;
+  margin-top: 16px;
 }
 
 .ability-item {
@@ -445,8 +476,8 @@ onMounted(() => {
   padding: 8px 12px;
   margin-bottom: 8px;
   background: white;
-  border-radius: 4px;
   border: 1px solid #e8e8e8;
+  border-radius: 4px;
 }
 
 .ability-name {
@@ -455,8 +486,8 @@ onMounted(() => {
 }
 
 .ability-value {
-  color: #1890ff;
   font-weight: bold;
+  color: #1890ff;
 }
 
 .section-card {
@@ -469,10 +500,10 @@ onMounted(() => {
   font-size: 16px;
   line-height: 1.8;
   color: #333;
+  white-space: pre-wrap;
   background: #f9f9f9;
   border-left: 4px solid #1890ff;
   border-radius: 4px;
-  white-space: pre-wrap;
 }
 
 .priority-title {

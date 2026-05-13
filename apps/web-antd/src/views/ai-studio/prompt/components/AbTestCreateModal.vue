@@ -2,9 +2,6 @@
 import { computed, ref, watch } from 'vue';
 
 import {
-  ExperimentOutlined,
-} from '@ant-design/icons-vue';
-import {
   Form,
   Input,
   InputNumber,
@@ -15,6 +12,7 @@ import {
   Space,
   Typography,
 } from 'ant-design-vue';
+import type { DefaultOptionType } from 'ant-design-vue/es/select';
 
 import {
   createAbTest,
@@ -75,15 +73,36 @@ const scenarioOptions = computed(() =>
 
 const rules = {
   name: [{ required: true, message: '请输入测试名称' }],
-  controlVersionId: [{ required: true, message: '请选择对照版本', type: 'number' as const, min: 1 }],
-  treatmentVersionId: [{ required: true, message: '请选择实验版本', type: 'number' as const, min: 1 }],
+  controlVersionId: [
+    {
+      required: true,
+      message: '请选择对照版本',
+      type: 'number' as const,
+      min: 1,
+    },
+  ],
+  treatmentVersionId: [
+    {
+      required: true,
+      message: '请选择实验版本',
+      type: 'number' as const,
+      min: 1,
+    },
+  ],
 };
+
+const filterOption = (input: string, option?: DefaultOptionType) =>
+  String(option?.label ?? '')
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 const loadVersions = async () => {
   if (!props.templateId) return;
   loading.value = true;
   try {
-    const res = await getPromptTemplateVersions(props.templateId, { limit: 100 });
+    const res = await getPromptTemplateVersions(props.templateId, {
+      limit: 100,
+    });
     versions.value = res.data;
   } catch {
     message.error('加载版本列表失败');
@@ -110,7 +129,8 @@ const handleSubmit = async () => {
       ...formData.value,
     };
     if (scenarioValue.value) {
-      (params as Record<string, unknown>).scenario = scenarioValue.value;
+      (params as unknown as Record<string, unknown>).scenario =
+        scenarioValue.value;
     }
     await createAbTest(props.templateId, params);
     message.success('A/B 测试创建成功');
@@ -188,9 +208,7 @@ watch(
           :loading="loading"
           placeholder="选择对照版本"
           show-search
-          :filter-option="(input: string, option: { label: string }) =>
-            option.label.toLowerCase().includes(input.toLowerCase())
-          "
+          :filter-option="filterOption"
         />
       </Form.Item>
 
@@ -201,9 +219,7 @@ watch(
           :loading="loading"
           placeholder="选择实验版本"
           show-search
-          :filter-option="(input: string, option: { label: string }) =>
-            option.label.toLowerCase().includes(input.toLowerCase())
-          "
+          :filter-option="filterOption"
         />
       </Form.Item>
 
@@ -216,7 +232,9 @@ watch(
             :step="5"
           />
           <Typography.Text type="secondary">
-            {{ formData.trafficPercentage }}% 流量进入实验组，{{ 100 - (formData.trafficPercentage ?? 50) }}% 进入对照组
+            {{ formData.trafficPercentage }}% 流量进入实验组，{{
+              100 - (formData.trafficPercentage ?? 50)
+            }}% 进入对照组
           </Typography.Text>
         </Space>
       </Form.Item>
@@ -229,9 +247,7 @@ watch(
           placeholder="达到次数后自动完成"
           style="width: 100%"
         />
-        <template #help>
-          设置后，达到目标次数时测试将自动完成
-        </template>
+        <template #help> 设置后，达到目标次数时测试将自动完成 </template>
       </Form.Item>
 
       <Form.Item label="关联场景（可选）">

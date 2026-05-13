@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
+import type { CSSProperties } from 'vue';
 import {
   Button,
   Space,
@@ -26,6 +27,8 @@ import {
   UserDeleteOutlined,
   ReloadOutlined,
 } from '@ant-design/icons-vue';
+import type { RangeValue } from 'ant-design-vue/es/vc-picker/interface';
+import type { Dayjs } from 'dayjs';
 import { requestClient } from '#/api/request';
 
 // Types
@@ -75,8 +78,8 @@ const pageSize = ref(20);
 // Filter state
 const filterRuleType = ref<string | undefined>(undefined);
 const filterViolationType = ref<string | undefined>(undefined);
-const filterActionExecuted = ref<boolean | undefined>(undefined);
-const filterDateRange = ref<[string, string] | null>(null);
+const filterActionExecuted = ref<string | undefined>(undefined);
+const filterDateRange = ref<[Dayjs, Dayjs] | undefined>(undefined);
 
 // Modal state
 const detailModalVisible = ref(false);
@@ -103,16 +106,6 @@ const actionOptions = [
   { value: 'KICK', label: '踢出群聊' },
   { value: 'BLACKLIST', label: '加入黑名单' },
 ];
-
-// Helper functions for action display
-function getActionColor(action: string): string {
-  const colors: Record<string, string> = {
-    WARN: 'warning',
-    KICK: 'error',
-    BLACKLIST: 'default',
-  };
-  return colors[action] || 'default';
-}
 
 // Table columns
 const columns = [
@@ -182,6 +175,18 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function handleDateRangeChange(value: RangeValue<Dayjs> | RangeValue<string>) {
+  if (value?.[0] && value?.[1] && typeof value[0] !== 'string') {
+    filterDateRange.value = [value[0], value[1] as Dayjs];
+  } else {
+    filterDateRange.value = undefined;
+  }
+}
+
+const redStatisticStyle: CSSProperties = { color: '#cf1322' };
+const greenStatisticStyle: CSSProperties = { color: '#3f8600' };
+const orangeStatisticStyle: CSSProperties = { color: '#faad14' };
+
 // API calls
 async function fetchRecords() {
   loading.value = true;
@@ -198,11 +203,11 @@ async function fetchRecords() {
       params.violationType = filterViolationType.value;
     }
     if (filterActionExecuted.value !== undefined) {
-      params.actionExecuted = filterActionExecuted.value;
+      params.actionExecuted = filterActionExecuted.value === 'true';
     }
     if (filterDateRange.value) {
-      params.startDate = filterDateRange.value[0];
-      params.endDate = filterDateRange.value[1];
+      params.startDate = filterDateRange.value[0].format('YYYY-MM-DD');
+      params.endDate = filterDateRange.value[1].format('YYYY-MM-DD');
     }
 
     const res = await requestClient.get<{
@@ -260,7 +265,7 @@ function handleReset() {
   filterRuleType.value = undefined;
   filterViolationType.value = undefined;
   filterActionExecuted.value = undefined;
-  filterDateRange.value = null;
+  filterDateRange.value = undefined;
   currentPage.value = 1;
   fetchRecords();
 }
@@ -274,6 +279,14 @@ function handlePageChange(page: number, size: number) {
 function handleViewDetail(record: ViolationRecord) {
   selectedRecord.value = record;
   detailModalVisible.value = true;
+}
+
+function isViolationRecord(record: unknown): record is ViolationRecord {
+  return (
+    !!record &&
+    typeof record === 'object' &&
+    typeof (record as ViolationRecord).id === 'number'
+  );
 }
 
 function goBack() {
@@ -318,7 +331,7 @@ onMounted(() => {
           <Statistic
             title="今日违规"
             :value="statistics.todayCount"
-            value-style="color: #cf1322"
+            :value-style="redStatisticStyle"
           />
         </Card>
       </Col>
@@ -332,7 +345,7 @@ onMounted(() => {
           <Statistic
             title="已处置"
             :value="statistics.processedCount"
-            value-style="color: #3f8600"
+            :value-style="greenStatisticStyle"
           />
         </Card>
       </Col>
@@ -341,7 +354,7 @@ onMounted(() => {
           <Statistic
             title="待处置"
             :value="statistics.pendingCount"
-            value-style="color: #faad14"
+            :value-style="orangeStatisticStyle"
           />
         </Card>
       </Col>
@@ -370,12 +383,13 @@ onMounted(() => {
           style="width: 120px"
           allowClear
         >
-          <Select.Option :value="true">已处置</Select.Option>
-          <Select.Option :value="false">待处置</Select.Option>
+          <Select.Option value="true">已处置</Select.Option>
+          <Select.Option value="false">待处置</Select.Option>
         </Select>
         <DatePicker.RangePicker
-          v-model:value="filterDateRange"
+          :value="filterDateRange"
           style="width: 240px"
+          @change="handleDateRangeChange"
         />
         <Button type="primary" @click="handleSearch">
           <SearchOutlined /> 查询
@@ -442,7 +456,11 @@ onMounted(() => {
             {{ formatDate(record.occurredAt) }}
           </template>
           <template v-if="column.key === 'actions'">
-            <Button type="link" size="small" @click="handleViewDetail(record)">
+            <Button
+              type="link"
+              size="small"
+              @click="isViolationRecord(record) && handleViewDetail(record)"
+            >
               <EyeOutlined /> 详情
             </Button>
           </template>

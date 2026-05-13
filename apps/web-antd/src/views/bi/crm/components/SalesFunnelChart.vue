@@ -85,8 +85,8 @@ function renderChart() {
         const stage = props.data!.stages[params.dataIndex];
         let tooltip = `${params.name}<br/>`;
         tooltip += `数量: ${params.value}<br/>`;
-        tooltip += `占比: ${stage.percentage.toFixed(2)}%`;
-        if (stage.conversionRate !== undefined) {
+        tooltip += `占比: ${stage?.percentage.toFixed(2) ?? '0.00'}%`;
+        if (stage?.conversionRate !== undefined) {
           tooltip += `<br/>转化率: ${stage.conversionRate.toFixed(2)}%`;
         }
         return tooltip;

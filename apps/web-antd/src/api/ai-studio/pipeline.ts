@@ -5,18 +5,30 @@ import { requestClient } from '../request';
 
 // ==================== 类型定义 ====================
 
+export interface PipelineStep {
+  stepKey: string;
+  name: string;
+  type: string;
+  order?: number;
+  config?: Record<string, unknown>;
+  inputMapping?: Record<string, unknown>;
+  outputMapping?: Record<string, unknown>;
+  dependencies?: string[];
+}
+
 export interface Pipeline {
   id: number;
   key: string;
   name: string;
   description: string | null;
   triggerType: string;
-  triggerConfig: any;
-  inputSchema: any;
-  outputSchema: any;
-  formSchema: any | null;
+  triggerConfig: Record<string, unknown>;
+  inputSchema: Record<string, unknown>;
+  outputSchema: Record<string, unknown>;
+  formSchema: Record<string, unknown> | null;
   defHash: string | null;
-  runtimeConfig: any;
+  runtimeConfig: Record<string, unknown>;
+  steps?: PipelineStep[];
   isSystem: boolean;
   isActive: boolean;
   version: number;
@@ -99,7 +111,7 @@ export async function getPipelineByKey(key: string) {
  */
 export async function updateRuntimeConfig(
   key: string,
-  config: Record<string, any>,
+  config: Record<string, unknown>,
 ) {
   return requestClient.put(`/ai-studio/pipelines/${key}/config`, {
     runtimeConfig: config,

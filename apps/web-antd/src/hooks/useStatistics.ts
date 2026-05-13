@@ -4,9 +4,9 @@ import { requestClient } from '#/api/request';
 /**
  * API 端点配置
  */
-export interface StatisticsEndpoints<T extends Record<string, unknown>> {
-  [key: string]: string;
-}
+export type StatisticsEndpoints<T extends Record<string, unknown>> = {
+  [K in keyof T]: string;
+};
 
 /**
  * 统计数据加载状态
@@ -64,14 +64,15 @@ export function useStatistics<T extends Record<string, unknown>>(
 
     try {
       const keys = Object.keys(endpoints);
-      const promises = keys.map((key) =>
-        requestClient.get<T[typeof key]>(endpoints[key]),
-      );
+      const promises = keys.map((key) => requestClient.get(endpoints[key]!));
 
       const results = await Promise.all(promises);
 
       keys.forEach((key, index) => {
-        (data as Record<string, Ref<unknown>>)[key].value = results[index];
+        const target = (data as Record<string, Ref<unknown>>)[key];
+        if (target) {
+          target.value = results[index];
+        }
       });
     } catch (e) {
       error.value = e instanceof Error ? e.message : '加载统计数据失败';

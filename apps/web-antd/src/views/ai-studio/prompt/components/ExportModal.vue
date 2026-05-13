@@ -16,7 +16,6 @@ import {
   Radio,
   Row,
   Space,
-  Tabs,
   Tag,
   Typography,
   message,

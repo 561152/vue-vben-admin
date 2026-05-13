@@ -2,25 +2,16 @@
 import { ref, onMounted } from 'vue';
 import {
   Button,
-  Space,
   message,
   Card,
   Table,
-  Modal,
-  Form,
-  Input,
-  Select,
   Switch,
   Popconfirm,
   Tabs,
   TabPane,
 } from 'ant-design-vue';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  ArrowLeftOutlined,
-} from '@ant-design/icons-vue';
+import { DeleteOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue';
+import type { Key } from 'ant-design-vue/es/vc-tree/interface';
 import { requestClient } from '#/api/request';
 
 // Types
@@ -93,7 +84,9 @@ async function handleDelete(id: number) {
   }
 }
 
-async function handleToggleOrgShare(enabled: boolean) {
+async function handleToggleOrgShare(checked: boolean | string | number) {
+  const enabled = Boolean(checked);
+
   try {
     await requestClient.patch('/operations/anti-harassment/blacklist/config', {
       orgShareEnabled: enabled,
@@ -105,7 +98,9 @@ async function handleToggleOrgShare(enabled: boolean) {
   }
 }
 
-async function handleToggleInterOrgShare(enabled: boolean) {
+async function handleToggleInterOrgShare(checked: boolean | string | number) {
+  const enabled = Boolean(checked);
+
   try {
     await requestClient.patch('/operations/anti-harassment/blacklist/config', {
       interOrgShareEnabled: enabled,
@@ -117,8 +112,8 @@ async function handleToggleInterOrgShare(enabled: boolean) {
   }
 }
 
-function handleTabChange(key: string) {
-  activeTab.value = key;
+function handleTabChange(key: Key) {
+  activeTab.value = String(key);
   currentPage.value = 1;
   fetchBlacklist();
 }

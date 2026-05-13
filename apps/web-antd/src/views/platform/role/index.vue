@@ -165,6 +165,20 @@ async function handleAssignPermissions(record: RoleItem) {
   }
 }
 
+function isRoleItem(record: unknown): record is RoleItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'string'
+  );
+}
+
+function handleAssignPermissionsRecord(record: unknown) {
+  if (isRoleItem(record)) {
+    handleAssignPermissions(record);
+  }
+}
+
 async function handlePermissionSubmit() {
   if (!currentRoleId.value) return;
 
@@ -214,7 +228,13 @@ async function handleEdit(record: RoleItem) {
   modalVisible.value = true;
 }
 
-async function handleDelete(id: number) {
+function handleEditRecord(record: unknown) {
+  if (isRoleItem(record)) {
+    handleEdit(record);
+  }
+}
+
+async function handleDelete(id: string) {
   try {
     await requestClient.delete(`/platform/roles/${id}`);
     message.success('删除成功');
@@ -273,13 +293,13 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
             <Button
               type="link"
               size="small"
-              @click="handleAssignPermissions(record)"
+              @click="handleAssignPermissionsRecord(record)"
               >分配权限</Button
             >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">

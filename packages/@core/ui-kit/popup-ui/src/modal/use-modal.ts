@@ -1,4 +1,5 @@
-import type { ExtendedModalApi, ModalApiOptions, ModalProps } from './modal';
+import type { ExtendedModalApi } from './modal-api';
+import type { ModalApiOptions, ModalProps } from './modal';
 
 import {
   defineComponent,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
 
 // 定义组件参数
 const props = defineProps<{
@@ -40,10 +40,10 @@ type DragAction =
 // DOM 引用
 const containerRef = ref<HTMLDivElement | null>(null);
 const bgImageRef = ref<HTMLImageElement | null>(null);
-const maskRef = ref<HTMLDivElement | null>(null);
+useTemplateRef<HTMLDivElement>('maskRef');
 const maskViewRef = ref<HTMLDivElement | null>(null);
 const cropperRef = ref<HTMLDivElement | null>(null);
-const cropperViewRef = ref<HTMLDivElement | null>(null);
+useTemplateRef<HTMLDivElement>('cropperViewRef');
 
 // 响应式数据
 const isCropperVisible = ref<boolean>(false);
@@ -832,19 +832,21 @@ defineExpose({ getCropImage });
 <style scoped>
 .cropper-action-wrapper {
   @apply box-border flex items-center justify-center;
+
+  background-color: transparent;
+
   /* 马赛克背景 */
   background-image:
     linear-gradient(45deg, #ccc 25%, transparent 25%),
     linear-gradient(-45deg, #ccc 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, #ccc 75%),
     linear-gradient(-45deg, transparent 75%, #ccc 75%);
-  background-size: 20px 20px;
   background-position:
     0 0,
     0 10px,
     10px -10px,
     -10px 0;
-  background-color: transparent;
+  background-size: 20px 20px;
 }
 
 .cropper-container {

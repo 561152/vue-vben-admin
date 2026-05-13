@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, h } from 'vue';
 import { Card, Tag, Checkbox, Tooltip, Dropdown } from 'ant-design-vue';
 import {
   EyeOutlined,
@@ -17,6 +17,9 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons-vue';
+import type { CheckboxChangeEvent } from 'ant-design-vue/es/checkbox/interface';
+import type { ItemType } from 'ant-design-vue/es/menu/src/hooks/useItems';
+import type { MenuClickEventHandler } from 'ant-design-vue/es/menu/src/interface';
 import type { MaterialItem, MaterialType, MaterialStatus } from '../types';
 
 const props = defineProps<{
@@ -130,7 +133,7 @@ function handleClick() {
   }
 }
 
-function handleSelect(e: Event) {
+function handleSelect(e: CheckboxChangeEvent) {
   e.stopPropagation();
   emit('select', props.material, !props.selected);
 }
@@ -150,7 +153,19 @@ function handleUse(e: Event) {
   emit('use', props.material);
 }
 
-function handleMenuClick({ key }: { key: string }) {
+const menuItems: ItemType[] = [
+  { key: 'edit', label: '编辑', icon: () => h(EditOutlined) },
+  { key: 'use', label: '使用', icon: () => h(SendOutlined) },
+  { type: 'divider' },
+  {
+    key: 'delete',
+    label: '删除',
+    icon: () => h(DeleteOutlined),
+    danger: true,
+  },
+];
+
+const handleMenuClick: MenuClickEventHandler = ({ key }) => {
   switch (key) {
     case 'edit':
       emit('edit', props.material);
@@ -162,7 +177,7 @@ function handleMenuClick({ key }: { key: string }) {
       emit('use', props.material);
       break;
   }
-}
+};
 </script>
 
 <template>
@@ -260,17 +275,7 @@ function handleMenuClick({ key }: { key: string }) {
       <Dropdown
         :trigger="['click']"
         :menu="{
-          items: [
-            { key: 'edit', label: '编辑', icon: EditOutlined },
-            { key: 'use', label: '使用', icon: SendOutlined },
-            { type: 'divider' },
-            {
-              key: 'delete',
-              label: '删除',
-              icon: DeleteOutlined,
-              danger: true,
-            },
-          ],
+          items: menuItems,
           onClick: handleMenuClick,
         }"
       >

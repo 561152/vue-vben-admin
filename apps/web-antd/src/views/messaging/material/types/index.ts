@@ -1,6 +1,14 @@
 // ==================== 素材库类型定义 ====================
 
-export type MaterialType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'FILE' | 'MIXED';
+import type { Dayjs } from 'dayjs';
+
+export type MaterialType =
+  | 'TEXT'
+  | 'IMAGE'
+  | 'VIDEO'
+  | 'LINK'
+  | 'FILE'
+  | 'MIXED';
 
 export type MaterialStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 
@@ -55,7 +63,7 @@ export interface MaterialFilters {
   status?: MaterialStatus;
   categoryId?: number | null;
   tags?: string[];
-  dateRange?: [Date, Date];
+  dateRange?: [Dayjs, Dayjs];
   minUsageCount?: number;
   maxUsageCount?: number;
   sortBy?: 'updatedAt' | 'usageCount' | 'viewCount' | 'name' | 'createdAt';
@@ -79,7 +87,14 @@ export interface UsageRecord {
   id: number;
   materialId: number;
   materialName: string;
-  usageType: 'MASS_MESSAGE' | 'MOMENT' | 'DIRECT_MESSAGE' | 'SCHEDULED_MESSAGE' | 'TEMPLATE' | 'CAMPAIGN' | 'OTHER';
+  usageType:
+    | 'MASS_MESSAGE'
+    | 'MOMENT'
+    | 'DIRECT_MESSAGE'
+    | 'SCHEDULED_MESSAGE'
+    | 'TEMPLATE'
+    | 'CAMPAIGN'
+    | 'OTHER';
   targetId: string | null;
   targetName: string | null;
   createdAt: string;
@@ -104,7 +119,10 @@ export interface RecommendedMaterial {
 }
 
 // 常量定义
-export const MATERIAL_TYPE_CONFIG: Record<MaterialType, { label: string; color: string; icon: string }> = {
+export const MATERIAL_TYPE_CONFIG: Record<
+  MaterialType,
+  { label: string; color: string; icon: string }
+> = {
   TEXT: { label: '文本', color: '#595959', icon: 'FileTextOutlined' },
   IMAGE: { label: '图片', color: '#52c41a', icon: 'PictureOutlined' },
   VIDEO: { label: '视频', color: '#722ed1', icon: 'VideoCameraOutlined' },
@@ -113,7 +131,10 @@ export const MATERIAL_TYPE_CONFIG: Record<MaterialType, { label: string; color: 
   MIXED: { label: '图文', color: '#13c2c2', icon: 'FolderOutlined' },
 };
 
-export const MATERIAL_STATUS_CONFIG: Record<MaterialStatus, { label: string; color: string }> = {
+export const MATERIAL_STATUS_CONFIG: Record<
+  MaterialStatus,
+  { label: string; color: string }
+> = {
   DRAFT: { label: '草稿', color: '#bfbfbf' },
   ACTIVE: { label: '启用', color: '#52c41a' },
   ARCHIVED: { label: '归档', color: '#8c8c8c' },

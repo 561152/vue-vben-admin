@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import {
   Card,
   Input,
@@ -10,7 +10,6 @@ import {
   Space,
   Tag,
   Tooltip,
-  Empty,
   message,
   Modal,
   List,
@@ -294,22 +293,6 @@ const sendMessage = async () => {
     isStreaming.value = false;
     streamingContent.value = '';
     scrollToBottom();
-  }
-};
-
-// 结束会话
-const endSession = async () => {
-  if (!currentSessionId.value) return;
-
-  try {
-    await requestClient.post(
-      `/ai-doctor/counselor/session/${currentSessionId.value}/end`,
-    );
-    message.success('会话已结束');
-    currentSessionId.value = null;
-    messages.value = [];
-  } catch (error) {
-    console.error('Failed to end session:', error);
   }
 };
 
@@ -836,8 +819,8 @@ onMounted(() => {
 
 .faq-tip a {
   color: #1890ff;
-  cursor: pointer;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .faq-tip a:hover {

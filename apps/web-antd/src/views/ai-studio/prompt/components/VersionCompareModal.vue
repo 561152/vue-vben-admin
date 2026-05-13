@@ -22,6 +22,7 @@ import {
   compareVersions,
   type ComparisonResult,
 } from '#/api/ai-studio/prompt-ab-testing';
+import type { DefaultOptionType } from 'ant-design-vue/es/select';
 import {
   getPromptTemplateVersions,
   type PromptTemplateVersion,
@@ -66,6 +67,11 @@ const versionOptions = computed(() =>
   })),
 );
 
+const filterOption = (input: string, option?: DefaultOptionType) =>
+  String(option?.label ?? '')
+    .toLowerCase()
+    .includes(input.toLowerCase());
+
 /**
  * 简单行级 diff：逐行比对，标记新增/删除/相同
  */
@@ -79,7 +85,6 @@ const computeDiff = (textA: string, textB: string) => {
     lineB?: number;
   }> = [];
 
-  const maxLen = Math.max(linesA.length, linesB.length);
   let idxA = 0;
   let idxB = 0;
 
@@ -142,13 +147,6 @@ const computeDiff = (textA: string, textB: string) => {
 
   return result;
 };
-
-const systemPromptDiff = computed(() => {
-  if (!versionAContent.value || !versionBContent.value) return [];
-  const contentA = versionAContent.value.systemPrompt || '' || '';
-  const contentB = versionBContent.value.systemPrompt || '' || '';
-  return computeDiff(contentA.trim(), contentB.trim());
-});
 
 const userPromptDiff = computed(() => {
   if (!versionAContent.value || !versionBContent.value) return [];
@@ -227,10 +225,7 @@ watch(
             placeholder="选择版本 A"
             style="width: 100%"
             show-search
-            :filter-option="
-              (input: string, option: { label: string }) =>
-                option.label.toLowerCase().includes(input.toLowerCase())
-            "
+            :filter-option="filterOption"
           />
         </Col>
         <Col :span="4" class="text-center">
@@ -251,10 +246,7 @@ watch(
             placeholder="选择版本 B"
             style="width: 100%"
             show-search
-            :filter-option="
-              (input: string, option: { label: string }) =>
-                option.label.toLowerCase().includes(input.toLowerCase())
-            "
+            :filter-option="filterOption"
           />
         </Col>
       </Row>

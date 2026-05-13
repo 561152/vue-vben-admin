@@ -154,6 +154,20 @@ async function handleEdit(record: ConfigItem) {
   modalVisible.value = true;
 }
 
+function isConfigItem(record: unknown): record is ConfigItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'string'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isConfigItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(record: ConfigItem) {
   if (record.isSystem) {
     message.warning('系统配置不允许删除');
@@ -166,6 +180,12 @@ async function handleDelete(record: ConfigItem) {
     fetchData();
   } catch (e: any) {
     message.error(e.message || '删除失败');
+  }
+}
+
+function handleDeleteRecord(record: unknown) {
+  if (isConfigItem(record)) {
+    handleDelete(record);
   }
 }
 
@@ -217,12 +237,12 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
             <Popconfirm
               title="确定删除吗？"
-              @confirm="handleDelete(record)"
+              @confirm="handleDeleteRecord(record)"
               :disabled="record.isSystem"
             >
               <Button

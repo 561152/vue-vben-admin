@@ -79,7 +79,7 @@ interface EmptyGroup {
 
 // ==================== 数据加载 ====================
 
-interface GroupStats {
+interface GroupStats extends Record<string, unknown> {
   overview: GroupOverview;
   memberAnalysis: MemberAnalysis;
   emptyGroups: EmptyGroup[];
@@ -156,23 +156,6 @@ const topGroupColumns: RankingColumn[] = [
 const distributionColumns: DistributionColumn[] = [
   { title: '成员规模', dataIndex: 'range', key: 'range' },
   { title: '群数量', dataIndex: 'count', key: 'count' },
-];
-
-const memberTypeColumns: DistributionColumn[] = [
-  {
-    title: '成员类型',
-    key: 'type',
-    dataIndex: 'type',
-    valueMap: memberTypeMap,
-    isTag: true,
-  },
-  { title: '数量', dataIndex: 'count', key: 'count' },
-  {
-    title: '占比',
-    key: 'percentage',
-    dataIndex: 'percentage',
-    showProgress: true,
-  },
 ];
 
 const activeGroupColumns: DistributionColumn[] = [

@@ -2,7 +2,7 @@
  * AttachmentEditor 组件单元测试
  * 测试附件编辑器的核心逻辑
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // 模拟 requestClient
 vi.mock('#/api/request', () => ({
@@ -312,9 +312,11 @@ describe('AttachmentEditor', () => {
 
       const imageFile = { size: 5 * 1024 * 1024 }; // 5MB
       const largeImage = { size: 15 * 1024 * 1024 }; // 15MB
+      const videoFile = { size: 8 * 1024 * 1024 }; // 8MB
 
       expect(imageFile.size <= maxImageSize).toBe(true);
       expect(largeImage.size <= maxImageSize).toBe(false);
+      expect(videoFile.size <= maxVideoSize).toBe(true);
     });
   });
 

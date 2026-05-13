@@ -9,8 +9,9 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
-import { clearUserCache } from '#/api/core/user';
+import { setLoginExpiredHandler } from '#/api/auth-session-events';
+import { getAccessCodesApi, loginApi, logoutApi } from '#/api/core/auth';
+import { clearUserCache, getUserInfoApi } from '#/api/core/user';
 import { $t } from '#/locales';
 import { useBrandingStore } from '#/store/branding';
 
@@ -121,4 +122,8 @@ export const useAuthStore = defineStore('auth', () => {
     loginLoading,
     logout,
   };
+});
+
+setLoginExpiredHandler(async () => {
+  await useAuthStore().logout();
 });

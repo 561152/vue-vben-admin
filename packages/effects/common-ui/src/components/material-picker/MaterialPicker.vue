@@ -6,7 +6,6 @@ import {
   Tabs,
   TabPane,
   Table,
-  Image,
   Checkbox,
   Button,
   Input,
@@ -32,7 +31,14 @@ import { request } from '../../utils/request';
 
 // ==================== Types ====================
 
-export type MaterialType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE' | 'LINK' | 'MIXED' | 'ALL';
+export type MaterialType =
+  | 'TEXT'
+  | 'IMAGE'
+  | 'VIDEO'
+  | 'FILE'
+  | 'LINK'
+  | 'MIXED'
+  | 'ALL';
 
 export interface Material {
   id: number;
@@ -158,14 +164,19 @@ const columns = [
 ];
 
 const categoryTreeData = computed<DataNode[]>(() => {
-  const buildTree = (cats: Category[], parentId: number | null = null): DataNode[] => {
+  const buildTree = (
+    cats: Category[],
+    parentId: number | null = null,
+  ): DataNode[] => {
     return cats
       .filter((c) => c.parentId === parentId)
       .map((c) => ({
         key: c.id,
         title: `${c.name} ${c.materialCount ? `(${c.materialCount})` : ''}`,
         children: c.children ? buildTree(c.children) : buildTree(cats, c.id),
-        icon: expandedKeys.value.includes(c.id) ? FolderOpenOutlined : FolderOutlined,
+        icon: expandedKeys.value.includes(c.id)
+          ? FolderOpenOutlined
+          : FolderOutlined,
       }));
   };
 
@@ -246,18 +257,6 @@ function getTypeColor(type: MaterialType): string {
   return colors[type] || 'default';
 }
 
-function formatDateTime(dateStr: string): string {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function handleTypeChange(type: Key) {
   activeType.value = type as MaterialType;
   page.value = 1;
@@ -265,8 +264,10 @@ function handleTypeChange(type: Key) {
   fetchMaterialList();
 }
 
-function handleCategorySelect(selectedKeys: number[]) {
-  selectedCategoryId.value = selectedKeys[0] || null;
+function handleCategorySelect(selectedKeys: Key[]) {
+  const [selectedKey] = selectedKeys;
+  selectedCategoryId.value =
+    typeof selectedKey === 'number' ? selectedKey : null;
   page.value = 1;
   fetchMaterialList();
 }
@@ -299,7 +300,9 @@ function handleSelect(id: number, checked: boolean) {
 }
 
 function handleConfirm() {
-  const selected = materialList.value.filter((m) => selectedIds.value.includes(m.id));
+  const selected = materialList.value.filter((m) =>
+    selectedIds.value.includes(m.id),
+  );
 
   if (selected.length === 0) {
     message.warning('请选择素材');
@@ -349,7 +352,7 @@ watch(
         <!-- Category Tree -->
         <div v-if="showCategories" class="w-48 flex-shrink-0">
           <div class="mb-2 font-medium">分类</div>
-          <div class="h-[500px] overflow-auto border rounded p-2">
+          <div class="h-[500px] overflow-auto rounded border p-2">
             <Tree
               v-model:expandedKeys="expandedKeys"
               :tree-data="categoryTreeData"
@@ -367,7 +370,11 @@ watch(
         <!-- Main Content -->
         <div class="flex-1">
           <!-- Type Tabs -->
-          <Tabs v-if="!type || type === 'ALL'" v-model:activeKey="activeType" @change="handleTypeChange">
+          <Tabs
+            v-if="!type || type === 'ALL'"
+            v-model:activeKey="activeType"
+            @change="handleTypeChange"
+          >
             <TabPane v-for="opt in typeOptions" :key="opt.key">
               <template #tab>
                 <span class="flex items-center gap-1">
@@ -425,7 +432,8 @@ watch(
                   <Checkbox
                     :checked="selectedIds.includes(record.id)"
                     @change="
-                      (e: { target: { checked: boolean } }) => handleSelect(record.id, e.target.checked)
+                      (e: { target: { checked: boolean } }) =>
+                        handleSelect(record.id, e.target.checked)
                     "
                   />
                 </template>
@@ -446,7 +454,10 @@ watch(
                 <template v-if="column.key === 'name'">
                   <div class="flex flex-col gap-1">
                     <span class="font-medium">{{ record.name }}</span>
-                    <span v-if="record.description" class="text-xs text-gray-400">
+                    <span
+                      v-if="record.description"
+                      class="text-xs text-gray-400"
+                    >
                       {{ record.description }}
                     </span>
                   </div>
@@ -460,7 +471,11 @@ watch(
 
                 <template v-if="column.key === 'tags'">
                   <div class="flex flex-wrap gap-1">
-                    <Tag v-for="tag in record.tags.slice(0, 3)" :key="tag" size="small">
+                    <Tag
+                      v-for="tag in record.tags.slice(0, 3)"
+                      :key="tag"
+                      size="small"
+                    >
                       {{ tag }}
                     </Tag>
                     <Tag v-if="record.tags.length > 3" size="small">

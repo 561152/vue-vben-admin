@@ -64,7 +64,10 @@ async function doSuspend() {
     async onOk() {
       loading.value = true;
       try {
-        const res = await suspendExecution(props.pipelineKey, props.executionId);
+        const res = await suspendExecution(
+          props.pipelineKey,
+          props.executionId,
+        );
         if (res.success) {
           message.success('已请求暂停,等待工作流到达暂停点');
         } else {
@@ -161,8 +164,8 @@ async function doCancel() {
 <style scoped>
 .execution-control-panel {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   padding: 8px 0;
 }
 </style>

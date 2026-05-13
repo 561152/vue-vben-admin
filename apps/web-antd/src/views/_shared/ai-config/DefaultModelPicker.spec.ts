@@ -1,9 +1,10 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 
+import type { AiCredentialDto } from './credentials.api';
 import DefaultModelPicker from './DefaultModelPicker.vue';
 
-const CREDS = [
+const CREDS: AiCredentialDto[] = [
   {
     id: 12,
     provider: 'OPENAI',

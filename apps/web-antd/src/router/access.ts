@@ -3,8 +3,6 @@ import type {
   GenerateMenuAndRoutesOptions,
 } from '@vben/types';
 
-import type { RouteRecordRaw } from 'vue-router';
-
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
 

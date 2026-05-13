@@ -181,6 +181,20 @@ async function handleEdit(record: TenantItem) {
   modalVisible.value = true;
 }
 
+function isTenantItem(record: unknown): record is TenantItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'string'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isTenantItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(id: string) {
   try {
     await requestClient.delete(`/platform/tenants/${id}`);
@@ -250,6 +264,12 @@ async function handleManageSubscriptions(record: TenantItem) {
   }
 }
 
+function handleManageSubscriptionsRecord(record: unknown) {
+  if (isTenantItem(record)) {
+    handleManageSubscriptions(record);
+  }
+}
+
 async function handleSubscriptionSubmit() {
   if (!currentTenantId.value) return;
 
@@ -295,13 +315,13 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
             <Button
               type="link"
               size="small"
-              @click="handleManageSubscriptions(record)"
+              @click="handleManageSubscriptionsRecord(record)"
               >管理订阅</Button
             >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">

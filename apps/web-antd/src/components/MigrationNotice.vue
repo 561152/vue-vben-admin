@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Alert as AAlert, Button as AButton } from 'ant-design-vue';
 import { SwapOutlined } from '@ant-design/icons-vue';
@@ -108,7 +108,9 @@ function checkMigrationStatus() {
       if (!dismissedNotices.includes(currentPath)) {
         // Show notice only on first visit after migration
         // (This handles direct navigation to the new URL)
-        const hasSeenMigration = sessionStorage.getItem(`seen-migration-${currentPath}`);
+        const hasSeenMigration = sessionStorage.getItem(
+          `seen-migration-${currentPath}`,
+        );
         if (!hasSeenMigration) {
           showNotice.value = true;
           newLocationLabel.value = getNewLocationLabel(route.fullPath);

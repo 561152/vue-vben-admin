@@ -171,6 +171,20 @@ async function handleEdit(record: UserItem) {
   modalVisible.value = true;
 }
 
+function isUserItem(record: unknown): record is UserItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'number'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isUserItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(id: number) {
   try {
     await requestClient.delete(`/users/${id}`);
@@ -265,7 +279,7 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
             <Button

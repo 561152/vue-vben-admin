@@ -40,11 +40,7 @@ function validatePayload(): null | Record<string, unknown> {
     errorText.value = `JSON 解析失败:${error.message}`;
     return null;
   }
-  if (
-    typeof parsed !== 'object' ||
-    parsed === null ||
-    Array.isArray(parsed)
-  ) {
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     errorText.value = 'resumeData 必须是 JSON 对象(非数组、非 null)';
     return null;
   }
@@ -118,6 +114,7 @@ function onCancel() {
   margin-bottom: 8px;
   color: rgb(0 0 0 / 45%);
 }
+
 .error {
   margin-top: 8px;
   color: #ff4d4f;

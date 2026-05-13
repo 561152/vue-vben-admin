@@ -6,8 +6,6 @@ import {
   Button,
   Tree,
   Empty,
-  Space,
-  Tooltip,
   Modal,
   Form,
   Input,
@@ -23,16 +21,9 @@ import {
   UnorderedListOutlined,
   CheckSquareOutlined,
   FolderOutlined,
-  FileTextOutlined,
-  PictureOutlined,
-  VideoCameraOutlined,
-  LinkOutlined,
-  FileOutlined,
   FolderOpenOutlined,
   ImportOutlined,
   DeleteOutlined,
-  ExportOutlined,
-  HistoryOutlined,
 } from '@ant-design/icons-vue';
 import { useModalForm } from '#/composables';
 import { requestClient } from '#/api/request';
@@ -42,7 +33,6 @@ import FilterPanel from './components/FilterPanel.vue';
 import MaterialDetailDrawer from './components/MaterialDetailDrawer.vue';
 import ImportExportModal from './components/ImportExportModal.vue';
 import VersionManager from './components/VersionManager.vue';
-import AIAssistant from './components/AIAssistant.vue';
 import { useMaterialLibrary } from './composables/useMaterialLibrary';
 import type { MaterialItem, MaterialFormState, CategoryItem } from './types';
 
@@ -57,13 +47,11 @@ const {
   filters,
   categories,
   selectedCategoryId,
-  categoryLoading,
   materials,
   loading,
   pagination,
   detailVisible,
   selectedMaterial,
-  hasSelection,
   selectedCount,
   fetchMaterials,
   fetchCategories,
@@ -72,7 +60,6 @@ const {
   clearSelection,
   enterSelectionMode,
   openDetail,
-  closeDetail,
   batchDelete,
   batchChangeCategory,
   batchAddTags,
@@ -144,6 +131,7 @@ const categoryTreeData = computed(() => {
 
 function handleCategorySelect(selectedKeys: Array<number | string>) {
   const key = selectedKeys[0];
+  if (key === undefined) return;
   if (key === 'all') {
     selectedCategoryId.value = null;
   } else {
@@ -461,7 +449,7 @@ onMounted(() => {
               :total="pagination.total"
               :page-size-options="['12', '24', '48', '96']"
               show-size-changer
-              show-total
+              :show-total="(total) => `共 ${total} 条`"
               @change="fetchMaterials"
             />
           </div>
@@ -556,10 +544,15 @@ onMounted(() => {
 
         <Form.Item label="所属分类">
           <Select
-            v-model:value="formState.categoryId"
+            :value="formState.categoryId ?? undefined"
             placeholder="选择分类"
             allow-clear
             style="width: 200px"
+            @change="
+              (value) =>
+                (formState.categoryId =
+                  typeof value === 'number' ? value : null)
+            "
           >
             <Select.Option
               v-for="cat in categoryOptions"
@@ -603,9 +596,14 @@ onMounted(() => {
         </Form.Item>
         <Form.Item label="上级分类">
           <Select
-            v-model:value="categoryFormState.parentId"
+            :value="categoryFormState.parentId ?? undefined"
             placeholder="选择上级分类（可选）"
             allow-clear
+            @change="
+              (value) =>
+                (categoryFormState.parentId =
+                  typeof value === 'number' ? value : null)
+            "
           >
             <Select.Option
               v-for="cat in categoryOptions"

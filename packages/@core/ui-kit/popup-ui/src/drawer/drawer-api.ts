@@ -1,3 +1,5 @@
+import type { Ref } from 'vue';
+
 import type { DrawerApiOptions, DrawerState } from './drawer';
 
 import { Store } from '@vben-core/shared/store';
@@ -181,3 +183,9 @@ export class DrawerApi {
     return this.lock(false);
   }
 }
+
+export type ExtendedDrawerApi = DrawerApi & {
+  useStore: <T = NoInfer<DrawerState>>(
+    selector?: (state: NoInfer<DrawerState>) => T,
+  ) => Readonly<Ref<T>>;
+};

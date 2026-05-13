@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import {
   Table,
   Button,
@@ -61,6 +61,7 @@ const { featureModules, showFeatureFilter, loadFeatureModules } =
 
 const detailVisible = ref(false);
 const detailComponent = ref<ComponentItem | null>(null);
+const visibleDetailComponent = computed(() => detailComponent.value);
 const testModalVisible = ref(false);
 const testingComponent = ref<ComponentItem | null>(null);
 const testInput = ref('');
@@ -270,6 +271,33 @@ const handleDelete = async (id: number) => {
   }
 };
 
+const isComponentItem = (
+  record: Record<string, any>,
+): record is ComponentItem =>
+  typeof record.id === 'number' &&
+  typeof record.name === 'string' &&
+  typeof record.code === 'string' &&
+  typeof record.type === 'string' &&
+  typeof record.category === 'string' &&
+  typeof record.version === 'string' &&
+  typeof record.usageCount === 'number' &&
+  typeof record.updatedAt === 'string';
+
+const withComponentItem = (
+  record: Record<string, any>,
+  handler: (item: ComponentItem) => void,
+) => {
+  if (isComponentItem(record)) {
+    handler(record);
+  }
+};
+
+const getTypeOption = (type: string) =>
+  typeOptions.find((opt) => opt.value === type);
+
+const getCategoryLabel = (category: string) =>
+  categoryOptions.find((opt) => opt.value === category)?.label;
+
 onMounted(() => {
   loadFeatureModules();
   fetchData();
@@ -338,17 +366,29 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Tooltip title="查看详情">
-                <Button type="link" size="small" @click="showDetail(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withComponentItem(record, showDetail)"
+                >
                   <template #icon><EyeOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="测试组件">
-                <Button type="link" size="small" @click="showTest(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withComponentItem(record, showTest)"
+                >
                   <template #icon><ThunderboltOutlined /></template>
                 </Button>
               </Tooltip>
               <Tooltip title="编辑">
-                <Button type="link" size="small" @click="showEdit(record)">
+                <Button
+                  type="link"
+                  size="small"
+                  @click="withComponentItem(record, showEdit)"
+                >
                   <template #icon><EditOutlined /></template>
                 </Button>
               </Tooltip>
@@ -448,32 +488,24 @@ onMounted(() => {
       width="600"
       placement="right"
     >
-      <div v-if="detailComponent" class="component-detail">
+      <div v-if="visibleDetailComponent" class="component-detail">
         <div class="detail-item">
           <label>组件ID：</label>
-          <span>{{ detailComponent.id }}</span>
+          <span>{{ visibleDetailComponent.id }}</span>
         </div>
         <div class="detail-item">
           <label>组件名称：</label>
-          <span>{{ detailComponent.name }}</span>
+          <span>{{ visibleDetailComponent.name }}</span>
         </div>
         <div class="detail-item">
           <label>组件编码：</label>
-          <span>{{ detailComponent.code }}</span>
+          <span>{{ visibleDetailComponent.code }}</span>
         </div>
         <div class="detail-item">
           <label>类型：</label>
           <span>
-            <Tag
-              :color="
-                typeOptions.find((opt) => opt.value === detailComponent.type)
-                  ?.color
-              "
-            >
-              {{
-                typeOptions.find((opt) => opt.value === detailComponent.type)
-                  ?.label
-              }}
+            <Tag :color="getTypeOption(visibleDetailComponent.type)?.color">
+              {{ getTypeOption(visibleDetailComponent.type)?.label }}
             </Tag>
           </span>
         </div>
@@ -481,30 +513,28 @@ onMounted(() => {
           <label>分类：</label>
           <span>
             <Tag>
-              {{
-                categoryOptions.find(
-                  (opt) => opt.value === detailComponent.category,
-                )?.label
-              }}
+              {{ getCategoryLabel(visibleDetailComponent.category) }}
             </Tag>
           </span>
         </div>
         <div class="detail-item">
           <label>版本：</label>
-          <span>{{ detailComponent.version }}</span>
+          <span>{{ visibleDetailComponent.version }}</span>
         </div>
         <div class="detail-item">
           <label>使用次数：</label>
-          <span>{{ detailComponent.usageCount }}</span>
+          <span>{{ visibleDetailComponent.usageCount }}</span>
         </div>
         <div class="detail-item">
           <label>描述：</label>
-          <span>{{ detailComponent.description || '-' }}</span>
+          <span>{{ visibleDetailComponent.description || '-' }}</span>
         </div>
         <div class="detail-item">
           <label>更新时间：</label>
           <span>{{
-            dayjs(detailComponent.updatedAt).format('YYYY-MM-DD HH:mm:ss')
+            dayjs(visibleDetailComponent.updatedAt).format(
+              'YYYY-MM-DD HH:mm:ss',
+            )
           }}</span>
         </div>
       </div>

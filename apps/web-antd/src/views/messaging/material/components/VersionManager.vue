@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import {
   Drawer,
   List,
@@ -14,14 +14,10 @@ import {
   message,
 } from 'ant-design-vue';
 import {
-  HistoryOutlined,
   RollbackOutlined,
   EyeOutlined,
   SwapOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   EditOutlined,
-  DeleteOutlined,
 } from '@ant-design/icons-vue';
 import { requestClient } from '#/api/request';
 import type { VersionItem, MaterialItem } from '../types';

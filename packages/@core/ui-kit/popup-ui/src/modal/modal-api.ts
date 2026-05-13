@@ -1,3 +1,5 @@
+import type { Ref } from 'vue';
+
 import type { ModalApiOptions, ModalState } from './modal';
 
 import { Store } from '@vben-core/shared/store';
@@ -194,3 +196,9 @@ export class ModalApi {
     return this.lock(false);
   }
 }
+
+export type ExtendedModalApi = ModalApi & {
+  useStore: <T = NoInfer<ModalState>>(
+    selector?: (state: NoInfer<ModalState>) => T,
+  ) => Readonly<Ref<T>>;
+};

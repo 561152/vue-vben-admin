@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import type { ExtendedModalApi, ModalProps } from './modal';
+import type { ExtendedModalApi } from './modal-api';
+import type { ModalProps } from './modal';
 
 import {
   computed,
@@ -9,6 +10,7 @@ import {
   ref,
   unref,
   useId,
+  useTemplateRef,
   watch,
 } from 'vue';
 
@@ -50,10 +52,10 @@ const props = withDefaults(defineProps<Props>(), {
 const components = globalShareState.getComponents();
 
 const contentRef = ref();
-const wrapperRef = ref<HTMLElement>();
+useTemplateRef<HTMLElement>('wrapperRef');
 const dialogRef = ref();
 const headerRef = ref();
-const footerRef = ref();
+useTemplateRef<HTMLElement>('footerRef');
 
 const id = useId();
 

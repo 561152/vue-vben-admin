@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { Card, Table, Progress, Tag, Empty } from 'ant-design-vue';
+import type { TablePaginationConfig } from 'ant-design-vue';
+import type { SizeType } from 'ant-design-vue/es/config-provider';
 import type { SelectOption } from '#/constants/crm-options';
 
 export interface DistributionColumn {
@@ -32,9 +34,9 @@ interface Props {
   /** 列配置 */
   columns: DistributionColumn[];
   /** 是否显示分页 */
-  pagination?: boolean;
+  pagination?: false | TablePaginationConfig;
   /** 表格大小 */
-  size?: 'default' | 'middle' | 'small';
+  size?: SizeType;
   /** 表格滚动高度 */
   scrollY?: number;
   /** 空数据描述 */

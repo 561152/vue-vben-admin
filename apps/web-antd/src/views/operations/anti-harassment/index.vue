@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import {
   Button,
   Space,
@@ -19,6 +19,7 @@ import {
   Popconfirm,
   Badge,
 } from 'ant-design-vue';
+import type { TableProps } from 'ant-design-vue';
 import {
   PlusOutlined,
   EditOutlined,
@@ -55,6 +56,28 @@ interface SensitiveWord {
   isActive: boolean;
 }
 
+interface RuleConfig {
+  keywords: string[];
+  messageTypes: string[];
+  maxLength: number;
+  maxLines: number;
+  maxFrequency: number;
+  frequencyWindow: number;
+  blockExternalCorp: boolean;
+}
+
+interface RuleFormState {
+  name: string;
+  ruleType: string;
+  config: RuleConfig;
+  action: string;
+  addToOrgBlacklist: boolean;
+  addToGroupBlacklist: boolean;
+  warningMessage: string;
+  warnCount: number;
+  isActive: boolean;
+}
+
 // ==================== Router ====================
 
 const router = useRouter();
@@ -75,7 +98,7 @@ const editingRule = ref<AntiHarassmentRule | null>(null);
 const modalLoading = ref(false);
 
 // Form state
-const ruleForm = ref({
+const ruleForm = ref<RuleFormState>({
   name: '',
   ruleType: 'SENSITIVE_WORD',
   config: {
@@ -173,6 +196,18 @@ const {
   },
 });
 
+const ruleTableProps = computed<TableProps<AntiHarassmentRule>>(() => ({
+  ...tableProps.value,
+  columns: ruleColumns,
+}));
+
+const sensitiveWordColumns = [
+  { title: '敏感词', dataIndex: 'word', key: 'word' },
+  { title: '分类', dataIndex: 'category', key: 'category' },
+  { title: '级别', dataIndex: 'level', key: 'level' },
+  { title: '状态', dataIndex: 'isActive', key: 'isActive' },
+];
+
 // ==================== 辅助数据加载 ====================
 
 async function fetchSensitiveWords() {
@@ -193,12 +228,18 @@ async function fetchSensitiveWords() {
 async function fetchListCounts() {
   try {
     const [whiteRes, blackRes] = await Promise.all([
-      requestClient.get<{ total: number }>('/operations/anti-harassment/lists', {
-        params: { listType: 'WHITELIST', pageSize: 1 },
-      }),
-      requestClient.get<{ total: number }>('/operations/anti-harassment/lists', {
-        params: { listType: 'BLACKLIST', pageSize: 1 },
-      }),
+      requestClient.get<{ total: number }>(
+        '/operations/anti-harassment/lists',
+        {
+          params: { listType: 'WHITELIST', pageSize: 1 },
+        },
+      ),
+      requestClient.get<{ total: number }>(
+        '/operations/anti-harassment/lists',
+        {
+          params: { listType: 'BLACKLIST', pageSize: 1 },
+        },
+      ),
     ]);
     whitelistCount.value = whiteRes.total || 0;
     blacklistCount.value = blackRes.total || 0;
@@ -227,6 +268,13 @@ function handleCreateRule() {
 }
 
 function handleEditRule(rule: AntiHarassmentRule) {
+  const warningMessage =
+    typeof rule.config.warningMessage === 'string'
+      ? rule.config.warningMessage
+      : '';
+  const warnCount =
+    typeof rule.config.warnCount === 'number' ? rule.config.warnCount : 3;
+
   editingRule.value = rule;
   ruleModalTitle.value = '编辑规则';
   ruleForm.value = {
@@ -236,11 +284,19 @@ function handleEditRule(rule: AntiHarassmentRule) {
     action: rule.action,
     addToOrgBlacklist: false,
     addToGroupBlacklist: false,
-    warningMessage: rule.config.warningMessage || '',
-    warnCount: rule.config.warnCount || 3,
+    warningMessage,
+    warnCount,
     isActive: rule.isActive,
   };
   ruleModalVisible.value = true;
+}
+
+function isAntiHarassmentRule(record: unknown): record is AntiHarassmentRule {
+  return (
+    !!record &&
+    typeof record === 'object' &&
+    typeof (record as AntiHarassmentRule).id === 'number'
+  );
 }
 
 function resetRuleForm() {
@@ -339,19 +395,6 @@ async function handleDeleteRule(id: number) {
     fetchData();
   } catch (e: unknown) {
     const errorMessage = e instanceof Error ? e.message : '删除失败';
-    message.error(errorMessage);
-  }
-}
-
-async function handleToggleRule(rule: AntiHarassmentRule) {
-  try {
-    await requestClient.patch(`/operations/anti-harassment/rules/${rule.id}/toggle`, {
-      isActive: !rule.isActive,
-    });
-    message.success(rule.isActive ? '规则已禁用' : '规则已启用');
-    fetchData();
-  } catch (e: unknown) {
-    const errorMessage = e instanceof Error ? e.message : '操作失败';
     message.error(errorMessage);
   }
 }
@@ -466,7 +509,7 @@ onMounted(() => {
             </Space>
           </div>
 
-          <Table v-bind="tableProps" :columns="ruleColumns">
+          <Table v-bind="ruleTableProps">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'isActive'">
                 <Badge
@@ -479,13 +522,18 @@ onMounted(() => {
                   <Button
                     type="link"
                     size="small"
-                    @click="handleEditRule(record)"
+                    @click="
+                      isAntiHarassmentRule(record) && handleEditRule(record)
+                    "
                   >
                     <EditOutlined /> 编辑
                   </Button>
                   <Popconfirm
                     title="确定要删除这条规则吗？"
-                    @confirm="handleDeleteRule(record.id)"
+                    @confirm="
+                      isAntiHarassmentRule(record) &&
+                      handleDeleteRule(record.id)
+                    "
                   >
                     <Button type="link" size="small" danger>
                       <DeleteOutlined /> 删除
@@ -505,31 +553,36 @@ onMounted(() => {
           <Table
             :data-source="sensitiveWords"
             :loading="wordsLoading"
+            :columns="sensitiveWordColumns"
             :pagination="{ pageSize: 20 }"
             row-key="id"
           >
-            <template #columns>
-              <Table.Column title="敏感词" dataIndex="word" />
-              <Table.Column title="分类" dataIndex="category" />
-              <Table.Column title="级别" dataIndex="level">
-                <template #default="{ text }">
-                  <Tag
-                    :color="
-                      text === 1 ? 'orange' : text === 2 ? 'red' : 'default'
-                    "
-                  >
-                    {{ text === 1 ? '一般' : text === 2 ? '严重' : '普通' }}
-                  </Tag>
-                </template>
-              </Table.Column>
-              <Table.Column title="状态" dataIndex="isActive">
-                <template #default="{ text }">
-                  <Badge
-                    :status="text ? 'success' : 'default'"
-                    :text="text ? '启用' : '禁用'"
-                  />
-                </template>
-              </Table.Column>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'level'">
+                <Tag
+                  :color="
+                    record.level === 1
+                      ? 'orange'
+                      : record.level === 2
+                        ? 'red'
+                        : 'default'
+                  "
+                >
+                  {{
+                    record.level === 1
+                      ? '一般'
+                      : record.level === 2
+                        ? '严重'
+                        : '普通'
+                  }}
+                </Tag>
+              </template>
+              <template v-if="column.key === 'isActive'">
+                <Badge
+                  :status="record.isActive ? 'success' : 'default'"
+                  :text="record.isActive ? '启用' : '禁用'"
+                />
+              </template>
             </template>
           </Table>
         </TabPane>

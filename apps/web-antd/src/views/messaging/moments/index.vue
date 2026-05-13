@@ -35,6 +35,7 @@ import {
   FolderOpenOutlined,
 } from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
+import type { Dayjs } from 'dayjs';
 import { requestClient } from '#/api/request';
 import { useCrudTable } from '#/composables';
 import CustomerFilterDrawer from './components/CustomerFilterDrawer.vue';
@@ -93,7 +94,7 @@ const failedCount = ref(0);
 const retryLoading = ref(false);
 
 // Filters (用于 history 表格)
-const dateRange = ref<[unknown, unknown] | null>(null);
+const dateRange = ref<[Dayjs, Dayjs] | undefined>(undefined);
 
 // Attachment interface
 interface MomentsAttachment {
@@ -191,8 +192,8 @@ const {
     if (params.createdBy) apiParams.createdBy = params.createdBy;
     if (params.status) apiParams.status = params.status;
     if (dateRange.value) {
-      apiParams.startDate = dateRange.value[0];
-      apiParams.endDate = dateRange.value[1];
+      apiParams.startDate = dateRange.value[0].format('YYYY-MM-DD');
+      apiParams.endDate = dateRange.value[1].format('YYYY-MM-DD');
     }
     if (params.minLikes) apiParams.minLikes = params.minLikes;
     if (params.minComments) apiParams.minComments = params.minComments;

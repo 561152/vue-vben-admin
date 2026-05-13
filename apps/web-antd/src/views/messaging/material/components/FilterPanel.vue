@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
 import {
-  Form,
   Input,
   Select,
   DatePicker,
@@ -15,6 +14,7 @@ import {
   ReloadOutlined,
   FilterOutlined,
 } from '@ant-design/icons-vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
 import type { MaterialFilters, CategoryItem } from '../types';
 
 const props = defineProps<{
@@ -65,6 +65,7 @@ const sortOptions = [
 ] as const;
 
 const tagPresets = ['产品', '活动', '节日', '促销', '公告', '新品', '限时'];
+const UNCATEGORIZED_CATEGORY_VALUE = 'uncategorized';
 
 // 获取分类选项（扁平化）
 const categoryOptions = () => {
@@ -119,7 +120,9 @@ function toggleTag(tag: string) {
   localFilters.tags = [...tags];
 }
 
-function handleSortChange(value: string) {
+function handleSortChange(value: SelectValue) {
+  if (typeof value !== 'string') return;
+
   if (localFilters.sortBy === value) {
     // 切换排序方向
     localFilters.sortOrder = localFilters.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -128,6 +131,15 @@ function handleSortChange(value: string) {
     // 根据字段设置默认排序方向
     localFilters.sortOrder = value === 'name' ? 'asc' : 'desc';
   }
+}
+
+function handleCategoryChange(value: SelectValue) {
+  if (value === UNCATEGORIZED_CATEGORY_VALUE) {
+    localFilters.categoryId = null;
+    return;
+  }
+
+  localFilters.categoryId = typeof value === 'number' ? value : undefined;
 }
 </script>
 
@@ -181,12 +193,19 @@ function handleSortChange(value: string) {
 
       <!-- 分类筛选 -->
       <Select
-        v-model:value="localFilters.categoryId"
+        :value="
+          localFilters.categoryId === null
+            ? UNCATEGORIZED_CATEGORY_VALUE
+            : localFilters.categoryId
+        "
         placeholder="所属分类"
         style="width: 150px"
         allow-clear
+        @change="handleCategoryChange"
       >
-        <Select.Option :value="null">未分类</Select.Option>
+        <Select.Option :value="UNCATEGORIZED_CATEGORY_VALUE">
+          未分类
+        </Select.Option>
         <Select.Option
           v-for="opt in categoryOptions()"
           :key="opt.value"

@@ -11,13 +11,11 @@ import {
   TimelineItem,
   Empty,
   Button,
-  Space,
   Spin,
   Statistic,
   Row,
   Col,
   Badge,
-  Tooltip,
   Popconfirm,
   message,
 } from 'ant-design-vue';
@@ -27,7 +25,6 @@ import {
   MailOutlined,
   EnvironmentOutlined,
   ClockCircleOutlined,
-  MessageOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   WechatOutlined,
@@ -77,13 +74,6 @@ const statusOptions: Record<string, { label: string; color: string }> = {
   INVALID: { label: '无效客户', color: 'default' },
 };
 
-const channelIcons: Record<string, string> = {
-  WECOM: 'wechat',
-  DOUYIN: 'video',
-  XIAOHONGSHU: 'book',
-  WECHAT: 'wechat',
-};
-
 const channelColors: Record<string, string> = {
   WECOM: '#07c160',
   DOUYIN: '#000000',
@@ -113,7 +103,7 @@ const overdueFollowUps = computed(() =>
 watch(
   () => [props.open, props.customerId],
   async ([open, id]) => {
-    if (open && id) {
+    if (open && typeof id === 'number') {
       await loadData(id);
     }
   },
@@ -175,7 +165,7 @@ function formatRelativeTime(time: string | undefined) {
 }
 
 function getActivityIcon(type: string) {
-  return activityIcons[type] || activityIcons.OTHER;
+  return activityIcons[type] ?? activityIcons.OTHER!;
 }
 
 function handleClose() {

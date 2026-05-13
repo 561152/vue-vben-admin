@@ -3,13 +3,23 @@
     <a-card>
       <a-form layout="inline" :model="filter" @finish="reload">
         <a-form-item label="Action">
-          <a-input v-model:value="filter.action" placeholder="e.g. prompt:update" />
+          <a-input
+            v-model:value="filter.action"
+            placeholder="e.g. prompt:update"
+          />
         </a-form-item>
         <a-form-item label="Resource">
-          <a-input v-model:value="filter.resource" placeholder="e.g. PromptTemplate" />
+          <a-input
+            v-model:value="filter.resource"
+            placeholder="e.g. PromptTemplate"
+          />
         </a-form-item>
         <a-form-item label="Scope">
-          <a-select v-model:value="filter.scope" allow-clear style="width: 120px;">
+          <a-select
+            v-model:value="filter.scope"
+            allow-clear
+            style="width: 120px"
+          >
             <a-select-option value="TENANT">TENANT</a-select-option>
             <a-select-option value="PLATFORM">PLATFORM</a-select-option>
           </a-select>
@@ -38,9 +48,7 @@
       </a-table>
     </a-card>
 
-    <AuditLogDetail
-      v-model:visible="detailVisible"
-      :row="selectedRow" />
+    <AuditLogDetail v-model:visible="detailVisible" :row="selectedRow" />
   </Page>
 </template>
 

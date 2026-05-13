@@ -9,7 +9,7 @@ export interface PromptVariable {
   required: boolean;
   description?: string;
   defaultValue?: unknown;
-  inferred: boolean; // 是否自动推断
+  inferred?: boolean; // 是否自动推断
 }
 
 export interface ParseResult {
@@ -110,6 +110,7 @@ export class PromptEngine {
     while ((match = VARIABLE_REGEX.exec(this.template)) !== null) {
       const fullMatch = match[0];
       const varName = match[1];
+      if (!varName) continue;
       const start = match.index;
       const end = start + fullMatch.length;
 

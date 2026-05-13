@@ -16,12 +16,16 @@ import { useAccessStore } from '@vben/stores';
 import { message, notification } from 'ant-design-vue';
 import { h } from 'vue';
 
-import { useAuthStore } from '#/store';
 import { $t } from '#/locales';
 
-import { refreshTokenApi } from './core';
+import { notifyLoginExpired } from './auth-session-events';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+
+interface RefreshTokenResult {
+  data: string;
+  status: number;
+}
 
 // 登录过期倒计时管理
 let loginExpiredTimer: NodeJS.Timeout | null = null;
@@ -39,7 +43,6 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   async function doReAuthenticate() {
     console.warn('Access token or refresh token is invalid or expired. ');
     const accessStore = useAccessStore();
-    const authStore = useAuthStore();
     accessStore.setAccessToken(null);
 
     // 如果已经有通知显示，不重复创建
@@ -48,17 +51,20 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }
 
     // 优化：使用友好的倒计时通知替代强制模态框
-    if (preferences.app.loginExpiredMode === 'modal' && accessStore.isAccessChecked) {
-      showLoginExpiredNotification(authStore);
+    if (
+      preferences.app.loginExpiredMode === 'modal' &&
+      accessStore.isAccessChecked
+    ) {
+      showLoginExpiredNotification();
     } else {
-      await authStore.logout();
+      await notifyLoginExpired();
     }
   }
 
   /**
    * 显示登录过期倒计时通知
    */
-  function showLoginExpiredNotification(authStore: any) {
+  function showLoginExpiredNotification() {
     let countdown = 30;
     const key = `login-expired-${Date.now()}`;
     loginExpiredNotificationKey = key;
@@ -66,7 +72,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     // 立即重新登录的回调
     function handleReloginNow() {
       clearLoginExpiredNotification();
-      authStore.logout();
+      void notifyLoginExpired();
     }
 
     // 更新通知内容
@@ -108,7 +114,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       if (countdown <= 0) {
         // 倒计时结束，自动登出
         clearLoginExpiredNotification();
-        authStore.logout();
+        void notifyLoginExpired();
       } else {
         // 更新倒计时
         updateNotification();
@@ -135,7 +141,12 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
-    const resp = await refreshTokenApi();
+    const resp = await baseRequestClient.post<RefreshTokenResult>(
+      '/auth/refresh',
+      {
+        withCredentials: true,
+      },
+    );
     const newToken = resp.data;
     accessStore.setAccessToken(newToken);
     return newToken;

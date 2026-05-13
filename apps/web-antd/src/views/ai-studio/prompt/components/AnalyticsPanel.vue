@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
 
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import {
   BarChartOutlined,
@@ -15,7 +15,6 @@ import {
   message,
   Row,
   Select,
-  Space,
   Spin,
   Statistic,
   Typography,
@@ -74,7 +73,6 @@ const renderCharts = () => {
   const usageCounts = trends.value.map((t) => t.usageCount);
   const successRates = trends.value.map((t) => Math.round(t.successRate * 100));
   const latencies = trends.value.map((t) => t.avgLatencyMs);
-  const tokens = trends.value.map((t) => t.tokenUsage.totalTokens);
 
   renderTrendChart({
     tooltip: {
@@ -266,12 +264,18 @@ watch(
 
       <!-- 使用趋势图 -->
       <Card size="small" title="使用趋势" class="mb-4">
-        <EchartsUI ref="trendChartRef" :style="{ height: '320px', width: '100%' }" />
+        <EchartsUI
+          ref="trendChartRef"
+          :style="{ height: '320px', width: '100%' }"
+        />
       </Card>
 
       <!-- Token 消耗图 -->
       <Card size="small" title="Token 消耗趋势">
-        <EchartsUI ref="tokenChartRef" :style="{ height: '280px', width: '100%' }" />
+        <EchartsUI
+          ref="tokenChartRef"
+          :style="{ height: '280px', width: '100%' }"
+        />
       </Card>
     </Spin>
   </div>

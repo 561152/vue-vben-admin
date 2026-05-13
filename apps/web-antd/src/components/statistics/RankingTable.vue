@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { computed, type Component } from 'vue';
 import { Card, Table, Progress, Tag, Empty } from 'ant-design-vue';
+import type { TablePaginationConfig } from 'ant-design-vue';
+import type { SizeType } from 'ant-design-vue/es/config-provider';
 
 export interface RankingColumn {
   /** 列标题 */
@@ -41,9 +43,9 @@ interface Props {
   /** 显示数量限制 */
   limit?: number;
   /** 是否显示分页 */
-  pagination?: boolean;
+  pagination?: false | TablePaginationConfig;
   /** 表格大小 */
-  size?: 'default' | 'middle' | 'small';
+  size?: SizeType;
   /** 空数据描述 */
   emptyText?: string;
 }

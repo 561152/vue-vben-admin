@@ -6,6 +6,41 @@ import { requestClient } from '../request';
 
 // ==================== 类型定义 ====================
 
+export interface PromptVariable {
+  name: string;
+  type: 'boolean' | 'image_url' | 'json' | 'number' | 'string' | 'text';
+  required: boolean;
+  description?: string;
+  defaultValue?: unknown;
+}
+
+export interface PromptModelConfig {
+  model?: string;
+  temperature?: number;
+  top_p?: number;
+  max_tokens?: number;
+  maxTokens?: number;
+  topP?: number;
+  [key: string]: unknown;
+}
+
+export interface PromptTemplateCurrentVersion {
+  id: string;
+  templateId: string;
+  version: number;
+  systemPrompt: string | null;
+  userPromptTpl: string;
+  templateContent?: string;
+  variables: PromptVariable[];
+  outputSchema: unknown;
+  modelConfig: PromptModelConfig | null;
+  modelName: string | null;
+  changeLog: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  isActive?: boolean;
+}
+
 export interface PromptTemplate {
   id: string;
   tenantId: string | null;
@@ -19,24 +54,18 @@ export interface PromptTemplate {
   tags: string[];
   activeVersionId: string | null;
   latestVersion: number;
+  version?: number;
   usageCount: number;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
-  currentVersion: {
-    id: string;
-    templateId: string;
-    version: number;
-    systemPrompt: string | null;
-    userPromptTpl: string;
-    variables: unknown[];
-    outputSchema: unknown;
-    modelConfig: Record<string, unknown>;
-    modelName: string | null;
-    changeLog: string | null;
-    createdBy: string | null;
-    createdAt: string;
-  } | null;
+  templateContent: string;
+  variables: PromptVariable[];
+  defaultValues: Record<string, unknown> | null;
+  modelConfig: PromptModelConfig | null;
+  currentVersion: PromptTemplateCurrentVersion | null;
+  activeVersion?: PromptTemplateCurrentVersion | null;
+  isActive?: boolean;
 }
 
 export interface PromptTemplateListParams {
@@ -51,7 +80,84 @@ export interface PromptTemplateListParams {
 
 export interface PromptTemplateListResponse {
   data: PromptTemplate[];
+  items: PromptTemplate[];
   total: number;
+}
+
+function normalizePromptVariables(variables: unknown): PromptVariable[] {
+  return Array.isArray(variables) ? (variables as PromptVariable[]) : [];
+}
+
+function normalizePromptModelConfig(
+  modelConfig: unknown,
+): PromptModelConfig | null {
+  return modelConfig && typeof modelConfig === 'object'
+    ? (modelConfig as PromptModelConfig)
+    : null;
+}
+
+function normalizePromptTemplateVersion<
+  T extends PromptTemplateVersion | PromptTemplateCurrentVersion,
+>(
+  version: T | null,
+):
+  | (T & {
+      isActive: boolean;
+      modelConfig: PromptModelConfig | null;
+      templateContent: string;
+      variables: PromptVariable[];
+    })
+  | null {
+  if (!version) return null;
+
+  const variables = normalizePromptVariables(version.variables);
+  const modelConfig = normalizePromptModelConfig(version.modelConfig);
+
+  return {
+    ...version,
+    templateContent:
+      'templateContent' in version && version.templateContent !== undefined
+        ? version.templateContent
+        : version.userPromptTpl,
+    variables,
+    modelConfig,
+    isActive: 'isActive' in version ? (version.isActive ?? false) : false,
+  };
+}
+
+function normalizePromptTemplate(template: PromptTemplate): PromptTemplate {
+  const currentVersion = normalizePromptTemplateVersion(
+    template.currentVersion,
+  );
+  const activeVersion = normalizePromptTemplateVersion(
+    template.activeVersion ?? null,
+  );
+  const normalizedVersion = currentVersion ?? activeVersion;
+  return {
+    ...template,
+    currentVersion: normalizedVersion,
+    activeVersion: activeVersion ?? currentVersion,
+    templateContent:
+      template.templateContent ?? normalizedVersion?.templateContent ?? '',
+    variables: template.variables ?? normalizedVersion?.variables ?? [],
+    defaultValues: template.defaultValues ?? null,
+    modelConfig: template.modelConfig ?? normalizedVersion?.modelConfig ?? null,
+  };
+}
+
+type PromptTemplateWritePayload = UpdatePromptTemplateData & {
+  userPromptTpl?: string;
+};
+
+function toPromptTemplateWritePayload<T extends UpdatePromptTemplateData>(
+  data: T,
+): T & PromptTemplateWritePayload {
+  return {
+    ...data,
+    ...(data.templateContent === undefined
+      ? {}
+      : { userPromptTpl: data.templateContent }),
+  };
 }
 
 // ==================== API ====================
@@ -97,10 +203,13 @@ export async function getPromptTemplates(params?: PromptTemplateListParams) {
     params: queryParams,
   });
 
+  const normalized = (response.items || []).map(normalizePromptTemplate);
+
   // 转换 API 响应格式: items -> data
   // 注意：拦截器已提取 data，所以 response 就是 { items: [...], total: n }
   return {
-    data: response.items || [],
+    data: normalized,
+    items: normalized,
     total: response.total || 0,
   };
 }
@@ -109,14 +218,40 @@ export async function getPromptTemplates(params?: PromptTemplateListParams) {
  * 获取提示词模板详情
  */
 export async function getPromptTemplate(id: string) {
-  return requestClient.get<PromptTemplate>(`/prompt-templates/${id}`);
+  const template = await requestClient.get<PromptTemplate>(
+    `/prompt-templates/${id}`,
+  );
+  return normalizePromptTemplate(template);
 }
 
 /**
  * 根据 key 获取提示词模板
  */
 export async function getPromptTemplateByKey(key: string) {
-  return requestClient.get<PromptTemplate>(`/prompt-templates/key/${key}`);
+  const pageSize = 100;
+  let offset = 0;
+
+  while (true) {
+    const response = await getPromptTemplates({
+      limit: pageSize,
+      offset,
+      search: key,
+    });
+    const template = response.items.find((item) => item.key === key);
+
+    if (template) return template;
+
+    if (
+      response.items.length === 0 ||
+      offset + response.items.length >= response.total
+    ) {
+      break;
+    }
+
+    offset += pageSize;
+  }
+
+  throw new Error(`Prompt template with key "${key}" was not found`);
 }
 
 // ==================== 提示词管理模块新增接口 ====================
@@ -127,20 +262,9 @@ export interface CreatePromptTemplateData {
   description?: string | null;
   category?: string | null;
   templateContent: string;
-  variables?: Array<{
-    name: string;
-    type: string;
-    required: boolean;
-    description?: string;
-    defaultValue?: unknown;
-  }>;
+  variables?: PromptVariable[];
   defaultValues?: Record<string, unknown> | null;
-  modelConfig?: {
-    model?: string;
-    temperature?: number;
-    top_p?: number;
-    max_tokens?: number;
-  } | null;
+  modelConfig?: PromptModelConfig | null;
   tags?: string[];
   isActive?: boolean;
 }
@@ -153,9 +277,10 @@ export interface PromptTemplateVersion {
   version: number;
   systemPrompt: string | null;
   userPromptTpl: string;
-  variables: unknown;
+  templateContent: string;
+  variables: PromptVariable[];
   outputSchema: unknown;
-  modelConfig: unknown;
+  modelConfig: PromptModelConfig | null;
   changeLog: string | null;
   createdBy: string | null;
   createdAt: string;
@@ -172,7 +297,11 @@ export interface CategoryOption {
  * 创建提示词模板
  */
 export async function createPromptTemplate(data: CreatePromptTemplateData) {
-  return requestClient.post<PromptTemplate>('/prompt-templates', data);
+  const template = await requestClient.post<PromptTemplate>(
+    '/prompt-templates',
+    toPromptTemplateWritePayload(data),
+  );
+  return normalizePromptTemplate(template);
 }
 
 /**
@@ -182,7 +311,11 @@ export async function updatePromptTemplate(
   id: string,
   data: UpdatePromptTemplateData,
 ) {
-  return requestClient.put<PromptTemplate>(`/prompt-templates/${id}`, data);
+  const template = await requestClient.put<PromptTemplate>(
+    `/prompt-templates/${id}`,
+    toPromptTemplateWritePayload(data),
+  );
+  return normalizePromptTemplate(template);
 }
 
 /**
@@ -200,20 +333,25 @@ export async function clonePromptTemplate(
   newKey?: string,
   newName?: string,
 ) {
-  return requestClient.post<PromptTemplate>(`/prompt-templates/${id}/clone`, {
-    newKey,
-    newName,
-  });
+  const template = await requestClient.post<PromptTemplate>(
+    `/prompt-templates/${id}/duplicate`,
+    {
+      key: newKey,
+      name: newName,
+    },
+  );
+  return normalizePromptTemplate(template);
 }
 
 /**
  * 发布提示词模板（创建新版本）
  */
 export async function publishPromptTemplate(id: string, changeLog?: string) {
-  return requestClient.post<PromptTemplateVersion>(
+  const version = await requestClient.post<PromptTemplateVersion>(
     `/prompt-templates/${id}/publish`,
     { changeLog },
   );
+  return normalizePromptTemplateVersion(version);
 }
 
 /**
@@ -227,17 +365,21 @@ export async function getPromptTemplateVersions(
   const versions = await requestClient.get<PromptTemplateVersion[]>(
     `/prompt-templates/${id}/versions`,
   );
-  return { data: versions, total: versions.length };
+  return {
+    data: versions.map((version) => normalizePromptTemplateVersion(version)!),
+    total: versions.length,
+  };
 }
 
 /**
  * 回滚到指定版本
  */
 export async function rollbackPromptTemplate(id: string, versionId: string) {
-  return requestClient.post<PromptTemplate>(
+  const template = await requestClient.post<PromptTemplate>(
     `/prompt-templates/${id}/rollback`,
     { versionId },
   );
+  return normalizePromptTemplate(template);
 }
 
 /**

@@ -13,7 +13,7 @@
         :key="index"
         class="annotation-box"
         :style="getAnnotationStyle(annotation)"
-        @click="$emit('annotationClick', annotation)"
+        @click="emit('annotationClick', annotation)"
       >
         <span class="annotation-label">{{ annotation.label }}</span>
       </div>
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import type { CSSProperties } from 'vue';
 
 interface Annotation {
   id: string;
@@ -53,9 +53,7 @@ const emit = defineEmits<{
   imageLoad: [];
 }>();
 
-const containerRef = ref<HTMLElement>();
-
-const getAnnotationStyle = (annotation: Annotation) => {
+const getAnnotationStyle = (annotation: Annotation): CSSProperties => {
   return {
     position: 'absolute',
     left: `${annotation.x}px`,

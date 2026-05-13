@@ -1,32 +1,44 @@
 <template>
   <div>
     <a-alert
-      type="info" show-icon
+      type="info"
+      show-icon
       message="Redaction 规则编辑器(Phase 2F YAML stub;Phase 4 升级为富 UI)"
-      description="租户规则只能 narrow 平台默认。violations 会在保存时返回。" />
+      description="租户规则只能 narrow 平台默认。violations 会在保存时返回。"
+    />
 
     <Codemirror
       v-model:value="yaml"
       :options="{ mode: 'yaml', lineNumbers: true }"
-      style="height: 400px; margin: 12px 0;" />
+      style="height: 400px; margin: 12px 0"
+    />
 
     <a-collapse :default-active-key="['registry']">
       <a-collapse-panel key="registry" header="平台 Coverage Registry(参考)">
-        <a-table :dataSource="registry" :columns="registryColumns"
-          rowKey="row=>row.table+'.'+row.column" size="small" :pagination="false" />
+        <a-table
+          :dataSource="registry"
+          :columns="registryColumns"
+          rowKey="row=>row.table+'.'+row.column"
+          size="small"
+          :pagination="false"
+        />
       </a-collapse-panel>
     </a-collapse>
 
-    <div style="margin-top: 12px;">
+    <div style="margin-top: 12px">
       <a-space>
-        <a-button type="primary" @click="emit('save', parsed)" :disabled="!parsed">
+        <a-button type="primary" @click="saveParsed" :disabled="!parsed">
           保存
         </a-button>
       </a-space>
     </div>
 
-    <a-alert v-if="parseError" type="error" style="margin-top: 12px;"
-      :message="parseError" />
+    <a-alert
+      v-if="parseError"
+      type="error"
+      style="margin-top: 12px"
+      :message="parseError"
+    />
   </div>
 </template>
 
@@ -57,7 +69,15 @@ const parsed = computed<TenantRedactionRule | null>(() => {
   }
 });
 
-watch(parsed, (v) => { if (v) emit('update:rule', v); });
+const saveParsed = () => {
+  if (parsed.value) {
+    emit('save', parsed.value);
+  }
+};
+
+watch(parsed, (v) => {
+  if (v) emit('update:rule', v);
+});
 
 const registryColumns = [
   { title: 'Table', dataIndex: 'table' },

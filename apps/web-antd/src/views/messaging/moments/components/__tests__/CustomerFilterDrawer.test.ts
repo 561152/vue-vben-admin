@@ -2,8 +2,7 @@
  * CustomerFilterDrawer 组件单元测试
  * 测试客户筛选抽屉的核心逻辑
  */
-import { mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // 模拟 requestClient
 vi.mock('#/api/request', () => ({
@@ -122,7 +121,7 @@ describe('CustomerFilterDrawer', () => {
       // Tab separated
       const tsvContent = 'id\tphone\n1\t13800138001';
       const tsvLines = tsvContent.split('\n');
-      const tsvRow = tsvLines[1].split('\t');
+      const tsvRow = (tsvLines[1] ?? '').split('\t');
 
       expect(tsvRow).toHaveLength(2);
       expect(tsvRow[1]).toBe('13800138001');
@@ -130,7 +129,7 @@ describe('CustomerFilterDrawer', () => {
       // Comma separated
       const csvContent = 'id,phone\n1,13800138001';
       const csvLines = csvContent.split('\n');
-      const csvRow = csvLines[1].split(',');
+      const csvRow = (csvLines[1] ?? '').split(',');
 
       expect(csvRow).toHaveLength(2);
       expect(csvRow[1]).toBe('13800138001');

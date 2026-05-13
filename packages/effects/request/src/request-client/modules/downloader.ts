@@ -1,4 +1,4 @@
-import type { RequestClient } from '../request-client';
+import type { RequestClientLike } from '../client-contract';
 import type { RequestClientConfig } from '../types';
 
 type DownloadRequestConfig = {
@@ -11,9 +11,9 @@ type DownloadRequestConfig = {
 } & Omit<RequestClientConfig, 'responseReturn'>;
 
 class FileDownloader {
-  private client: RequestClient;
+  private client: RequestClientLike;
 
-  constructor(client: RequestClient) {
+  constructor(client: RequestClientLike) {
     this.client = client;
   }
   /**

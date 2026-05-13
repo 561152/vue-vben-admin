@@ -238,7 +238,11 @@ const brandingStore = useBrandingStore();
 const loading = ref(false);
 const saving = ref(false);
 
-const formState = reactive<BrandingSetting>({
+type BrandingFormState = {
+  [Key in keyof BrandingSetting]: Exclude<BrandingSetting[Key], null>;
+};
+
+const formState = reactive<BrandingFormState>({
   systemName: undefined,
   logoUrl: undefined,
   logoInvertedUrl: undefined,
@@ -277,7 +281,7 @@ onMounted(async () => {
 async function onSave() {
   saving.value = true;
   try {
-    const result = await updateBrandingApi(formState);
+    const result = await updateBrandingApi({ ...formState });
     originalData.value = { ...result };
     brandingStore.setBranding(result);
     message.success('保存成功');

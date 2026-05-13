@@ -2,7 +2,7 @@
  * MediaLibraryModal 组件单元测试
  * 测试素材库选择弹窗的核心逻辑
  */
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // 模拟 requestClient
 vi.mock('#/api/request', () => ({
@@ -40,10 +40,11 @@ describe('MediaLibraryModal', () => {
         { key: 'video', label: '视频' },
         { key: 'file', label: '文件' },
       ];
+      const [imageTab, videoTab, fileTab] = tabs;
 
-      expect(tabs[0].label).toBe('图片');
-      expect(tabs[1].label).toBe('视频');
-      expect(tabs[2].label).toBe('文件');
+      expect(imageTab?.label).toBe('图片');
+      expect(videoTab?.label).toBe('视频');
+      expect(fileTab?.label).toBe('文件');
     });
   });
 
@@ -137,6 +138,7 @@ describe('MediaLibraryModal', () => {
       // Select second item (replaces first)
       selectedId = 2;
       expect(selectedId).toBe(2);
+      expect(multiple).toBe(false);
     });
 
     it('should clear selection on cancel', () => {

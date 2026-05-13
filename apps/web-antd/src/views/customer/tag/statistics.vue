@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { h } from 'vue';
+import { computed } from 'vue';
 import { Row, Col, Card, Progress, Tag, Table, Empty } from 'ant-design-vue';
 import {
   TagOutlined,
@@ -79,7 +79,7 @@ interface UnusedTag {
 
 // ==================== 数据加载 ====================
 
-interface TagStats {
+interface TagStats extends Record<string, unknown> {
   overview: TagOverview;
   usageAnalysis: UsageAnalysis;
   unusedTags: UnusedTag[];
@@ -208,8 +208,6 @@ const trendData = computed(() =>
 </script>
 
 <script lang="ts">
-import { computed } from 'vue';
-
 export default {
   name: 'TagStatistics',
 };

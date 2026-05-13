@@ -147,12 +147,20 @@ export async function exportToExcel(params: BiCrmApi.TimeRangeParams) {
 
   // 构建查询参数
   const queryString = new URLSearchParams(
-    params as Record<string, string>,
+    Object.entries(params).reduce<Record<string, string>>(
+      (acc, [key, value]) => {
+        if (value !== undefined) acc[key] = String(value);
+        return acc;
+      },
+      {},
+    ),
   ).toString();
 
   // 获取 API base URL
   const apiURL = import.meta.env.VITE_GLOB_API_URL || '/api';
-  const url = `${apiURL}/bi/crm/export?${queryString}`;
+  const url = queryString
+    ? `${apiURL}/bi/crm/export?${queryString}`
+    : `${apiURL}/bi/crm/export`;
 
   // 使用原生 fetch 避免响应拦截器
   const response = await fetch(url, {

@@ -3,7 +3,7 @@ import type { TabDefinition } from '@vben-core/typings';
 
 import type { TabConfig, TabsProps } from '../../types';
 
-import { computed, ref } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 
 import { Pin, X } from '@vben-core/icons';
 import { VbenContextMenu, VbenIcon } from '@vben-core/shadcn-ui';
@@ -27,9 +27,8 @@ const emit = defineEmits<{
   unpin: [TabDefinition];
 }>();
 const active = defineModel<string>('active');
-
-const contentRef = ref();
-const tabRef = ref();
+useTemplateRef<HTMLDivElement>('contentRef');
+useTemplateRef<HTMLDivElement[]>('tabRef');
 
 const style = computed(() => {
   const { gap } = props;

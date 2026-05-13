@@ -176,7 +176,6 @@ import dayjs from 'dayjs';
 import {
   fetchSyncSessions,
   type SyncSessionItem,
-  type SyncTaskItem,
   type SyncSessionQuery,
 } from '#/api/wecom-sync';
 
@@ -195,7 +194,7 @@ const pageSize = ref(20);
 const filters = reactive({
   type: undefined as string | undefined,
   status: undefined as string | undefined,
-  dateRange: null as [dayjs.Dayjs, dayjs.Dayjs] | null,
+  dateRange: undefined as [dayjs.Dayjs, dayjs.Dayjs] | undefined,
 });
 
 // ==================== 表格列定义 ====================
@@ -275,7 +274,7 @@ function onFilterChange() {
 function resetFilters() {
   filters.type = undefined;
   filters.status = undefined;
-  filters.dateRange = null;
+  filters.dateRange = undefined;
   currentPage.value = 1;
   fetchData();
 }
@@ -299,12 +298,13 @@ function formatTime(iso: string): string {
   return dayjs(iso).format('YYYY-MM-DD HH:mm:ss');
 }
 
-function taskDuration(task: SyncTaskItem): string {
-  if (!task.startedAt || !task.completedAt) return '-';
+function taskDuration(task: Record<string, unknown>): string {
+  const startedAt = typeof task.startedAt === 'string' ? task.startedAt : null;
+  const completedAt =
+    typeof task.completedAt === 'string' ? task.completedAt : null;
+  if (!startedAt || !completedAt) return '-';
   const seconds = Math.round(
-    (new Date(task.completedAt).getTime() -
-      new Date(task.startedAt).getTime()) /
-      1000,
+    (new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 1000,
   );
   return formatDuration(seconds);
 }

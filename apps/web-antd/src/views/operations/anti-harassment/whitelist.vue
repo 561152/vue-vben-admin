@@ -12,7 +12,6 @@ import {
   Select,
   Switch,
   Popconfirm,
-  Tag,
 } from 'ant-design-vue';
 import {
   PlusOutlined,
@@ -158,7 +157,9 @@ async function handleDelete(id: number) {
   }
 }
 
-async function handleToggleShare(enabled: boolean) {
+async function handleToggleShare(checked: boolean | string | number) {
+  const enabled = Boolean(checked);
+
   try {
     await requestClient.patch('/operations/anti-harassment/whitelist/config', {
       shareEnabled: enabled,

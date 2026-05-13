@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, h } from 'vue';
+import type { ColumnsType } from 'ant-design-vue/es/table';
 import {
   Table,
   Button,
@@ -74,7 +75,7 @@ const currentUserId = ref<string | null>(null);
 const currentUserRoles = ref<string[]>([]);
 const roleModalLoading = ref(false);
 
-const columns = [
+const columns: ColumnsType<UserItem> = [
   { title: '用户名', dataIndex: 'username', key: 'username', width: 120 },
   { title: '真实姓名', dataIndex: 'realName', key: 'realName', width: 120 },
   { title: '邮箱', dataIndex: 'email', key: 'email', width: 180 },
@@ -131,7 +132,7 @@ const columns = [
     title: '操作',
     key: 'action',
     width: 200,
-    fixed: 'right',
+    fixed: 'right' as const,
   },
 ];
 
@@ -204,6 +205,20 @@ async function handleAssignRoles(record: UserItem) {
   }
 }
 
+function isUserItem(record: unknown): record is UserItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'string'
+  );
+}
+
+function handleAssignRolesRecord(record: unknown) {
+  if (isUserItem(record)) {
+    handleAssignRoles(record);
+  }
+}
+
 async function handleRoleSubmit() {
   if (!currentUserId.value) return;
 
@@ -250,6 +265,12 @@ async function handleEdit(record: UserItem) {
     tenantId: String(record.tenantId || ''),
   };
   modalVisible.value = true;
+}
+
+function handleEditRecord(record: unknown) {
+  if (isUserItem(record)) {
+    handleEdit(record);
+  }
 }
 
 async function handleDelete(id: string) {
@@ -313,10 +334,13 @@ onMounted(() => {
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <Space>
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
-            <Button type="link" size="small" @click="handleAssignRoles(record)"
+            <Button
+              type="link"
+              size="small"
+              @click="handleAssignRolesRecord(record)"
               >分配角色</Button
             >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">

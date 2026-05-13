@@ -90,7 +90,6 @@ export const useUserModeStore = defineStore('userMode', () => {
     currentMode.value = mode;
     config.value = { ...MODE_PRESETS[mode] };
     saveToStorage();
-
   }
 
   /**
@@ -157,7 +156,6 @@ export const useUserModeStore = defineStore('userMode', () => {
         const data = JSON.parse(stored);
         currentMode.value = data.mode || 'PARENT';
         config.value = data.config || MODE_PRESETS[currentMode.value];
-
       }
     } catch (error) {
       console.error('[UserMode] Failed to load from storage:', error);
@@ -183,11 +181,7 @@ export const useUserModeStore = defineStore('userMode', () => {
   /**
    * 根据模式过滤内容
    */
-  function filterContent<T>(
-    content: T,
-    parentContent: T,
-    childContent: T,
-  ): T {
+  function filterContent<T>(_content: T, parentContent: T, childContent: T): T {
     return isParentMode.value ? parentContent : childContent;
   }
 

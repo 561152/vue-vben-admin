@@ -19,6 +19,7 @@ import {
   ReloadOutlined,
   SyncOutlined,
 } from '@ant-design/icons-vue';
+import type { Dayjs } from 'dayjs';
 import { requestClient } from '#/api/request';
 
 import {
@@ -80,7 +81,7 @@ const topCustomersLoading = ref(false);
 
 // 筛选
 const filterType = ref<string | undefined>(undefined);
-const filterDateRange = ref<[unknown, unknown] | null>(null);
+const filterDateRange = ref<[Dayjs, Dayjs] | undefined>(undefined);
 
 // ==================== 常量 ====================
 
@@ -119,21 +120,6 @@ const overviewCards = computed<StatisticItem[]>(() => [
     title: '待处理',
     value: statistics.value?.pendingTasks || 0,
     valueColor: '#faad14',
-  },
-]);
-
-const interactionCards = computed<StatisticItem[]>(() => [
-  {
-    title: '总点赞数',
-    value: statistics.value?.totalLikes || 0,
-    prefixIcon: LikeOutlined,
-    valueColor: '#1890ff',
-  },
-  {
-    title: '总评论数',
-    value: statistics.value?.totalComments || 0,
-    prefixIcon: CommentOutlined,
-    valueColor: '#52c41a',
   },
 ]);
 
@@ -198,8 +184,8 @@ async function fetchInteractions() {
     };
     if (filterType.value) params.interactionType = filterType.value;
     if (filterDateRange.value) {
-      params.startDate = filterDateRange.value[0];
-      params.endDate = filterDateRange.value[1];
+      params.startDate = filterDateRange.value[0].format('YYYY-MM-DD');
+      params.endDate = filterDateRange.value[1].format('YYYY-MM-DD');
     }
 
     const res = await requestClient.get<{
@@ -219,9 +205,12 @@ async function fetchTopCustomers() {
   topCustomersLoading.value = true;
   try {
     topCustomers.value =
-      (await requestClient.get<TopCustomer[]>('/messaging/moments/top-customers', {
-        params: { limit: 10 },
-      })) || [];
+      (await requestClient.get<TopCustomer[]>(
+        '/messaging/moments/top-customers',
+        {
+          params: { limit: 10 },
+        },
+      )) || [];
   } catch (e) {
     console.error(e);
   } finally {

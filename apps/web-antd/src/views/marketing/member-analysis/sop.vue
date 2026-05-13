@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted, h } from 'vue';
+import { ref, onMounted, h } from 'vue';
 import {
   Card,
   Row,
@@ -15,7 +15,6 @@ import {
   Timeline,
   TimelineItem,
   Select,
-  Input,
   InputSearch,
   Modal,
   message,
@@ -34,9 +33,9 @@ import {
   StepForwardOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined,
   MinusCircleOutlined,
 } from '@ant-design/icons-vue';
+import type { Key } from 'ant-design-vue/es/table/interface';
 import { useCrudTable } from '#/composables';
 import {
   getSopStats,
@@ -53,8 +52,18 @@ defineOptions({ name: 'SopManagement' });
 // ==================== Constants ====================
 
 const SOP_TYPES = [
-  { value: 'WELCOME_NEW_MEMBER', label: '新会员欢迎 SOP', color: 'blue', icon: RocketOutlined },
-  { value: 'VIP_UPGRADE', label: 'VIP 升级 SOP', color: 'gold', icon: CrownOutlined },
+  {
+    value: 'WELCOME_NEW_MEMBER',
+    label: '新会员欢迎 SOP',
+    color: 'blue',
+    icon: RocketOutlined,
+  },
+  {
+    value: 'VIP_UPGRADE',
+    label: 'VIP 升级 SOP',
+    color: 'gold',
+    icon: CrownOutlined,
+  },
 ] as const;
 
 const SOP_STATUS_OPTIONS = [
@@ -89,13 +98,6 @@ const batchModalLoading = ref(false);
 const selectedCustomers = ref<number[]>([]);
 const selectedSopCode = ref<string>('WELCOME_NEW_MEMBER');
 
-// ==================== Computed ====================
-
-const sopStatsMap = computed(() => ({
-  WELCOME_NEW_MEMBER: welcomeSopStats.value,
-  VIP_UPGRADE: vipSopStats.value,
-}));
-
 // ==================== Types ====================
 
 interface CustomerSopItem {
@@ -119,33 +121,12 @@ interface CustomerSopFilters {
 
 // ==================== Helper Functions ====================
 
-function getSopTypeLabel(code: string) {
-  return SOP_TYPES.find(t => t.value === code)?.label || code;
-}
-
-function getSopTypeColor(code: string) {
-  return SOP_TYPES.find(t => t.value === code)?.color || 'default';
-}
-
 function getSopStatusLabel(status: string) {
-  return SOP_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
+  return SOP_STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
 }
 
 function getSopStatusColor(status: string) {
-  return SOP_STATUS_OPTIONS.find(o => o.value === status)?.color || 'default';
-}
-
-function getSopStatusIcon(status: string) {
-  switch (status) {
-    case 'completed':
-      return CheckCircleOutlined;
-    case 'in_progress':
-      return ClockCircleOutlined;
-    case 'skipped':
-      return CloseCircleOutlined;
-    default:
-      return MinusCircleOutlined;
-  }
+  return SOP_STATUS_OPTIONS.find((o) => o.value === status)?.color || 'default';
 }
 
 // ==================== API Functions ====================
@@ -182,12 +163,11 @@ const columns = [
     key: 'sopType',
     width: 150,
     customRender: ({ text }: { text: string }) => {
-      const config = SOP_TYPES.find(t => t.value === text);
-      return h(
-        Tag,
-        { color: config?.color || 'default' },
-        () => [h(config?.icon || RocketOutlined, { style: { marginRight: '4px' } }), config?.label || text],
-      );
+      const config = SOP_TYPES.find((t) => t.value === text);
+      return h(Tag, { color: config?.color || 'default' }, () => [
+        h(config?.icon || RocketOutlined, { style: { marginRight: '4px' } }),
+        config?.label || text,
+      ]);
     },
   },
   {
@@ -196,7 +176,7 @@ const columns = [
     key: 'sopStatus',
     width: 100,
     customRender: ({ text }: { text: string }) => {
-      const config = SOP_STATUS_OPTIONS.find(o => o.value === text);
+      const config = SOP_STATUS_OPTIONS.find((o) => o.value === text);
       return h(
         Tag,
         { color: config?.color || 'default' },
@@ -209,16 +189,25 @@ const columns = [
     key: 'progress',
     width: 150,
     customRender: ({ record }: { record: CustomerSopItem }) => {
-      const percent = record.totalSteps > 0
-        ? Math.round((record.currentStep / record.totalSteps) * 100)
-        : 0;
+      const percent =
+        record.totalSteps > 0
+          ? Math.round((record.currentStep / record.totalSteps) * 100)
+          : 0;
       return h('div', {}, [
         h(Progress, {
           percent,
           size: 'small',
-          style: { width: '100px', display: 'inline-block', marginRight: '8px' },
+          style: {
+            width: '100px',
+            display: 'inline-block',
+            marginRight: '8px',
+          },
         }),
-        h('span', { style: { fontSize: '12px' } }, `${record.currentStep}/${record.totalSteps}`),
+        h(
+          'span',
+          { style: { fontSize: '12px' } },
+          `${record.currentStep}/${record.totalSteps}`,
+        ),
       ]);
     },
   },
@@ -248,15 +237,10 @@ const columns = [
 
 // ==================== Table Logic ====================
 
-const {
-  tableProps,
-  filters,
-  loading: tableLoading,
-  dataSource,
-  search,
-  resetFilters,
-  fetchData,
-} = useCrudTable<CustomerSopItem, CustomerSopFilters>({
+const { tableProps, filters, search, resetFilters, fetchData } = useCrudTable<
+  CustomerSopItem,
+  CustomerSopFilters
+>({
   fetchApi: async (params) => {
     // First get customers
     const response = await getCustomers({
@@ -281,7 +265,8 @@ const {
             customerLevel: customer.customerLevel,
             sopType: sopCode || 'WELCOME_NEW_MEMBER',
             sopStatus: (sopData as { status?: string })?.status || 'pending',
-            currentStep: (sopData as { currentStep?: number })?.currentStep || 0,
+            currentStep:
+              (sopData as { currentStep?: number })?.currentStep || 0,
             totalSteps: 4, // Default total steps
             startedAt: (sopData as { startedAt?: string })?.startedAt,
             updatedAt: (sopData as { updatedAt?: string })?.updatedAt,
@@ -307,10 +292,14 @@ const {
     // Filter by SOP type and status if specified
     let filteredItems = itemsWithSop;
     if (params.sopType) {
-      filteredItems = filteredItems.filter(item => item.sopType === params.sopType);
+      filteredItems = filteredItems.filter(
+        (item) => item.sopType === params.sopType,
+      );
     }
     if (params.sopStatus) {
-      filteredItems = filteredItems.filter(item => item.sopStatus === params.sopStatus);
+      filteredItems = filteredItems.filter(
+        (item) => item.sopStatus === params.sopStatus,
+      );
     }
 
     return {
@@ -370,7 +359,7 @@ async function confirmBatchStart() {
   batchModalLoading.value = true;
   try {
     await startCustomerSop({
-      customerIds: selectedCustomers.value.map(id => id.toString()),
+      customerIds: selectedCustomers.value.map((id) => id.toString()),
       sopCode: selectedSopCode.value,
     });
     message.success('SOP 启动成功');
@@ -386,8 +375,10 @@ async function confirmBatchStart() {
   }
 }
 
-function handleSelectionChange(selectedRowKeys: number[]) {
-  selectedCustomers.value = selectedRowKeys;
+function handleSelectionChange(selectedRowKeys: Key[]) {
+  selectedCustomers.value = selectedRowKeys
+    .map((key) => Number(key))
+    .filter((key) => Number.isFinite(key));
 }
 
 function getTimelineItems(sopCode: string, progress: Record<string, unknown>) {
@@ -398,12 +389,14 @@ function getTimelineItems(sopCode: string, progress: Record<string, unknown>) {
     { title: '满意度调查', description: '收集客户反馈' },
   ];
 
-  const sopData = progress[sopCode] as {
-    status?: string;
-    currentStep?: number;
-    startedAt?: string;
-    completedAt?: string;
-  } | undefined;
+  const sopData = progress[sopCode] as
+    | {
+        status?: string;
+        currentStep?: number;
+        startedAt?: string;
+        completedAt?: string;
+      }
+    | undefined;
 
   const currentStep = sopData?.currentStep || 0;
   const status = sopData?.status || 'pending';
@@ -428,9 +421,18 @@ function getTimelineItems(sopCode: string, progress: Record<string, unknown>) {
       label: `步骤 ${stepNum}`,
       children: h('div', {}, [
         h('div', { style: { fontWeight: 500 } }, step.title),
-        h('div', { style: { fontSize: '12px', color: '#999' } }, step.description),
+        h(
+          'div',
+          { style: { fontSize: '12px', color: '#999' } },
+          step.description,
+        ),
       ]),
-      color: itemStatus === 'finish' ? '#52c41a' : itemStatus === 'process' ? '#1890ff' : undefined,
+      color:
+        itemStatus === 'finish'
+          ? '#52c41a'
+          : itemStatus === 'process'
+            ? '#1890ff'
+            : undefined,
       dot,
     };
   });
@@ -472,10 +474,12 @@ onMounted(() => {
               <Card class="sop-card">
                 <div class="sop-card-header">
                   <div class="sop-title">
-                    <RocketOutlined class="sop-icon" style="color: #1890ff;" />
+                    <RocketOutlined class="sop-icon" style="color: #1890ff" />
                     <div>
                       <h4>新会员欢迎 SOP</h4>
-                      <p class="sop-desc">自动欢迎新注册会员，发放优惠券并引导首单</p>
+                      <p class="sop-desc">
+                        自动欢迎新注册会员，发放优惠券并引导首单
+                      </p>
                     </div>
                   </div>
                   <Tag color="blue" size="large">
@@ -487,9 +491,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">进行中</span>
                     <Progress
-                      :percent="welcomeSopStats.totalCustomers > 0
-                        ? (welcomeSopStats.inProgress / welcomeSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        welcomeSopStats.totalCustomers > 0
+                          ? (welcomeSopStats.inProgress /
+                              welcomeSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#1890ff"
                     />
@@ -498,9 +506,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">已完成</span>
                     <Progress
-                      :percent="welcomeSopStats.totalCustomers > 0
-                        ? (welcomeSopStats.completed / welcomeSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        welcomeSopStats.totalCustomers > 0
+                          ? (welcomeSopStats.completed /
+                              welcomeSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#52c41a"
                     />
@@ -509,9 +521,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">已跳过</span>
                     <Progress
-                      :percent="welcomeSopStats.totalCustomers > 0
-                        ? (welcomeSopStats.abandoned / welcomeSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        welcomeSopStats.totalCustomers > 0
+                          ? (welcomeSopStats.abandoned /
+                              welcomeSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#ff4d4f"
                     />
@@ -521,7 +537,8 @@ onMounted(() => {
 
                 <div class="sop-footer">
                   <Tag color="green">
-                    完成率: {{ welcomeSopStats?.completionRate?.toFixed(1) || 0 }}%
+                    完成率:
+                    {{ welcomeSopStats?.completionRate?.toFixed(1) || 0 }}%
                   </Tag>
                 </div>
               </Card>
@@ -532,10 +549,12 @@ onMounted(() => {
               <Card class="sop-card">
                 <div class="sop-card-header">
                   <div class="sop-title">
-                    <CrownOutlined class="sop-icon" style="color: #faad14;" />
+                    <CrownOutlined class="sop-icon" style="color: #faad14" />
                     <div>
                       <h4>VIP 升级 SOP</h4>
-                      <p class="sop-desc">引导高价值客户升级 VIP，享受专属权益</p>
+                      <p class="sop-desc">
+                        引导高价值客户升级 VIP，享受专属权益
+                      </p>
                     </div>
                   </div>
                   <Tag color="gold" size="large">
@@ -547,9 +566,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">进行中</span>
                     <Progress
-                      :percent="vipSopStats.totalCustomers > 0
-                        ? (vipSopStats.inProgress / vipSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        vipSopStats.totalCustomers > 0
+                          ? (vipSopStats.inProgress /
+                              vipSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#1890ff"
                     />
@@ -558,9 +581,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">已完成</span>
                     <Progress
-                      :percent="vipSopStats.totalCustomers > 0
-                        ? (vipSopStats.completed / vipSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        vipSopStats.totalCustomers > 0
+                          ? (vipSopStats.completed /
+                              vipSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#52c41a"
                     />
@@ -569,9 +596,13 @@ onMounted(() => {
                   <div class="progress-item">
                     <span class="label">已跳过</span>
                     <Progress
-                      :percent="vipSopStats.totalCustomers > 0
-                        ? (vipSopStats.abandoned / vipSopStats.totalCustomers) * 100
-                        : 0"
+                      :percent="
+                        vipSopStats.totalCustomers > 0
+                          ? (vipSopStats.abandoned /
+                              vipSopStats.totalCustomers) *
+                            100
+                          : 0
+                      "
                       :show-info="false"
                       stroke-color="#ff4d4f"
                     />
@@ -599,19 +630,27 @@ onMounted(() => {
                       <Timeline>
                         <TimelineItem color="green">
                           <p><strong>步骤 1:</strong> 发送欢迎消息</p>
-                          <p class="step-desc">自动发送个性化欢迎语，介绍品牌和服务</p>
+                          <p class="step-desc">
+                            自动发送个性化欢迎语，介绍品牌和服务
+                          </p>
                         </TimelineItem>
                         <TimelineItem color="blue">
                           <p><strong>步骤 2:</strong> 优惠券发放</p>
-                          <p class="step-desc">发放新人专属优惠券，促进首次购买</p>
+                          <p class="step-desc">
+                            发放新人专属优惠券，促进首次购买
+                          </p>
                         </TimelineItem>
                         <TimelineItem color="blue">
                           <p><strong>步骤 3:</strong> 首单引导</p>
-                          <p class="step-desc">推荐热门商品，引导完成首次订单</p>
+                          <p class="step-desc">
+                            推荐热门商品，引导完成首次订单
+                          </p>
                         </TimelineItem>
                         <TimelineItem>
                           <p><strong>步骤 4:</strong> 满意度调查</p>
-                          <p class="step-desc">收集购物体验反馈，持续优化服务</p>
+                          <p class="step-desc">
+                            收集购物体验反馈，持续优化服务
+                          </p>
                         </TimelineItem>
                       </Timeline>
                     </div>
@@ -660,7 +699,10 @@ onMounted(() => {
             />
             <Select
               v-model:value="filters.sopType"
-              :options="[{ value: '', label: '全部 SOP 类型' }, ...SOP_TYPES.map(t => ({ value: t.value, label: t.label }))]"
+              :options="[
+                { value: '', label: '全部 SOP 类型' },
+                ...SOP_TYPES.map((t) => ({ value: t.value, label: t.label })),
+              ]"
               placeholder="SOP 类型"
               style="width: 160px"
               allow-clear
@@ -690,17 +732,15 @@ onMounted(() => {
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'customer'">
               <div class="customer-cell">
-                <Avatar
-                  v-if="record.avatar"
-                  :src="record.avatar"
-                  :size="40"
-                />
+                <Avatar v-if="record.avatar" :src="record.avatar" :size="40" />
                 <Avatar v-else :size="40">
                   <template #icon><UserOutlined /></template>
                 </Avatar>
                 <div class="customer-info">
                   <div class="customer-name">{{ record.name }}</div>
-                  <Tag size="small" color="default">{{ record.customerLevel }}</Tag>
+                  <Tag size="small" color="default">{{
+                    record.customerLevel
+                  }}</Tag>
                 </div>
               </div>
             </template>
@@ -777,17 +817,34 @@ onMounted(() => {
                   <component :is="sopType.icon" />
                   {{ sopType.label }}
                 </Tag>
-                <Tag :color="getSopStatusColor(
-                  (detailProgress.sopProgress?.[sopType.value] as { status?: string })?.status || 'pending'
-                )">
-                  {{ getSopStatusLabel(
-                    (detailProgress.sopProgress?.[sopType.value] as { status?: string })?.status || 'pending'
-                  ) }}
+                <Tag
+                  :color="
+                    getSopStatusColor(
+                      (
+                        detailProgress.sopProgress?.[sopType.value] as {
+                          status?: string;
+                        }
+                      )?.status || 'pending',
+                    )
+                  "
+                >
+                  {{
+                    getSopStatusLabel(
+                      (
+                        detailProgress.sopProgress?.[sopType.value] as {
+                          status?: string;
+                        }
+                      )?.status || 'pending',
+                    )
+                  }}
                 </Tag>
               </div>
               <Timeline class="mt-3">
                 <TimelineItem
-                  v-for="(item, index) in getTimelineItems(sopType.value, detailProgress.sopProgress || {})"
+                  v-for="(item, index) in getTimelineItems(
+                    sopType.value,
+                    detailProgress.sopProgress || {},
+                  )"
                   :key="index"
                   :color="item.color"
                 >
@@ -817,7 +874,9 @@ onMounted(() => {
           <Select
             v-model:value="selectedSopCode"
             style="width: 100%"
-            :options="SOP_TYPES.map(t => ({ value: t.value, label: t.label }))"
+            :options="
+              SOP_TYPES.map((t) => ({ value: t.value, label: t.label }))
+            "
           />
         </div>
       </div>

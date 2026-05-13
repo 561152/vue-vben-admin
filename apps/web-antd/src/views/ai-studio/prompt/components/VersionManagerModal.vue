@@ -6,7 +6,6 @@ import {
   ClockCircleOutlined,
   ColumnHeightOutlined,
   ExclamationCircleOutlined,
-  EyeOutlined,
   ReloadOutlined,
 } from '@ant-design/icons-vue';
 import {
@@ -14,12 +13,9 @@ import {
   Avatar,
   Button,
   Card,
-  Col,
   Descriptions,
-  Divider,
   Empty,
   Modal,
-  Row,
   Space,
   Tag,
   Timeline,
@@ -29,7 +25,6 @@ import {
 } from 'ant-design-vue';
 
 import {
-  comparePromptVersions,
   getPromptTemplateVersions,
   rollbackPromptTemplate,
   type PromptTemplate,
@@ -81,14 +76,6 @@ const modalVisible = computed({
 const hasSelectedTwoVersions = computed(
   () => selectedVersions.value.length === 2,
 );
-
-// 获取选中的版本信息
-const selectedVersionInfo = computed(() => {
-  if (selectedVersions.value.length !== 2) return null;
-  const v1 = versions.value.find((v) => v.id === selectedVersions.value[0]);
-  const v2 = versions.value.find((v) => v.id === selectedVersions.value[1]);
-  return { v1, v2 };
-});
 
 // ==================== 方法 ====================
 
@@ -153,11 +140,10 @@ const computeDiff = (oldText: string, newText: string) => {
 
   // 简单的行级 diff 算法
   while (oldIndex < oldLines.length || newIndex < newLines.length) {
-    const oldLine = oldLines[oldIndex];
-    const newLine = newLines[newIndex];
-
     if (oldIndex >= oldLines.length) {
       // 新增行
+      const newLine = newLines[newIndex];
+      if (newLine === undefined) break;
       diff.push({
         type: 'add',
         rightLine: newIndex + 1,
@@ -166,23 +152,31 @@ const computeDiff = (oldText: string, newText: string) => {
       newIndex++;
     } else if (newIndex >= newLines.length) {
       // 删除行
+      const oldLine = oldLines[oldIndex];
+      if (oldLine === undefined) break;
       diff.push({
         type: 'delete',
         leftLine: oldIndex + 1,
         content: oldLine,
       });
       oldIndex++;
-    } else if (oldLine === newLine) {
-      // 相同行
-      diff.push({
-        type: 'equal',
-        leftLine: oldIndex + 1,
-        rightLine: newIndex + 1,
-        content: oldLine,
-      });
-      oldIndex++;
-      newIndex++;
     } else {
+      const oldLine = oldLines[oldIndex];
+      const newLine = newLines[newIndex];
+      if (oldLine === undefined || newLine === undefined) break;
+
+      if (oldLine === newLine) {
+        // 相同行
+        diff.push({
+          type: 'equal',
+          leftLine: oldIndex + 1,
+          rightLine: newIndex + 1,
+          content: oldLine,
+        });
+        oldIndex++;
+        newIndex++;
+        continue;
+      }
       // 检查是否是修改行（简单启发式：比较相似度）
       const nextOldMatch = newLines.indexOf(oldLine, newIndex);
       const nextNewMatch = oldLines.indexOf(newLine, oldIndex);

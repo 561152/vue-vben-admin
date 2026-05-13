@@ -17,13 +17,12 @@ import {
   ArrowDownOutlined,
   RocketOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
   ClockCircleOutlined,
   ThunderboltOutlined,
-  DollarOutlined,
 } from '@ant-design/icons-vue';
+import type { Dayjs } from 'dayjs';
+import type { SelectValue } from 'ant-design-vue/es/select';
 import { requestClient } from '#/api/request';
-import dayjs from 'dayjs';
 
 interface MetricsOverview {
   totalExecutions: number;
@@ -55,7 +54,7 @@ interface ComponentMetrics {
 }
 
 const loading = ref(false);
-const dateRange = ref<any[]>([]);
+const dateRange = ref<[Dayjs, Dayjs] | undefined>(undefined);
 const timeRange = ref('7d');
 
 const overview = ref<MetricsOverview>({
@@ -173,8 +172,8 @@ const fetchMetrics = async () => {
     const response = await requestClient.get('/ai-studio/metrics', {
       params: {
         timeRange: timeRange.value,
-        startDate: dateRange.value[0]?.format('YYYY-MM-DD'),
-        endDate: dateRange.value[1]?.format('YYYY-MM-DD'),
+        startDate: dateRange.value?.[0]?.format('YYYY-MM-DD'),
+        endDate: dateRange.value?.[1]?.format('YYYY-MM-DD'),
       },
     });
 
@@ -275,9 +274,9 @@ const fetchMetrics = async () => {
   }
 };
 
-const handleTimeRangeChange = (value: string) => {
+const handleTimeRangeChange = (value: SelectValue) => {
   if (value !== 'custom') {
-    dateRange.value = [];
+    dateRange.value = undefined;
   }
   fetchMetrics();
 };
@@ -434,7 +433,7 @@ onUnmounted(() => {
                   :percent="record.successRate"
                   :status="record.successRate >= 90 ? 'success' : 'exception'"
                   size="small"
-                  :format="(percent: number) => `${percent}%`"
+                  :format="(percent?: number) => `${percent ?? 0}%`"
                 />
               </template>
             </template>
@@ -461,7 +460,7 @@ onUnmounted(() => {
                   :percent="record.successRate"
                   :status="record.successRate >= 95 ? 'success' : 'exception'"
                   size="small"
-                  :format="(percent: number) => `${percent}%`"
+                  :format="(percent?: number) => `${percent ?? 0}%`"
                 />
               </template>
             </template>

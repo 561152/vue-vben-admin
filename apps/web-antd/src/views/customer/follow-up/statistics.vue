@@ -142,12 +142,6 @@ const topUserColumns: RankingColumn[] = [
   { title: '已完成', dataIndex: 'completedCount', key: 'completedCount' },
 ];
 
-const topCustomerColumns: RankingColumn[] = [
-  { title: '排名', key: 'rank', width: 60, isRank: true },
-  { title: '客户', dataIndex: 'customerName', key: 'customerName' },
-  { title: '跟进次数', dataIndex: 'recordCount', key: 'recordCount' },
-];
-
 // ==================== 趋势数据 ====================
 
 const trendData = computed<TrendItem[]>(() =>

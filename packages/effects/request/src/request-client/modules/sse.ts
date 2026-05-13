@@ -1,15 +1,15 @@
 import type { AxiosRequestHeaders, InternalAxiosRequestConfig } from 'axios';
 
-import type { RequestClient } from '../request-client';
+import type { RequestClientLike } from '../client-contract';
 import type { SseRequestOptions } from '../types';
 
 /**
  * SSE模块
  */
 class SSE {
-  private client: RequestClient;
+  private client: RequestClientLike;
 
-  constructor(client: RequestClient) {
+  constructor(client: RequestClientLike) {
     this.client = client;
   }
 

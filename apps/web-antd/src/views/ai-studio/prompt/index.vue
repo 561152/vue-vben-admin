@@ -33,6 +33,10 @@ import {
   Tooltip,
   Typography,
 } from 'ant-design-vue';
+import type {
+  ColumnsType,
+  TablePaginationConfig,
+} from 'ant-design-vue/es/table';
 
 import {
   batchDeletePromptTemplates,
@@ -61,8 +65,8 @@ const selectedRowKeys = ref<string[]>([]);
 const searchKeyword = ref('');
 const categoryFilter = ref<string | undefined>(undefined);
 const tagsFilter = ref<string[]>([]);
-const statusFilter = ref<boolean | undefined>(undefined);
-const systemFilter = ref<boolean | undefined>(undefined);
+const statusFilter = ref<string | undefined>(undefined);
+const systemFilter = ref<string | undefined>(undefined);
 
 // 分页
 const pagination = ref({
@@ -113,8 +117,14 @@ const loadTemplates = async () => {
       category: categoryFilter.value,
       tags:
         tagsFilter.value.length > 0 ? tagsFilter.value.join(',') : undefined,
-      activeOnly: statusFilter.value,
-      includeSystem: systemFilter.value,
+      activeOnly:
+        statusFilter.value === undefined
+          ? undefined
+          : statusFilter.value === 'published',
+      includeSystem:
+        systemFilter.value === undefined
+          ? undefined
+          : systemFilter.value === 'system',
     };
 
     const res = await getPromptTemplates(params);
@@ -160,7 +170,7 @@ const resetFilters = () => {
 /**
  * 处理表格变化（分页、排序等）
  */
-const handleTableChange = (pag: { current?: number; pageSize?: number }) => {
+const handleTableChange = (pag: TablePaginationConfig) => {
   pagination.value.current = pag.current ?? 1;
   pagination.value.pageSize = pag.pageSize ?? 20;
   loadTemplates();
@@ -198,12 +208,10 @@ const handleClone = async (record: PromptTemplate) => {
 /**
  * 显示删除警告弹窗
  */
-const showDeleteWarning = (
-  record: PromptTemplate,
-  usage: { inUse: boolean; pipelines: Array<{ id: string; name: string }> },
-) => {
-  const pipelineNames = usage.pipelines.map((p) => p.name).join('、');
-
+const showDeleteWarning = (usage: {
+  inUse: boolean;
+  pipelines: Array<{ id: string; name: string }>;
+}) => {
   Modal.warning({
     title: '无法删除',
     width: 600,
@@ -219,12 +227,11 @@ const showDeleteWarning = (
                 {usage.pipelines.map((p) => (
                   <li key={p.id}>
                     <Typography.Text strong>{p.name}</Typography.Text>
-                    <Typography.Text
-                      type="secondary"
-                      style={{ marginLeft: '8px' }}
-                    >
-                      (ID: {p.id})
-                    </Typography.Text>
+                    <span style={{ marginLeft: '8px' }}>
+                      <Typography.Text type="secondary">
+                        (ID: {p.id})
+                      </Typography.Text>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -250,7 +257,7 @@ const handleDelete = async (record: PromptTemplate) => {
   // 先检查使用情况
   const usage = await checkPromptUsage(record.id);
   if (usage.inUse) {
-    showDeleteWarning(record, usage);
+    showDeleteWarning(usage);
     return;
   }
 
@@ -339,7 +346,7 @@ const formatDate = (dateStr: string) => {
 
 // ==================== 表格列定义 ====================
 
-const columns = [
+const columns: ColumnsType<PromptTemplate> = [
   {
     title: 'ID',
     dataIndex: 'id',
@@ -372,7 +379,7 @@ const columns = [
     dataIndex: 'latestVersion',
     key: 'latestVersion',
     width: 80,
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: number }) => `v${text}`,
   },
   {
@@ -380,7 +387,7 @@ const columns = [
     dataIndex: 'activeVersionId',
     key: 'activeVersionId',
     width: 100,
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: string | null }) =>
       text ? (
         <Badge status="success" text="已发布" />
@@ -393,7 +400,7 @@ const columns = [
     dataIndex: 'type',
     key: 'type',
     width: 100,
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: string }) =>
       text === 'SYSTEM' ? <Tag color="blue">系统</Tag> : <Tag>自定义</Tag>,
   },
@@ -402,7 +409,7 @@ const columns = [
     dataIndex: 'usageCount',
     key: 'usageCount',
     width: 100,
-    align: 'right',
+    align: 'right' as const,
     sorter: true,
     customRender: ({ text }: { text: number }) => text.toLocaleString('zh-CN'),
   },
@@ -416,11 +423,9 @@ const columns = [
       text?.length ? (
         <Space size="small" wrap>
           {text.slice(0, 2).map((tag) => (
-            <Tag key={tag} size="small">
-              {tag}
-            </Tag>
+            <Tag key={tag}>{tag}</Tag>
           ))}
-          {text.length > 2 && <Tag size="small">+{text.length - 2}</Tag>}
+          {text.length > 2 && <Tag>+{text.length - 2}</Tag>}
         </Space>
       ) : null,
   },
@@ -437,9 +442,43 @@ const columns = [
     key: 'action',
     width: 200,
     fixed: 'right',
-    align: 'center',
+    align: 'center' as const,
   },
 ];
+
+const isPromptTemplate = (record: unknown): record is PromptTemplate => {
+  if (!record || typeof record !== 'object') return false;
+
+  const template = record as Partial<Record<keyof PromptTemplate, unknown>>;
+  return (
+    typeof template.id === 'string' &&
+    typeof template.key === 'string' &&
+    typeof template.name === 'string' &&
+    (template.description === null ||
+      typeof template.description === 'string') &&
+    (template.type === 'TENANT' || template.type === 'SYSTEM') &&
+    typeof template.latestVersion === 'number' &&
+    typeof template.usageCount === 'number' &&
+    typeof template.createdAt === 'string' &&
+    typeof template.updatedAt === 'string'
+  );
+};
+
+const isSystemTemplateRecord = (record: unknown) => {
+  return isPromptTemplate(record) && record.type === 'SYSTEM';
+};
+
+const withPromptTemplate = (
+  record: unknown,
+  handler: (template: PromptTemplate) => void | Promise<void>,
+) => {
+  if (!isPromptTemplate(record)) {
+    message.error('提示词模板数据异常，请刷新后重试');
+    return;
+  }
+
+  void handler(record);
+};
 
 // ==================== 生命周期 ====================
 
@@ -450,7 +489,6 @@ watch(
     pagination.value.current = 1;
     loadTemplates();
   },
-  { debounce: 300 },
 );
 
 // 初始化
@@ -540,8 +578,8 @@ loadCategoriesAndTags();
             allow-clear
             style="width: 100%"
           >
-            <Select.Option :value="true">已发布</Select.Option>
-            <Select.Option :value="false">草稿</Select.Option>
+            <Select.Option value="published">已发布</Select.Option>
+            <Select.Option value="draft">草稿</Select.Option>
           </Select>
         </Col>
         <Col :xs="24" :sm="12" :md="8" :lg="4">
@@ -551,8 +589,8 @@ loadCategoriesAndTags();
             allow-clear
             style="width: 100%"
           >
-            <Select.Option :value="true">系统预设</Select.Option>
-            <Select.Option :value="false">自定义</Select.Option>
+            <Select.Option value="system">系统预设</Select.Option>
+            <Select.Option value="tenant">自定义</Select.Option>
           </Select>
         </Col>
         <Col :flex="1" class="text-right">
@@ -620,8 +658,8 @@ loadCategoriesAndTags();
               <Button
                 type="text"
                 size="small"
-                @click="goToEdit(record)"
-                :disabled="record.type === 'SYSTEM'"
+                @click="withPromptTemplate(record, goToEdit)"
+                :disabled="isSystemTemplateRecord(record)"
               >
                 <EditOutlined />
               </Button>
@@ -630,7 +668,7 @@ loadCategoriesAndTags();
               <Button
                 type="text"
                 size="small"
-                @click="openVersionManager(record)"
+                @click="withPromptTemplate(record, openVersionManager)"
               >
                 <TagsOutlined />
               </Button>
@@ -641,20 +679,26 @@ loadCategoriesAndTags();
               </Button>
               <template #overlay>
                 <Menu>
-                  <Menu.Item key="view" @click="goToEdit(record)">
+                  <Menu.Item
+                    key="view"
+                    @click="withPromptTemplate(record, goToEdit)"
+                  >
                     <EyeOutlined />
                     查看详情
                   </Menu.Item>
-                  <Menu.Item key="clone" @click="handleClone(record)">
+                  <Menu.Item
+                    key="clone"
+                    @click="withPromptTemplate(record, handleClone)"
+                  >
                     <FileTextOutlined />
                     克隆
                   </Menu.Item>
-                  <Menu.Divider v-if="record.type !== 'SYSTEM'" />
+                  <Menu.Divider v-if="!isSystemTemplateRecord(record)" />
                   <Menu.Item
-                    v-if="record.type !== 'SYSTEM'"
+                    v-if="!isSystemTemplateRecord(record)"
                     key="delete"
                     danger
-                    @click="handleDelete(record)"
+                    @click="withPromptTemplate(record, handleDelete)"
                   >
                     <DeleteOutlined />
                     删除

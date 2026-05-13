@@ -167,6 +167,20 @@ async function handleEdit(record: RoleItem) {
   modalVisible.value = true;
 }
 
+function isRoleItem(record: unknown): record is RoleItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'number'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isRoleItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(record: RoleItem) {
   if (record.isSystem) {
     message.warning('系统角色不可删除');
@@ -178,6 +192,12 @@ async function handleDelete(record: RoleItem) {
     fetchData();
   } catch (e: any) {
     message.error(e.message || '删除失败');
+  }
+}
+
+function handleDeleteRecord(record: unknown) {
+  if (isRoleItem(record)) {
+    handleDelete(record);
   }
 }
 
@@ -209,6 +229,12 @@ function handlePermissions(record: RoleItem) {
   permRoleId.value = record.id;
   selectedPermIds.value = record.permissions.map((p) => p.id);
   permModalVisible.value = true;
+}
+
+function handlePermissionsRecord(record: unknown) {
+  if (isRoleItem(record)) {
+    handlePermissions(record);
+  }
 }
 
 async function handlePermSubmit() {
@@ -258,20 +284,20 @@ onMounted(() => {
             <Button
               type="link"
               size="small"
-              @click="handleEdit(record)"
+              @click="handleEditRecord(record)"
               :disabled="record.isSystem"
               >编辑</Button
             >
             <Button
               type="link"
               size="small"
-              @click="handlePermissions(record)"
+              @click="handlePermissionsRecord(record)"
               :disabled="record.isSystem"
               >权限</Button
             >
             <Popconfirm
               title="确定删除吗？"
-              @confirm="handleDelete(record)"
+              @confirm="handleDeleteRecord(record)"
               :disabled="record.isSystem"
             >
               <Button

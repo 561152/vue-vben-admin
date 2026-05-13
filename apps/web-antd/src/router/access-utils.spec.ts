@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { filterRoutesByAccess } from './access-utils';
 
+const passthroughComponent = () => null;
+
 describe('filterRoutesByAccess', () => {
   it('should remove parent route when all children lack permissions', () => {
     const hasAppModule = (module: string) => module === 'OPERATIONS';
@@ -18,9 +20,11 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'OperationsEmployeeTask',
             path: 'employee-task',
+            component: passthroughComponent,
             meta: {
               appModule: 'OPERATIONS',
               permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'],
+              title: '员工任务',
             },
           },
         ],
@@ -45,6 +49,7 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'QuickGrading',
             path: 'quick-grading',
+            component: passthroughComponent,
             meta: {
               appModule: 'LMS',
               permissions: ['LMS:TUTOR:USE'],
@@ -74,17 +79,21 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'OperationsEmployeeTask',
             path: 'employee-task',
+            component: passthroughComponent,
             meta: {
               appModule: 'OPERATIONS',
               permissions: ['OPERATIONS:EMPLOYEE_TASK:VIEW'],
+              title: '员工任务',
             },
           },
           {
             name: 'OperationsAntiHarassment',
             path: 'anti-harassment',
+            component: passthroughComponent,
             meta: {
               appModule: 'OPERATIONS',
               permissions: ['OPERATIONS:ANTI_HARASSMENT:VIEW'],
+              title: '防骚扰',
             },
           },
         ],
@@ -93,9 +102,10 @@ describe('filterRoutesByAccess', () => {
 
     const result = filterRoutesByAccess(routes, hasAppModule, hasPermission);
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Operations');
-    expect(result[0].children).toHaveLength(1);
-    expect(result[0].children![0].name).toBe('OperationsEmployeeTask');
+    const [operationsRoute] = result;
+    expect(operationsRoute?.name).toBe('Operations');
+    expect(operationsRoute?.children).toHaveLength(1);
+    expect(operationsRoute?.children?.[0]?.name).toBe('OperationsEmployeeTask');
   });
 
   it('should always keep routes without appModule (e.g. Dashboard)', () => {
@@ -106,13 +116,14 @@ describe('filterRoutesByAccess', () => {
       {
         name: 'Dashboard',
         path: '/dashboard',
+        component: passthroughComponent,
         meta: { title: '首页' },
       },
     ];
 
     const result = filterRoutesByAccess(routes, hasAppModule, hasPermission);
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Dashboard');
+    expect(result[0]?.name).toBe('Dashboard');
   });
 
   it('should remove nested empty parent routes recursively', () => {
@@ -129,9 +140,11 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'CustomerListNew',
             path: '/customer/list',
+            component: passthroughComponent,
             meta: {
               appModule: 'CUSTOMER',
               permissions: ['CUSTOMER:CUSTOMER:LIST'],
+              title: '客户列表',
             },
           },
         ],
@@ -156,9 +169,11 @@ describe('filterRoutesByAccess', () => {
           {
             name: 'MarketingCampaign',
             path: '/marketing/campaign',
+            component: passthroughComponent,
             meta: {
               appModule: 'MARKETING',
               permissions: ['MARKETING:CAMPAIGN:LIST'],
+              title: '营销活动',
             },
           },
         ],
@@ -189,7 +204,12 @@ describe('filterRoutesByAccess', () => {
               {
                 name: 'CrmLevel2',
                 path: '/crm/level1/level2',
-                meta: { appModule: 'CRM', permissions: ['CRM:LEVEL2:VIEW'] },
+                component: passthroughComponent,
+                meta: {
+                  appModule: 'CRM',
+                  permissions: ['CRM:LEVEL2:VIEW'],
+                  title: 'Level2',
+                },
               },
             ],
           },

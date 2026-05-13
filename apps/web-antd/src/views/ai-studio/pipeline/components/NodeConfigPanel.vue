@@ -10,7 +10,6 @@ import {
   Button,
   Collapse,
   Tag,
-  Tooltip,
   Space,
   Alert,
   AutoComplete,
@@ -21,7 +20,6 @@ import {
   PlusOutlined,
   QuestionCircleOutlined,
   LinkOutlined,
-  CodeOutlined,
 } from '@ant-design/icons-vue';
 import PromptBindingModal from './PromptBindingModal.vue';
 import {
@@ -133,7 +131,10 @@ const upstreamStepOptions = computed(() => {
 
 // 是否为 LLM 类型步骤（显示提示词绑定）
 const isLlmStep = computed(() => {
-  return formState.value.type === 'llm' || formState.value.componentRef?.type === 'MODEL';
+  return (
+    formState.value.type === 'llm' ||
+    formState.value.componentRef?.type === 'MODEL'
+  );
 });
 
 // 从 inputSchema 获取输入字段
@@ -262,22 +263,6 @@ const handleSave = () => {
 // 删除节点
 const handleDelete = () => {
   emit('delete');
-};
-
-// 插入模板
-const insertTemplate = (field: { key: string }, template: string) => {
-  const mapping = inputMappings.value.find((m) => m.key === field.key);
-  if (mapping) {
-    mapping.value = template;
-  }
-};
-
-// 渲染配置字段
-const getConfigFieldComponent = (field: any) => {
-  if (field.enum) return 'select';
-  if (field.type === 'boolean') return 'switch';
-  if (field.type === 'number' || field.type === 'integer') return 'number';
-  return 'input';
 };
 
 // 加载提示词绑定列表
@@ -453,9 +438,7 @@ watch(
                   v-model:value="mapping.value"
                   :options="templateSuggestions.map((s) => ({ value: s }))"
                   placeholder="$.inputs.xxx 或 $.outputs.stepKey.data"
-                >
-                  <template #prefix><CodeOutlined /></template>
-                </AutoComplete>
+                />
               </Form.Item>
 
               <!-- 字段描述 -->
@@ -525,9 +508,7 @@ watch(
                     outputFields.map((f) => ({ value: `$.data.${f.key}` }))
                   "
                   placeholder="$.data.xxx"
-                >
-                  <template #prefix><CodeOutlined /></template>
-                </AutoComplete>
+                />
               </Form.Item>
 
               <Divider style="margin: 8px 0" />
@@ -636,7 +617,9 @@ watch(
                 <Tag :color="getBindingTypeColor(binding.bindingType)">
                   {{ getBindingTypeLabel(binding.bindingType) }}
                 </Tag>
-                <span class="binding-name">{{ binding.promptTemplateName }}</span>
+                <span class="binding-name">{{
+                  binding.promptTemplateName
+                }}</span>
                 <Button
                   type="link"
                   size="small"
@@ -682,7 +665,7 @@ watch(
 
     <!-- 提示词绑定弹窗 -->
     <PromptBindingModal
-      v-model:visible="showPromptBindingModal"
+      v-model:open="showPromptBindingModal"
       :pipeline-key="pipelineKey || ''"
       :step-key="formState.stepKey"
       :step-name="formState.name"
@@ -820,34 +803,34 @@ watch(
 }
 
 .prompt-binding-item:hover {
-  border-color: #1890ff;
   background: #e6f7ff;
+  border-color: #1890ff;
 }
 
 .binding-header {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
   margin-bottom: 4px;
 }
 
 .binding-name {
   flex: 1;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.85);
+  color: rgb(0 0 0 / 85%);
 }
 
 .binding-meta {
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgb(0 0 0 / 45%);
 }
 
 .template-key {
+  padding: 1px 4px;
   font-family: 'Courier New', monospace;
   background: #fff;
-  padding: 1px 4px;
   border-radius: 2px;
 }
 </style>

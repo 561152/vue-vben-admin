@@ -293,7 +293,7 @@ describe('MaterialPage category management', () => {
     const wrapper = mount(MaterialPage);
     await flushPromises();
 
-    expect(wrapper.get('[data-testid="select-category-all"]').exists()).toBe(
+    expect(wrapper.find('[data-testid="select-category-all"]').exists()).toBe(
       true,
     );
     expect(

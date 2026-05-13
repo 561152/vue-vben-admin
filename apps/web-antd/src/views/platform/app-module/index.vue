@@ -100,6 +100,20 @@ function handleEdit(record: AppModuleItem) {
   modalVisible.value = true;
 }
 
+function isAppModuleItem(record: unknown): record is AppModuleItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'string'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isAppModuleItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(id: string) {
   try {
     await requestClient.delete(`/platform/app-modules/${id}`);
@@ -167,7 +181,7 @@ onMounted(() => {
               v-if="canEdit"
               type="link"
               size="small"
-              @click="handleEdit(record)"
+              @click="handleEditRecord(record)"
             >
               编辑
             </Button>

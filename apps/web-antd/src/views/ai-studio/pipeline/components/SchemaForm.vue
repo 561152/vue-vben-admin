@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch, computed, h } from 'vue';
+import type { Component } from 'vue';
 import { Form } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import {
@@ -43,7 +44,7 @@ watch(
 );
 
 // 根据 Schema 类型选择组件
-function getFieldComponent(prop: any) {
+function getFieldComponent(prop: any): Component {
   if (prop.enum && Array.isArray(prop.enum)) return EnumField;
   if (prop.type === 'boolean') return BooleanField;
   if (prop.type === 'number' || prop.type === 'integer') return NumberField;

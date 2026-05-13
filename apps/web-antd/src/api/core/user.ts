@@ -94,6 +94,7 @@ export async function getUserInfoApi(): Promise<UserInfo> {
   // 转换为前端需要的 UserInfo 格式
   return {
     userId: String(result.id),
+    username: result.username,
     avatar: result.avatar || '',
     realName: result.realName || result.username,
     roles: roleNames,

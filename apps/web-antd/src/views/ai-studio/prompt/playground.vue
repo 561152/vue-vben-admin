@@ -77,6 +77,24 @@ const modelConfig = ref({
   topP: 1.0,
 });
 
+const toInputValue = (value: unknown): string | number | undefined => {
+  if (typeof value === 'string' || typeof value === 'number') return value;
+  if (typeof value === 'boolean') return String(value);
+  if (value === null || value === undefined) return undefined;
+  return JSON.stringify(value);
+};
+
+const toNumberValue = (value: unknown): string | number | undefined => {
+  if (typeof value === 'number' || typeof value === 'string') return value;
+  return undefined;
+};
+
+const toBooleanValue = (value: unknown): boolean => Boolean(value);
+
+const setVariableInput = (name: string, value: unknown) => {
+  variableInputs.value[name] = value;
+};
+
 // 输出状态
 const outputContent = ref('');
 const renderedPrompt = ref<{ systemPrompt: string; userPrompt: string } | null>(
@@ -491,30 +509,35 @@ watch(selectedTemplateId, async (newId) => {
                   <div class="variable-input">
                     <Input.TextArea
                       v-if="variable.type === 'text'"
-                      v-model:value="variableInputs[variable.name]"
+                      :value="toInputValue(variableInputs[variable.name])"
                       :placeholder="`输入 ${variable.name}`"
                       :rows="3"
                       :auto-size="{ minRows: 2, maxRows: 6 }"
+                      @update:value="setVariableInput(variable.name, $event)"
                     />
                     <Input.TextArea
                       v-else-if="variable.type === 'json'"
-                      v-model:value="variableInputs[variable.name]"
+                      :value="toInputValue(variableInputs[variable.name])"
                       placeholder="输入 JSON"
                       :rows="3"
+                      @update:value="setVariableInput(variable.name, $event)"
                     />
                     <InputNumber
                       v-else-if="variable.type === 'number'"
-                      v-model:value="variableInputs[variable.name]"
+                      :value="toNumberValue(variableInputs[variable.name])"
                       style="width: 100%"
+                      @update:value="setVariableInput(variable.name, $event)"
                     />
                     <Switch
                       v-else-if="variable.type === 'boolean'"
-                      v-model:checked="variableInputs[variable.name]"
+                      :checked="toBooleanValue(variableInputs[variable.name])"
+                      @update:checked="setVariableInput(variable.name, $event)"
                     />
                     <Input
                       v-else
-                      v-model:value="variableInputs[variable.name]"
+                      :value="toInputValue(variableInputs[variable.name])"
                       :placeholder="`输入 ${variable.name}`"
+                      @update:value="setVariableInput(variable.name, $event)"
                     />
                   </div>
                 </div>

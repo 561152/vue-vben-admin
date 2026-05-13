@@ -15,8 +15,6 @@ import {
   TabPane,
   Button,
   Input,
-  Select,
-  SelectOption,
   Table,
   Tag,
   Space,
@@ -48,7 +46,12 @@ const diagnosisList = ref<any[]>([]);
 
 const columns = [
   { title: '诊断编号', dataIndex: 'id', key: 'id', width: 120 },
-  { title: '学生姓名', dataIndex: 'studentName', key: 'studentName', width: 120 },
+  {
+    title: '学生姓名',
+    dataIndex: 'studentName',
+    key: 'studentName',
+    width: 120,
+  },
   { title: '诊断类型', dataIndex: 'type', key: 'type', width: 120 },
   { title: '诊断结果', dataIndex: 'result', key: 'result' },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -60,8 +63,8 @@ const columns = [
 const paperAnalysisData = ref({
   knowledgeCoverage: [
     { name: '数与代数', coverage: 0.85, color: '#52c41a' },
-    { name: '图形与几何', coverage: 0.70, color: '#faad14' },
-    { name: '统计与概率', coverage: 0.60, color: '#ff4d4f' },
+    { name: '图形与几何', coverage: 0.7, color: '#faad14' },
+    { name: '统计与概率', coverage: 0.6, color: '#ff4d4f' },
   ],
   abilityRadar: [
     { dimension: '计算能力', score: 85 },
@@ -180,9 +183,9 @@ const handleAnalyzePaper = () => {
                 <div class="coverage-item">
                   <div class="coverage-header">
                     <span class="coverage-name">{{ item.name }}</span>
-                    <span class="coverage-value">{{
-                      Math.round(item.coverage * 100)
-                    }}%</span>
+                    <span class="coverage-value"
+                      >{{ Math.round(item.coverage * 100) }}%</span
+                    >
                   </div>
                   <Progress
                     :percent="Math.round(item.coverage * 100)"

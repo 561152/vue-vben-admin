@@ -7,7 +7,6 @@ import {
   Spin,
   Empty,
   Button,
-  Space,
   Tag,
   Progress,
   Tabs,
@@ -83,7 +82,8 @@ const nextPage = () => {
 };
 
 // 格式化时间
-const formatTime = (isoString: string) => {
+const formatTime = (isoString?: string) => {
+  if (!isoString) return '-';
   const date = new Date(isoString);
   return date.toLocaleString('zh-CN', {
     year: 'numeric',

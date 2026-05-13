@@ -1,12 +1,7 @@
 import { ref, reactive, computed } from 'vue';
 import { message } from 'ant-design-vue';
 import { requestClient } from '#/api/request';
-import type {
-  MaterialItem,
-  CategoryItem,
-  MaterialFilters,
-  MaterialFormState,
-} from '../types';
+import type { MaterialItem, CategoryItem, MaterialFilters } from '../types';
 
 export function useMaterialLibrary() {
   // ==================== 视图状态 ====================
@@ -64,7 +59,8 @@ export function useMaterialLibrary() {
       if (filters.keyword) params.keyword = filters.keyword;
       if (filters.type) params.type = filters.type;
       if (filters.status) params.status = filters.status;
-      if (selectedCategoryId.value !== null) params.categoryId = selectedCategoryId.value;
+      if (selectedCategoryId.value !== null)
+        params.categoryId = selectedCategoryId.value;
       if (filters.tags?.length) params.tags = filters.tags.join(',');
       if (filters.sortBy) {
         params.sortBy = filters.sortBy;
@@ -91,7 +87,7 @@ export function useMaterialLibrary() {
     categoryLoading.value = true;
     try {
       const res = await requestClient.get<CategoryItem[]>(
-        '/messaging/material/categories/tree'
+        '/messaging/material/categories/tree',
       );
       categories.value = res || [];
     } catch (e) {
@@ -116,7 +112,7 @@ export function useMaterialLibrary() {
     if (selectedIds.value.length === materials.value.length) {
       selectedIds.value = [];
     } else {
-      selectedIds.value = materials.value.map(m => m.id);
+      selectedIds.value = materials.value.map((m) => m.id);
     }
   }
 
@@ -238,7 +234,7 @@ export function useMaterialLibrary() {
       const res = await requestClient.post(
         '/messaging/material/export',
         { ids: selectedIds.value },
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       );
 
       // 下载文件

@@ -136,6 +136,20 @@ async function handleEdit(record: DeptItem) {
   modalVisible.value = true;
 }
 
+function isDeptItem(record: unknown): record is DeptItem {
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    typeof (record as { id?: unknown }).id === 'number'
+  );
+}
+
+function handleEditRecord(record: unknown) {
+  if (isDeptItem(record)) {
+    handleEdit(record);
+  }
+}
+
 async function handleDelete(id: number) {
   try {
     await requestClient.delete(`/departments/${id}`);
@@ -192,7 +206,7 @@ onMounted(() => {
             <Button type="link" size="small" @click="handleAdd(record.id)"
               >新增</Button
             >
-            <Button type="link" size="small" @click="handleEdit(record)"
+            <Button type="link" size="small" @click="handleEditRecord(record)"
               >编辑</Button
             >
             <Popconfirm title="确定删除吗？" @confirm="handleDelete(record.id)">

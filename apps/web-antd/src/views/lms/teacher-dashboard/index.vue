@@ -19,8 +19,6 @@ import {
   Button,
   Table,
   Input,
-  Select,
-  SelectOption,
   Checkbox,
   Alert,
   message,
@@ -44,6 +42,7 @@ const router = useRouter();
 
 const pendingWrongQuestions = ref(0);
 const questionBankCount = ref(0);
+const teacherId = () => userStore.userInfo?.userId;
 
 // OCR 解析弹窗
 const ocrParserVisible = ref(false);
@@ -98,11 +97,14 @@ const questionColumns = [
 const loadStats = async () => {
   try {
     // 获取待分发错题数
-    const statsRes = await axios.get('/api/lms/grading-records/wrong-questions/stats', {
-      params: {
-        teacherId: userStore.user.id,
+    const statsRes = await axios.get(
+      '/api/lms/grading-records/wrong-questions/stats',
+      {
+        params: {
+          teacherId: teacherId(),
+        },
       },
-    });
+    );
     pendingWrongQuestions.value = statsRes.data.totalWrongQuestions || 0;
 
     // 获取题库数量
@@ -188,11 +190,14 @@ const importToQuestionBank = async () => {
 const showBatchDistribute = async () => {
   try {
     // 加载待分发的批改记录
-    const response = await axios.get('/api/lms/grading-records/pending-distribution', {
-      params: {
-        teacherId: userStore.user.id,
+    const response = await axios.get(
+      '/api/lms/grading-records/pending-distribution',
+      {
+        params: {
+          teacherId: teacherId(),
+        },
       },
-    });
+    );
 
     selectedRecordIds.value = response.data.records.map((r: any) => r.id);
     students.value = response.data.students || [];
@@ -215,13 +220,16 @@ const handleBatchDistribute = async () => {
   distributing.value = true;
 
   try {
-    const response = await axios.post('/api/lms/grading-records/batch-distribute', {
-      recordIds: selectedRecordIds.value,
-      teacherId: userStore.user.id,
-      studentIds: selectedStudents.value,
-      title: distributionTitle.value || undefined,
-      description: distributionDescription.value || undefined,
-    });
+    const response = await axios.post(
+      '/api/lms/grading-records/batch-distribute',
+      {
+        recordIds: selectedRecordIds.value,
+        teacherId: teacherId(),
+        studentIds: selectedStudents.value,
+        title: distributionTitle.value || undefined,
+        description: distributionDescription.value || undefined,
+      },
+    );
 
     message.success(
       `成功分发 ${response.data.total} 个任务，共 ${response.data.summary.totalQuestions} 道错题`,
@@ -271,11 +279,7 @@ onMounted(() => {
           <Card hoverable class="action-card" @click="showOcrParser">
             <div class="action-content">
               <CameraOutlined class="action-icon" />
-              <Statistic
-                title="OCR 题目解析"
-                :value="0"
-                suffix=""
-              />
+              <Statistic title="OCR 题目解析" :value="0" suffix="" />
               <div class="action-desc">批量识别题目图片</div>
             </div>
           </Card>
@@ -288,7 +292,9 @@ onMounted(() => {
                 title="一键分发错题"
                 :value="pendingWrongQuestions"
                 suffix="道"
-                :value-style="{ color: pendingWrongQuestions > 0 ? '#cf1322' : '#999' }"
+                :value-style="{
+                  color: pendingWrongQuestions > 0 ? '#cf1322' : '#999',
+                }"
               />
               <div class="action-desc">待分发错题数</div>
             </div>
@@ -371,10 +377,7 @@ onMounted(() => {
                 />
               </template>
               <template v-else-if="column.key === 'answer'">
-                <Input
-                  v-model:value="record.answer"
-                  placeholder="答案"
-                />
+                <Input v-model:value="record.answer" placeholder="答案" />
               </template>
               <template v-else-if="column.key === 'ocrConfidence'">
                 <span>{{ (record.ocrConfidence * 100).toFixed(0) }}%</span>
@@ -434,7 +437,9 @@ onMounted(() => {
 
         <!-- 学生选择 -->
         <div class="student-selection">
-          <h4>选择学生（{{ selectedStudents.length }}/{{ students.length }}）</h4>
+          <h4>
+            选择学生（{{ selectedStudents.length }}/{{ students.length }}）
+          </h4>
           <Checkbox.Group v-model:value="selectedStudents" style="width: 100%">
             <Row>
               <Col v-for="student in students" :key="student.id" :span="12">
@@ -474,14 +479,14 @@ onMounted(() => {
 }
 
 .action-card {
+  height: 200px;
   cursor: pointer;
   transition: all 0.3s ease;
-  height: 200px;
 }
 
 .action-card:hover {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .action-content {
@@ -494,9 +499,9 @@ onMounted(() => {
 }
 
 .action-icon {
+  margin-bottom: 16px;
   font-size: 48px;
   color: #1890ff;
-  margin-bottom: 16px;
 }
 
 .action-icon-warning {
@@ -509,8 +514,8 @@ onMounted(() => {
 
 .action-desc {
   margin-top: 8px;
-  color: #666;
   font-size: 14px;
+  color: #666;
 }
 
 .ocr-parser-modal {
@@ -523,12 +528,12 @@ onMounted(() => {
 }
 
 .parsing-hint {
-  margin-top: 16px;
   padding: 12px;
+  margin-top: 16px;
+  text-align: center;
   background: #e6f7ff;
   border: 1px solid #91d5ff;
   border-radius: 4px;
-  text-align: center;
 }
 
 .parsed-results {
